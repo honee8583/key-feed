@@ -31,7 +31,7 @@ public class P6spyPrettySqlFormatter implements MessageFormattingStrategy {
             }else {
                 sql = FormatStyle.BASIC.getFormatter().format(sql);
             }
-            sql = "|\nHeFormatSql(P6Spy sql,Hibernate format):"+ sql;
+            sql = "|\nFormatted SQL:\n"+ sql;
         }
 
         return sql;
