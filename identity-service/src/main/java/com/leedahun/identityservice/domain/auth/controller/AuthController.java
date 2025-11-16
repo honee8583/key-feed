@@ -72,7 +72,7 @@ public class AuthController {
         joinService.sendJoinEmail(emailVerificationSendRequestDto.getEmail());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new HttpResponse(HttpStatus.CREATED, SuccessMessage.WRITE_SUCCESS.getMessage(), null));
+                .body(new HttpResponse(HttpStatus.CREATED, SuccessMessage.EMAIL_SEND_SUCCESS.getMessage(), null));
     }
 
     @PostMapping("/email-verification/confirm")
