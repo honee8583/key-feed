@@ -13,7 +13,7 @@ spring:
             - id: identity-service
               uri: lb://identity-service
               predicates:
-                - Path=/api/identity/**
+                - Path=/api/auth/**
           globalcors:
             cors-configurations:
               '[/**]':
