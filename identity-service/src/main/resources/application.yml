@@ -1,1 +1,15 @@
-spring.application.name=identity-service
+server:
+  port: 8081
+
+spring:
+  profiles:
+    active: prod
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+jasypt:
+  encryptor:
+    password: ${jasypt_key}
+    bean: jasyptEncryptor
