@@ -34,6 +34,11 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    // security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+    implementation 'com.auth0:java-jwt:4.4.0'
+
     // database
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'com.mysql:mysql-connector-j'
@@ -56,6 +61,12 @@ dependencies {
 
     // service discovery
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+    // mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // thymeleaf
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 }
 
 dependencyManagement {
