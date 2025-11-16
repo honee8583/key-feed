@@ -21,6 +21,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
     private String jwtSecret;
 
     private static final String JWT_PREFIX = "Bearer ";
+    private static final String ID_CLAIM = "id";
 
     @Override
     public GatewayFilter apply(Object config) {
@@ -41,11 +42,15 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
                 DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(jwtSecret))
                         .build()
                         .verify(token.replace(JWT_PREFIX, ""));
-                userId = decodedJWT.getClaim("id").asLong();
+                userId = decodedJWT.getClaim(ID_CLAIM).asLong();
             } catch (TokenExpiredException e) {
-                log.info("토큰이 만료되었습니다.");
+                log.warn("토큰이 만료되었습니다.", e);
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
             } catch (JWTVerificationException e) {
-                log.info("토큰이 유효하지 않습니다.");
+                log.warn("토큰이 유효하지 않습니다.", e);
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
             }
 
             // userId를 X-User-Id 헤더에 담아서 다른 마이크로서비스에 전달
