@@ -53,7 +53,6 @@ public class KeywordServiceImpl implements KeywordService {
         Keyword keyword = Keyword.builder()
                 .user(user)
                 .name(name)
-                .isNotificationEnabled(true)
                 .build();
         keywordRepository.save(keyword);
 
