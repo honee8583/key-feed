@@ -32,7 +32,7 @@ public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
         final String userIdHeader = request.getHeader(USER_ID_HEADER);
         final String roleHeader = request.getHeader(ROLE_HEADER);
 
-        if (userIdHeader == null || userIdHeader.isBlank()) {
+        if (userIdHeader == null || userIdHeader.isBlank() || roleHeader == null || roleHeader.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
