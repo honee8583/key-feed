@@ -1,0 +1,174 @@
+package com.leedahun.identityservice.domain.auth.service.impl;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.anyLong;
+import static org.mockito.BDDMockito.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.never;
+import static org.mockito.BDDMockito.verify;
+
+import com.leedahun.identityservice.common.error.exception.EntityNotFoundException;
+import com.leedahun.identityservice.domain.auth.dto.LoginRequestDto;
+import com.leedahun.identityservice.domain.auth.dto.LoginResponseDto;
+import com.leedahun.identityservice.domain.auth.dto.LoginResult;
+import com.leedahun.identityservice.domain.auth.dto.LoginUser;
+import com.leedahun.identityservice.domain.auth.dto.TokenResult;
+import com.leedahun.identityservice.domain.auth.entity.Role;
+import com.leedahun.identityservice.domain.auth.entity.User;
+import com.leedahun.identityservice.domain.auth.exception.InvalidPasswordException;
+import com.leedahun.identityservice.domain.auth.repository.UserRepository;
+import com.leedahun.identityservice.domain.auth.util.JwtUtil;
+import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+@ExtendWith(MockitoExtension.class)
+class LoginServiceTest {
+
+    @Mock
+    JwtUtil jwtUtil;
+
+    @Mock
+    BCryptPasswordEncoder passwordEncoder;
+
+    @Mock
+    UserRepository userRepository;
+
+    @InjectMocks
+    LoginServiceImpl loginService;
+
+    private static final String EMAIL = "user@test.com";
+    private static final String NAME = "tester";
+    private static final String PHONE = "010-1234-5678";
+    private static final String RAW_PW = "plainPW!";
+    private static final String ENC_PW = "$2a$10$encoded";
+
+    @Test
+    @DisplayName("로그인 요청한 사용자 정보가 일치하면 사용자 정보를 반환한다")
+    void login_success() {
+        // given
+        User user = User.builder()
+                .id(1L)
+                .email(EMAIL)
+                .password(ENC_PW)
+                .username(NAME)
+                .role(Role.USER)
+                .build();
+
+        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(RAW_PW, ENC_PW)).willReturn(true);
+
+        given(jwtUtil.createAccessToken(1L, Role.USER)).willReturn("access.raw");
+        given(jwtUtil.createRefreshToken(1L, Role.USER)).willReturn("refresh.raw");
+
+        LoginRequestDto loginRequest = new LoginRequestDto(EMAIL, RAW_PW);
+
+        // when
+        LoginResult loginResult = loginService.login(loginRequest);
+
+        // then
+        LoginResponseDto loginResponseDto = loginResult.getLoginResponseDto();
+        verify(userRepository).findByEmail(EMAIL);
+        verify(passwordEncoder).matches(RAW_PW, ENC_PW);
+        assertThat(loginResponseDto.getAccessToken()).isEqualTo("access.raw");
+        assertThat(loginResult.getRefreshToken()).isEqualTo("refresh.raw");
+        assertThat(loginResponseDto.getEmail()).isEqualTo(EMAIL);
+        assertThat(loginResponseDto.getName()).isEqualTo(NAME);
+        assertThat(loginResponseDto.getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    @DisplayName("로그인을 시도한 사용자 정보가 없으면 EntityNotFoundException이 발생한다")
+    void login_userNotFound_throws() {
+        // given
+        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> loginService.login(new LoginRequestDto(EMAIL, RAW_PW)))
+                .isInstanceOf(EntityNotFoundException.class);
+
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(jwtUtil, never()).createAccessToken(anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("비밀번호 불일치면 InvalidPasswordException이 발생한다")
+    void login_wrongPassword_throws() {
+        // given
+        User user = User.builder()
+                .id(1L)
+                .email(EMAIL)
+                .password(ENC_PW)
+                .role(Role.USER)
+                .build();
+
+        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(RAW_PW, ENC_PW)).willReturn(false);
+
+        // when / then
+        assertThatThrownBy(() -> loginService.login(new LoginRequestDto(EMAIL, RAW_PW)))
+                .isInstanceOf(InvalidPasswordException.class);
+
+        verify(jwtUtil, never()).createAccessToken(anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("유효한 refresh 토큰이면 새 토큰을 반환한다")
+    void reissueTokens_success() {
+        // given
+        LoginUser principal = LoginUser.builder()
+                .id(10L)
+                .role(Role.USER.name())
+                .build();
+        given(jwtUtil.verify("refresh.raw")).willReturn(principal);
+
+        User user = User.builder()
+                .id(10L)
+                .email(EMAIL)
+                .password(ENC_PW)
+                .role(Role.USER)
+                .build();
+        given(userRepository.findById(10L)).willReturn(Optional.of(user));
+
+        given(jwtUtil.createAccessToken(10L, Role.USER)).willReturn("new.access.raw");
+        given(jwtUtil.createRefreshToken(10L, Role.USER)).willReturn("new.refresh.raw");
+
+        // when
+        TokenResult tokens = loginService.reissueTokens("refresh.raw");
+
+        // then
+        assertThat(tokens.getAccessToken()).isEqualTo("new.access.raw");
+        assertThat(tokens.getRefreshToken()).isEqualTo("new.refresh.raw");
+
+        verify(jwtUtil).verify("refresh.raw");
+        verify(userRepository).findById(10L);
+        verify(jwtUtil).createAccessToken(10L, Role.USER);
+        verify(jwtUtil).createRefreshToken(10L, Role.USER);
+    }
+
+    @Test
+    @DisplayName("토큰의 사용자 ID가 DB에 없으면 EntityNotFoundException이 발생한다")
+    void reissueTokens_userMissing_throws() {
+        // given
+        LoginUser principal = LoginUser.builder()
+                .id(99L)
+                .role(Role.USER.name())
+                .build();
+        given(jwtUtil.verify("refresh.raw")).willReturn(principal);
+        given(userRepository.findById(99L)).willReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> loginService.reissueTokens("refresh.raw"))
+                .isInstanceOf(EntityNotFoundException.class);
+
+        verify(jwtUtil, never()).createAccessToken(anyLong(), any());
+    }
+
+}
