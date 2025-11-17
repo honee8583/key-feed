@@ -235,7 +235,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("[POST /api/identity/auth/join/email/verify] 미인증 상태(PENDING 등) 시 200 OK와 '인증 실패' 메시지 및 상태를 반환한다")
+    @DisplayName("[POST /api/auth/email-verification/confirm] 미인증 상태(PENDING 등) 시 200 OK와 '인증 실패' 메시지 및 상태를 반환한다")
     void verify_email_code_not_verified_returns_failed_message() throws Exception {
         // given
         EmailVerificationConfirmRequestDto emailVerificationConfirmRequest =
