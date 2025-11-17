@@ -6,9 +6,11 @@ import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.entity.Keyword;
+import com.leedahun.identityservice.domain.keyword.exception.KeywordLimitExceededException;
 import com.leedahun.identityservice.domain.keyword.repository.KeywordRepository;
 import com.leedahun.identityservice.domain.keyword.service.KeywordService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,9 @@ public class KeywordServiceImpl implements KeywordService {
 
     private final KeywordRepository keywordRepository;
     private final UserRepository userRepository;
+
+    @Value("${app.limits.keyword-max-count}")
+    private int keywordMaxCount;
 
     @Override
     @Transactional(readOnly = true)
@@ -39,6 +44,10 @@ public class KeywordServiceImpl implements KeywordService {
 
         if (keywordRepository.existsByNameAndUser(name, user)) {
             throw new EntityAlreadyExistsException("Keyword", name);
+        }
+
+        if (keywordRepository.countByUserId(userId) >= keywordMaxCount) {
+            throw new KeywordLimitExceededException();
         }
 
         Keyword keyword = Keyword.builder()

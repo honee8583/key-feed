@@ -14,4 +14,6 @@ public interface KeywordRepository extends JpaRepository<Keyword, Long> {
 
     boolean existsByNameAndUser(String name, User user);
 
+    Long countByUserId(Long userId);
+
 }

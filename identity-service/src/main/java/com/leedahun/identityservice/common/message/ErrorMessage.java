@@ -24,7 +24,9 @@ public enum ErrorMessage {
     EMAIL_VERIFICATION_LOCKED("일정 시간 동안 많은 시도로 인해 인증이 제한되었습니다."),
     EMAIL_VERIFICATION_ATTEMPT_LIMIT_EXCEEDED("지정된 인증 횟수가 초과되었습니다."),
     EMAIL_SEND_FAILED("이메일 전송에 실패하였습니다."),
-    EMAIL_ALREADY_VERIFIED("이미 인증된 이메일입니다.");
+    EMAIL_ALREADY_VERIFIED("이미 인증된 이메일입니다."),
+
+    KEYWORD_LIMIT_EXCEEDED("키워드 등록 한도를 넘었습니다.");
 
     private final String message;
 }

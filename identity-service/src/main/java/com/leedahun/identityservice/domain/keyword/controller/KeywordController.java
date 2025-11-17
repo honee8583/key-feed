@@ -5,6 +5,7 @@ import com.leedahun.identityservice.common.response.HttpResponse;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordCreateRequestDto;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.service.KeywordService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,7 @@ public class KeywordController {
 
     @PostMapping
     public ResponseEntity<?> addKeyword(@AuthenticationPrincipal Long userId,
-                                        @RequestBody KeywordCreateRequestDto keywordCreateRequest) {
+                                        @Valid @RequestBody KeywordCreateRequestDto keywordCreateRequest) {
         KeywordResponseDto addKeywordResult = keywordService.addKeyword(userId, keywordCreateRequest.getName());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new HttpResponse(HttpStatus.CREATED, SuccessMessage.WRITE_SUCCESS.getMessage(), addKeywordResult));
