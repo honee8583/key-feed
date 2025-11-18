@@ -38,3 +38,7 @@ jasypt:
   encryptor:
     password: test_password
     bean: jasyptEncryptor
+
+app:
+  limits:
+    keyword-max-count: 20
