@@ -39,3 +39,7 @@ jwt:
   secret: ${jwt_key}
   expiration_time: 600000              # 10분
   refresh_expiration_time: 1209600000  # 14일
+
+app:
+  limits:
+    keyword-max-count: 20

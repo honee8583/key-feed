@@ -7,5 +7,6 @@ import org.springframework.security.test.context.support.WithSecurityContext;
 @Retention(RetentionPolicy.RUNTIME)
 @WithSecurityContext(factory = WithAnonymousUserSecurityContextFactory.class)
 public @interface WithAnonymousUser {
-    String id() default "";
+    String username() default "1";
+    String role() default "ROLE_USER";
 }

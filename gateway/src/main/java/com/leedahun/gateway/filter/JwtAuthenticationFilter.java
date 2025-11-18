@@ -38,11 +38,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
             }
 
             Long userId = null;
+            String role = null;
             try {
                 DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(jwtSecret))
                         .build()
                         .verify(token.replace(JWT_PREFIX, ""));
                 userId = decodedJWT.getClaim(ID_CLAIM).asLong();
+                role = decodedJWT.getClaim("role").asString();
             } catch (TokenExpiredException e) {
                 log.warn("토큰이 만료되었습니다.", e);
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -60,6 +62,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
                                     exchange.getRequest()
                                             .mutate()
                                             .header("X-User-Id", String.valueOf(userId))
+                                            .header("X-User-Roles", role)
                                             .build()
                             )
                             .build()

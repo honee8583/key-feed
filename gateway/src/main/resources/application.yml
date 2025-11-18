@@ -10,10 +10,16 @@ spring:
       server:
         webflux:
           routes:
-            - id: identity-service
+            - id: identity-auth-service
               uri: lb://identity-service
               predicates:
                 - Path=/api/auth/**
+            - id: identity-service
+              uri: lb://identity-service
+              predicates:
+                - Path=/api/keywords/**
+              filters:
+                - JwtAuthenticationFilter
           globalcors:
             cors-configurations:
               '[/**]':

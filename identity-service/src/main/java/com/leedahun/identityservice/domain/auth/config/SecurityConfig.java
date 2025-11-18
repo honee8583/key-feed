@@ -2,6 +2,7 @@ package com.leedahun.identityservice.domain.auth.config;
 
 import com.leedahun.identityservice.domain.auth.filter.CustomAccessDeniedHandler;
 import com.leedahun.identityservice.domain.auth.filter.CustomAuthenticationEntrypoint;
+import com.leedahun.identityservice.domain.auth.filter.GatewayHeaderAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,7 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -20,6 +22,7 @@ public class SecurityConfig {
 
     private final CustomAuthenticationEntrypoint authenticationEntrypoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final GatewayHeaderAuthenticationFilter gatewayHeaderAuthenticationFilter;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -36,7 +39,10 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/keywords/**").authenticated()
         );
+
+        http.addFilterBefore(gatewayHeaderAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.exceptionHandling(e -> e
                 .authenticationEntryPoint(authenticationEntrypoint)
