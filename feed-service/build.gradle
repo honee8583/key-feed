@@ -34,9 +34,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
-
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
 
     // database
     runtimeOnly 'com.h2database:h2'
@@ -54,6 +57,13 @@ dependencies {
 
     // aspectj
     implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    // openfeign
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+    // test
+    testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-stub-runner'
+    implementation 'org.springframework.cloud:spring-cloud-contract-wiremock:4.3.0'
 }
 
 dependencyManagement {
