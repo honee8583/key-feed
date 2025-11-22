@@ -19,16 +19,15 @@ import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
-                "client.identity-service.access-url=http://localhost:${wiremock.server.port}"
+                "spring.cloud.discovery.enabled=false",
+                "spring.cloud.openfeign.client.config.identity-service.url=http://localhost:${wiremock.server.port}"
         }
 )
 @AutoConfigureWireMock(port = 0)
-@ActiveProfiles("test")
 class UserInternalApiClientTest {
 
     @Autowired

@@ -6,10 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(
-    name = "identity-service",
-    url = "${client.identity-service.access-url:}"
-)
+@FeignClient(name = "identity-service")
 public interface UserInternalApiClient {
 
     @GetMapping("/internal/users/{userId}/keywords")
