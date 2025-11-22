@@ -55,6 +55,14 @@ public class FeedServiceImpl implements FeedService {
     @Override
     @Transactional(readOnly = true)
     public CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeed(List<String> keywords, Long lastId, int size) {
+        if (CollectionUtils.isEmpty(keywords)) {
+            return CommonPageResponse.<ContentFeedResponseDto>builder()
+                    .content(Collections.emptyList())
+                    .hasNext(false)
+                    .nextCursorId(null)
+                    .build();
+        }
+
         String keywordSearchPattern = getKeywordPattern(keywords);
         List<Content> contents = contentRepository.searchByKeywordsKeyset(
                 keywordSearchPattern,

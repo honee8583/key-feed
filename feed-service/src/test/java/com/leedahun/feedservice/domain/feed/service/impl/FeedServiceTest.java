@@ -28,6 +28,7 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -170,6 +171,26 @@ class FeedServiceTest {
             assertThat(response.getContent()).hasSize(3);
             assertThat(response.isHasNext()).isFalse();  // 다음페이지가 존재하지 않아야함
             assertThat(response.getNextCursorId()).isNull();
+        }
+
+        @Test
+        @DisplayName("성공: 키워드 리스트가 비어있으면 DB 조회 없이 빈 페이지를 반환한다")
+        void success_empty_keywords() {
+            // given
+            List<String> keywords = Collections.emptyList();
+            Long lastId = null;
+            int size = 10;
+
+            // when
+            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeed(keywords, lastId, size);
+
+            // then
+            assertThat(response.getContent()).isEmpty();
+            assertThat(response.isHasNext()).isFalse();
+            assertThat(response.getNextCursorId()).isNull();
+
+            // 중요: 키워드가 없으면 DB 조회를 아예 하지 않아야 함 (never() 검증)
+            verify(contentRepository, never()).searchByKeywordsKeyset(anyString(), any(), anyInt());
         }
     }
 
