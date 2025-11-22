@@ -26,7 +26,7 @@ public class FeedController {
     @GetMapping
     public ResponseEntity<?> getMyFeeds(@AuthenticationPrincipal Long userId,
                                         @RequestParam(value = "lastId", required = false) Long lastId,
-                                        @RequestParam(value = "size", required = false) int size) {
+                                        @RequestParam(value = "size", defaultValue = "10") int size) {
         List<String> keywords = feedService.fetchActiveKeywordNames(userId);
         CommonPageResponse<ContentFeedResponseDto> feeds = feedService.getPersonalizedFeed(keywords, lastId, size);
         return ResponseEntity.ok()
