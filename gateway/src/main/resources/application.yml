@@ -20,6 +20,12 @@ spring:
                 - Path=/api/keywords/**
               filters:
                 - JwtAuthenticationFilter
+            - id: feed-service
+              uri: lb://feed-service
+              predicates:
+                - Path=/api/feed/**
+              filters:
+                - JwtAuthenticationFilter
           globalcors:
             cors-configurations:
               '[/**]':
