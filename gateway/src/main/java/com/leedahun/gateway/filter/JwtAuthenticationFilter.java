@@ -1,19 +1,34 @@
 package com.leedahun.gateway.filter;
 
+import static com.leedahun.gateway.common.message.ErrorMessage.TOKEN_EXPIRED;
+import static com.leedahun.gateway.common.message.ErrorMessage.TOKEN_INVALID;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leedahun.gateway.common.response.HttpResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 @Component
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
@@ -47,12 +62,10 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
                 role = decodedJWT.getClaim("role").asString();
             } catch (TokenExpiredException e) {
                 log.warn("토큰이 만료되었습니다.", e);
-                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                return exchange.getResponse().setComplete();
+                return onError(exchange, TOKEN_EXPIRED.getMessage(), HttpStatus.UNAUTHORIZED);
             } catch (JWTVerificationException e) {
                 log.warn("토큰이 유효하지 않습니다.", e);
-                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                return exchange.getResponse().setComplete();
+                return onError(exchange, TOKEN_INVALID.getMessage(), HttpStatus.UNAUTHORIZED);
             }
 
             // userId를 X-User-Id 헤더에 담아서 다른 마이크로서비스에 전달
@@ -68,5 +81,25 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
                             .build()
             );
         };
+    }
+
+    private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(status);
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+        HttpResponse httpResponse = new HttpResponse(status, message, null);
+
+        try {
+            byte[] bytes = objectMapper.writeValueAsBytes(httpResponse);
+
+            DataBuffer buffer = response.bufferFactory().wrap(bytes);
+
+            return response.writeWith(Mono.just(buffer));
+        } catch (JsonProcessingException e) {
+            log.error("JSON 변환 중 오류 발생", e);
+            response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            return response.setComplete();
+        }
     }
 }
