@@ -1,15 +1,31 @@
 package com.leedahun.identityservice.domain.keyword.controller;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.doNothing;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.times;
+import static org.mockito.BDDMockito.when;
+import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.identityservice.common.error.exception.EntityNotFoundException;
 import com.leedahun.identityservice.common.message.SuccessMessage;
 import com.leedahun.identityservice.domain.auth.config.SecurityConfig;
-import com.leedahun.identityservice.domain.auth.controller.AuthController;
 import com.leedahun.identityservice.domain.auth.util.test.WithAnonymousUser;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordCreateRequestDto;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.service.KeywordService;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,21 +34,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
-
-import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.BDDMockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 
 @WithAnonymousUser
 @WebMvcTest(controllers = KeywordController.class,
@@ -50,21 +53,6 @@ class KeywordControllerTest {
 
     @MockitoBean
     private KeywordService keywordService;
-
-    private final Long TEST_USER_ID = 1L;
-
-    private Authentication testAuthentication;
-
-//    @BeforeEach
-//    void setUp() {
-//        // @AuthenticationPrincipal Long userId를 시뮬레이션하기 위한
-//        // 테스트용 Authentication 객체 생성
-//        testAuthentication = new UsernamePasswordAuthenticationToken(
-//                TEST_USER_ID, // Principal (이 값이 @AuthenticationPrincipal로 주입됨)
-//                null,
-//                List.of(new SimpleGrantedAuthority("ROLE_USER"))
-//        );
-//    }
 
     @Test
     @DisplayName("[GET /api/keywords] 내 키워드 목록 조회 성공 시 200 OK와 키워드 목록을 반환한다")
@@ -125,8 +113,7 @@ class KeywordControllerTest {
         given(keywordService.toggleKeywordNotification(any(), any())).willReturn(responseDto);
 
         // when & then
-        mockMvc.perform(patch("/api/keywords/{keywordId}/toggle", keywordId)
-                        .with(authentication(testAuthentication)))
+        mockMvc.perform(patch("/api/keywords/{keywordId}/toggle", keywordId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value(SuccessMessage.UPDATE_SUCCESS.getMessage()))

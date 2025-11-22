@@ -1,8 +1,8 @@
-package com.leedahun.identityservice.domain.auth.config;
+package com.leedahun.feedservice.config;
 
-import com.leedahun.identityservice.domain.auth.filter.CustomAccessDeniedHandler;
-import com.leedahun.identityservice.domain.auth.filter.CustomAuthenticationEntrypoint;
-import com.leedahun.identityservice.domain.auth.filter.GatewayHeaderAuthenticationFilter;
+import com.leedahun.feedservice.common.filter.CustomAccessDeniedHandler;
+import com.leedahun.feedservice.common.filter.CustomAuthenticationEntrypoint;
+import com.leedahun.feedservice.common.filter.GatewayHeaderAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -25,21 +24,16 @@ public class SecurityConfig {
     private final GatewayHeaderAuthenticationFilter gatewayHeaderAuthenticationFilter;
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http.headers(headers -> headers.frameOptions(FrameOptionsConfig::disable))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .csrf(AbstractHttpConfigurer::disable)
-            .formLogin(AbstractHttpConfigurer::disable)
-            .httpBasic(AbstractHttpConfigurer::disable);
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable);
 
         http.authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/keywords/**").authenticated()
+                .requestMatchers("/api/feed/**").authenticated()
 
                 // 마이크로서비스간의 통신
                 .requestMatchers("/internal/**").permitAll()
