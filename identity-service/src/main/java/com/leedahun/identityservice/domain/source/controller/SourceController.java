@@ -1,0 +1,47 @@
+package com.leedahun.identityservice.domain.source.controller;
+
+import com.leedahun.identityservice.common.message.SuccessMessage;
+import com.leedahun.identityservice.common.response.HttpResponse;
+import com.leedahun.identityservice.domain.source.dto.SourceRequestDto;
+import com.leedahun.identityservice.domain.source.dto.SourceResponseDto;
+import com.leedahun.identityservice.domain.source.service.SourceService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/sources")
+@RequiredArgsConstructor
+public class SourceController {
+
+    private final SourceService sourceService;
+
+    @GetMapping("/my")
+    public ResponseEntity<?> getMySources(@AuthenticationPrincipal Long userId) {
+        List<SourceResponseDto> sources = sourceService.getSourcesByUser(userId);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.READ_SUCCESS.getMessage(), sources));
+    }
+
+    @PostMapping
+    public ResponseEntity<?> addSource(@AuthenticationPrincipal Long userId,
+                                                       @Valid @RequestBody SourceRequestDto request) {
+        SourceResponseDto source = sourceService.addSource(userId, request);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.WRITE_SUCCESS.getMessage(), source));
+    }
+
+    @DeleteMapping("/my/{userSourceId}")
+    public ResponseEntity<?> removeSource(@AuthenticationPrincipal Long userId,
+                                          @PathVariable Long userSourceId) {
+        sourceService.removeUserSource(userId, userSourceId);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.DELETE_SUCCESS.getMessage(), null ));
+    }
+
+}

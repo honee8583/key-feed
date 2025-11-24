@@ -40,6 +40,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/keywords/**").authenticated()
+                .requestMatchers("/api/sources/**").authenticated()
 
                 // 마이크로서비스간의 통신
                 .requestMatchers("/internal/**").permitAll()

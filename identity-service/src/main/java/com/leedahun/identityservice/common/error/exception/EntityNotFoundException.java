@@ -6,7 +6,10 @@ import org.springframework.http.HttpStatus;
 public class EntityNotFoundException extends CustomException {
 
     public EntityNotFoundException(String entity, Object data) {
-        super(ErrorMessage.ENTITY_NOT_FOUND.getMessage() + entity + ": " + data, HttpStatus.CONFLICT);
+        super(
+                String.format("%s %s: %s", ErrorMessage.ENTITY_NOT_FOUND.getMessage(), entity, data),
+                HttpStatus.NOT_FOUND
+        );
     }
 
 }

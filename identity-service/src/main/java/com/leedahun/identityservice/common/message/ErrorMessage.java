@@ -26,7 +26,9 @@ public enum ErrorMessage {
     EMAIL_SEND_FAILED("이메일 전송에 실패하였습니다."),
     EMAIL_ALREADY_VERIFIED("이미 인증된 이메일입니다."),
 
-    KEYWORD_LIMIT_EXCEEDED("키워드 등록 한도를 넘었습니다.");
+    KEYWORD_LIMIT_EXCEEDED("키워드 등록 한도를 넘었습니다."),
+
+    INVALID_RSS_URL("해당 URL에 접근할 수 없거나 유효한 웹사이트가 아닙니다.");
 
     private final String message;
 }
