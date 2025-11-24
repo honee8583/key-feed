@@ -103,9 +103,6 @@ public class SourceServiceImpl implements SourceService {
                 return atomLink.attr("abs:href");
             }
 
-            if (!inputUrl.endsWith("/feed") && !inputUrl.endsWith("/rss")) {
-                return inputUrl;
-            }
             return inputUrl;
 
         } catch (IOException e) {
