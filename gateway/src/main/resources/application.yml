@@ -26,6 +26,12 @@ spring:
                 - Path=/api/feed/**
               filters:
                 - JwtAuthenticationFilter
+            - id: identity-service-source
+              uri: lb://identity-service
+              predicates:
+                - Path=/api/sources/**
+              filters:
+                - JwtAuthenticationFilter
           globalcors:
             cors-configurations:
               '[/**]':
