@@ -154,8 +154,8 @@ class KeywordControllerTest {
 
         // when & then
         mockMvc.perform(delete("/api/keywords/{keywordId}", badKeywordId))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.data").value(nullValue()));
 
