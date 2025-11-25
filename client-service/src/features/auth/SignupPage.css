@@ -1,0 +1,251 @@
+.signup-page {
+  position: relative;
+  min-height: 100vh;
+  padding: 24px 16px 48px;
+  background: linear-gradient(180deg, #7b3fe4 0%, #4267ff 40%, #021651 100%);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.signup-page__blur {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 9999px;
+  filter: blur(140px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.signup-page__blur--one {
+  top: -140px;
+  left: -120px;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.signup-page__blur--two {
+  bottom: -140px;
+  right: -120px;
+  background: rgba(194, 122, 255, 0.7);
+}
+
+.signup-page__container {
+  position: relative;
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: #ffffff;
+  z-index: 1;
+}
+
+.signup-page__hero {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.signup-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.signup-page__back:hover {
+  opacity: 0.8;
+}
+
+.signup-back-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.signup-page__hero-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.signup-page__hero-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 10px 15px rgba(15, 23, 42, 0.1);
+}
+
+.signup-page__hero-text h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #ffffff;
+}
+
+.signup-page__hero-text p {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(239, 246, 255, 0.9);
+}
+
+.signup-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 32px 32px 24px 24px;
+  padding: 32px 24px 28px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  color: #101828;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.signup-card__subtitle {
+  text-align: center;
+  font-size: 14px;
+  color: #475467;
+}
+
+.signup-card__socials {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.social-button--compact {
+  height: 48px;
+}
+
+.signup-card__divider {
+  margin: 8px 0;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.secondary-button {
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: #f8f9fb;
+  color: #334155;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.signup-agreements {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fdfdff;
+}
+
+.signup-agreements__all {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.signup-agreements__options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.signup-agreements__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+  color: #475467;
+}
+
+.signup-agreements__option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.signup-agreements input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: #6f4bff;
+}
+
+.text-link--muted {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.signup-card__feedback {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.signup-card__feedback.is-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+}
+
+.signup-card__feedback.is-error {
+  background: rgba(248, 113, 113, 0.12);
+  color: #b91c1c;
+}
+
+.signup-card__footer {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #475467;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@media (min-width: 768px) {
+  .signup-page {
+    padding-top: 48px;
+  }
+
+  .signup-card {
+    border-radius: 40px;
+  }
+}
