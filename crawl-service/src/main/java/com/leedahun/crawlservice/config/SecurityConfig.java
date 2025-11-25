@@ -33,7 +33,6 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable);
 
         http.authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/feed/**").authenticated()
 
                 // 마이크로서비스간의 통신
                 .requestMatchers("/internal/**").permitAll()
