@@ -13,3 +13,8 @@ jasypt:
   encryptor:
     password: ${jasypt_key}
     bean: jasyptEncryptor
+
+app:
+  kafka:
+    topic:
+      content: content-topic
