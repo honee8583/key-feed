@@ -23,6 +23,8 @@ import java.util.List;
 @Component
 public class RssFeedParser {
 
+    private static final int SUMMARY_LENGTH = 200;
+
     public List<FeedItem> parse(String feedUrl) {
         List<FeedItem> items = new ArrayList<>();
         try {
@@ -63,8 +65,8 @@ public class RssFeedParser {
                         thumbnailUrl = img.attr("src");
                     }
                     cleanSummary = doc.text(); // HTML 태그 찾기
-                    if (cleanSummary.length() > 200) {  // 200자 제한
-                        cleanSummary = cleanSummary.substring(0, 200) + "...";  // 너무 길면 200자 요약으로 생성
+                    if (cleanSummary.length() > SUMMARY_LENGTH) {  // 200자 제한
+                        cleanSummary = cleanSummary.substring(0, SUMMARY_LENGTH) + "...";  // 너무 길면 200자 요약으로 생성
                     }
                 }
 
