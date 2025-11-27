@@ -17,3 +17,8 @@ jasypt:
   encryptor:
     password: test_password
     bean: jasyptEncryptor
+
+app:
+  kafka:
+    topic:
+      content: content-topic

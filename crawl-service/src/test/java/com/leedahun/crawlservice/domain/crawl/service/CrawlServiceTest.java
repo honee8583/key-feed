@@ -4,6 +4,7 @@ import com.leedahun.crawlservice.domain.crawl.dto.CrawledContentDto;
 import com.leedahun.crawlservice.domain.crawl.dto.FeedItem;
 import com.leedahun.crawlservice.domain.crawl.entity.Source;
 import com.leedahun.crawlservice.domain.crawl.repository.SourceRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,6 +41,11 @@ class CrawlServiceTest {
 
     private static final String TEST_URL = "https://test-blog.com/feed";
     private static final String TOPIC_NAME = "content-topic";
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(crawlService, "TOPIC_NAME", TOPIC_NAME);
+    }
 
     @Test
     @DisplayName("새로운 글이 발견되면 Kafka로 발행하고 Source의 상태를 최신 글 Hash로 업데이트한다")

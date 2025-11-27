@@ -6,6 +6,7 @@ import com.leedahun.crawlservice.domain.crawl.entity.Source;
 import com.leedahun.crawlservice.domain.crawl.repository.SourceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,8 @@ public class CrawlService {
     private final RssFeedParser rssFeedParser;
     private final KafkaTemplate<String, CrawledContentDto> kafkaTemplate;
 
-    private static final String TOPIC_NAME = "content-topic";
+    @Value("${app.kafka.topic.content}")
+    private String TOPIC_NAME;
 
     @Transactional
     public void processSource(Source source) {
@@ -43,7 +45,7 @@ public class CrawlService {
         // RSS는 보통 최신순으로 정렬되어 있으므로 위에서부터 검사
         for (FeedItem item : items) {
             // 이전에 수집한 마지막 글(Hash)을 만나면 중단
-            if (item.getGuid().equals(lastHash)) {
+            if (java.util.Objects.equals(item.getGuid(), lastHash)) {
                 break;
             }
             newItems.add(item);

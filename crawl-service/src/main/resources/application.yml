@@ -9,15 +9,12 @@ spring:
     hibernate:
       ddl-auto: validate
 
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.add.type.headers: false
-
 jasypt:
   encryptor:
     password: ${jasypt_key}
     bean: jasyptEncryptor
+
+app:
+  kafka:
+    topic:
+      content: content-topic
