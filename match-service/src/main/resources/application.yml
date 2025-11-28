@@ -1,0 +1,23 @@
+server:
+  port: 8084
+
+spring:
+  profiles:
+    active: prod
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+jasypt:
+  encryptor:
+    password: ${jasypt_key}
+    bean: jasyptEncryptor
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: BASIC
