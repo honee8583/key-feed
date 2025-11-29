@@ -1,5 +1,6 @@
 package com.leedahun.crawlservice.domain.crawl.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.crawlservice.domain.crawl.dto.CrawledContentDto;
 import com.leedahun.crawlservice.domain.crawl.dto.FeedItem;
 import com.leedahun.crawlservice.domain.crawl.entity.Source;
@@ -22,7 +23,8 @@ public class CrawlService {
 
     private final SourceRepository sourceRepository;
     private final RssFeedParser rssFeedParser;
-    private final KafkaTemplate<String, CrawledContentDto> kafkaTemplate;
+    private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Value("${app.kafka.topic.content}")
     private String TOPIC_NAME;
@@ -72,12 +74,21 @@ public class CrawlService {
                     .publishedAt(item.getPubDate())
                     .build();
 
-            kafkaTemplate.send(TOPIC_NAME, contentDto);
+            sendContentMessage(contentDto);
         }
 
         // 4. Source 업데이트 최신화
         String newLatestHash = items.get(0).getGuid();  // 가장 최신글의 hash로 업데이트
         updateSourceStatus(source, newLatestHash);
+    }
+
+    private void sendContentMessage(CrawledContentDto content) {
+        try {
+            String jsonMessage = objectMapper.writeValueAsString(content);
+            kafkaTemplate.send(TOPIC_NAME, jsonMessage);
+        } catch (Exception e) {
+            log.error("JSON 변환 또는 전송 실패", e);
+        }
     }
 
     private void updateSourceStatus(Source source, String newHash) {
