@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.matchservice.domain.content.service.ContentService;
 import com.leedahun.matchservice.infra.kafka.dto.CrawledContentDto;
+import com.leedahun.matchservice.infra.kafka.exception.KafkaMessageProcessingException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -58,10 +60,10 @@ class ContentEventConsumerTest {
         when(objectMapper.readValue(eq(invalidJson), eq(CrawledContentDto.class)))
                 .thenThrow(new JsonProcessingException("Parsing Error") {});
 
-        // when
-        contentEventConsumer.consume(invalidJson);
+        // when & then
+        assertThatThrownBy(() -> contentEventConsumer.consume(invalidJson))
+                .isInstanceOf(KafkaMessageProcessingException.class);
 
-        // then
         // 저장 로직은 절대 호출되지 않아야 함
         verify(contentService, never()).saveContent(any());
     }
@@ -78,10 +80,10 @@ class ContentEventConsumerTest {
         // 저장 서비스가 예외를 던지도록 설정
         doThrow(new RuntimeException("DB Error")).when(contentService).saveContent(dto);
 
-        // when
-        contentEventConsumer.consume(jsonMessage);
+        // when & then
+        assertThatThrownBy(() -> contentEventConsumer.consume(jsonMessage))
+                .isInstanceOf(KafkaMessageProcessingException.class);
 
-        // then
         // 저장 시도는 했으나 예외 발생
         verify(contentService, times(1)).saveContent(dto);
     }
