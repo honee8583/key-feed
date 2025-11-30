@@ -16,7 +16,7 @@ public enum ErrorMessage {
 
     KEYWORD_REQUEST_FAIL("키워드 목록 조회에 실패하였습니다."),
 
-    IDENTITY_SERVICE_REQUEST_FAIL("identity-service와의 통신에 실패하였습니다.");
+    KAFKA_MESSAGE_PROCESSING_ERROR("카프카 메시지 처리 중 에러가 발생하였습니다.");
 
     private final String message;
 }
