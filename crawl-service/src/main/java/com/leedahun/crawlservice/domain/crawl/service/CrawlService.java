@@ -1,9 +1,11 @@
 package com.leedahun.crawlservice.domain.crawl.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.crawlservice.domain.crawl.dto.CrawledContentDto;
 import com.leedahun.crawlservice.domain.crawl.dto.FeedItem;
 import com.leedahun.crawlservice.domain.crawl.entity.Source;
+import com.leedahun.crawlservice.domain.crawl.exception.KafkaMessageSerializationException;
 import com.leedahun.crawlservice.domain.crawl.repository.SourceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -86,8 +88,9 @@ public class CrawlService {
         try {
             String jsonMessage = objectMapper.writeValueAsString(content);
             kafkaTemplate.send(TOPIC_NAME, jsonMessage);
-        } catch (Exception e) {
-            log.error("JSON 변환 또는 전송 실패", e);
+        } catch (JsonProcessingException e) {
+            log.error("Kafka 전송을 위한 JSON 변환 실패. ContentTitle: {}", content.getTitle(), e);
+            throw new KafkaMessageSerializationException(e);
         }
     }
 

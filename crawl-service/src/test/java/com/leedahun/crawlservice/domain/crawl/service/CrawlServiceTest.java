@@ -2,9 +2,11 @@ package com.leedahun.crawlservice.domain.crawl.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leedahun.crawlservice.common.message.ErrorMessage;
 import com.leedahun.crawlservice.domain.crawl.dto.CrawledContentDto;
 import com.leedahun.crawlservice.domain.crawl.dto.FeedItem;
 import com.leedahun.crawlservice.domain.crawl.entity.Source;
+import com.leedahun.crawlservice.domain.crawl.exception.KafkaMessageSerializationException;
 import com.leedahun.crawlservice.domain.crawl.repository.SourceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +23,7 @@ import java.util.List;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -127,6 +130,38 @@ class CrawlServiceTest {
 
         // DB 저장 호출 검증
         verify(sourceRepository, times(1)).save(source);
+    }
+
+    @Test
+    @DisplayName("JSON 변환 중 에러가 발생하면 KafkaMessageSerializationException을 던지고 롤백된다")
+    void processSource_JsonSerializationError() throws JsonProcessingException {
+        // given
+        String newHash = "hash-new";
+        Source source = Source.builder()
+                .id(1L)
+                .url(TEST_URL)
+                .lastItemHash("hash-old")
+                .build();
+
+        List<FeedItem> feedItems = List.of(createFeedItem(newHash, "New Title"));
+
+        given(rssFeedParser.parse(TEST_URL)).willReturn(feedItems);
+
+        // ObjectMapper가 예외를 던지도록 설정
+        given(objectMapper.writeValueAsString(any(CrawledContentDto.class)))
+                .willThrow(new JsonProcessingException("Serialization Error") {});
+
+        // when & then
+        assertThatThrownBy(() -> crawlService.processSource(source))
+                .isInstanceOf(KafkaMessageSerializationException.class) // 커스텀 예외 확인
+                .hasMessageContaining(ErrorMessage.KAFKA_MESSAGE_SERIALIZATION_FAIL.getMessage());
+
+        // verify
+        // 1. 예외 발생으로 인해 Kafka 전송이 호출되지 않아야 함
+        verify(kafkaTemplate, never()).send(any(), any());
+
+        // 2. 예외 발생으로 메서드가 중단되어 DB 저장(상태 업데이트)이 호출되지 않아야 함
+        verify(sourceRepository, never()).save(any(Source.class));
     }
 
     @Test

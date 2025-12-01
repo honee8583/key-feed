@@ -3,17 +3,22 @@ package com.leedahun.crawlservice.domain.crawl.scheduler;
 import com.leedahun.crawlservice.domain.crawl.entity.Source;
 import com.leedahun.crawlservice.domain.crawl.repository.SourceRepository;
 import com.leedahun.crawlservice.domain.crawl.service.CrawlService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -99,5 +104,68 @@ class CrawlSchedulerTest {
 
         // source1에서 에러가 났지만, source2에 대한 호출도 정상적으로 이루어져야 함
         verify(crawlService).processSource(source2);
+    }
+
+    @Test
+    @DisplayName("크롤링 작업이 10분 내에 완료되지 않으면 강제 종료한다")
+    void scheduleCrawling_Timeout() throws InterruptedException {
+        // given
+        Source source = Source.builder().id(1L).url("https://slow-blog.com").build();
+        given(sourceRepository.findSourcesToCrawl(any(LocalDateTime.class)))
+                .willReturn(List.of(source));
+
+        ExecutorService mockExecutor = mock(ExecutorService.class);
+
+        // Executors.newFixedThreadPool 호출 시 Mock Executor 반환
+        try (MockedStatic<Executors> executorsMock = mockStatic(Executors.class)) {
+            executorsMock.when(() -> Executors.newFixedThreadPool(anyInt())).thenReturn(mockExecutor);
+
+            // awaitTermination 호출 시 false 반환 설정
+            when(mockExecutor.awaitTermination(10, TimeUnit.MINUTES)).thenReturn(false);
+
+            // when
+            crawlScheduler.scheduleCrawling();
+
+            // then
+            // 작업 제출 확인
+            verify(mockExecutor).submit(any(Runnable.class));
+
+            // 정상 종료 시도 확인
+            verify(mockExecutor).shutdown();
+
+            // 타임아웃 발생으로 인한 강제 종료 확인
+            verify(mockExecutor).shutdownNow();
+        }
+    }
+
+    @Test
+    @DisplayName("크롤링 작업 대기 중 인터럽트가 발생하면 강제 종료하고 인터럽트 상태를 복구한다")
+    void scheduleCrawling_Interrupted() throws InterruptedException {
+        // given
+        Source source = Source.builder()
+                .id(1L)
+                .url("https://blog.com")
+                .build();
+        given(sourceRepository.findSourcesToCrawl(any(LocalDateTime.class))).willReturn(List.of(source));
+
+        ExecutorService mockExecutor = mock(ExecutorService.class);
+        try (MockedStatic<Executors> executorsMock = mockStatic(Executors.class)) {
+            executorsMock.when(() -> Executors.newFixedThreadPool(anyInt())).thenReturn(mockExecutor);
+
+            // awaitTermination 호출 시 InterruptedException 발생 설정
+            when(mockExecutor.awaitTermination(10, TimeUnit.MINUTES)).thenThrow(new InterruptedException("Interrupted!"));
+
+            // when
+            crawlScheduler.scheduleCrawling();
+
+            // then
+            // 예외 발생 시에도 강제 종료가 호출되어야 함
+            verify(mockExecutor).shutdownNow();
+
+            // 현재 스레드의 인터럽트 상태가 복구되었는지 확인
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+
+            Thread.interrupted();
+        }
     }
 }
