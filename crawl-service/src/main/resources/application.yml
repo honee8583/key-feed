@@ -17,4 +17,4 @@ jasypt:
 app:
   kafka:
     topic:
-      content: content-topic
+      content: crawl.content.collected

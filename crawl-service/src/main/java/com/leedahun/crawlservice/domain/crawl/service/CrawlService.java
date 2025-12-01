@@ -1,8 +1,11 @@
 package com.leedahun.crawlservice.domain.crawl.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.crawlservice.domain.crawl.dto.CrawledContentDto;
 import com.leedahun.crawlservice.domain.crawl.dto.FeedItem;
 import com.leedahun.crawlservice.domain.crawl.entity.Source;
+import com.leedahun.crawlservice.domain.crawl.exception.KafkaMessageSerializationException;
 import com.leedahun.crawlservice.domain.crawl.repository.SourceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +25,8 @@ public class CrawlService {
 
     private final SourceRepository sourceRepository;
     private final RssFeedParser rssFeedParser;
-    private final KafkaTemplate<String, CrawledContentDto> kafkaTemplate;
+    private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Value("${app.kafka.topic.content}")
     private String TOPIC_NAME;
@@ -72,12 +76,22 @@ public class CrawlService {
                     .publishedAt(item.getPubDate())
                     .build();
 
-            kafkaTemplate.send(TOPIC_NAME, contentDto);
+            sendContentMessage(contentDto);
         }
 
         // 4. Source 업데이트 최신화
         String newLatestHash = items.get(0).getGuid();  // 가장 최신글의 hash로 업데이트
         updateSourceStatus(source, newLatestHash);
+    }
+
+    private void sendContentMessage(CrawledContentDto content) {
+        try {
+            String jsonMessage = objectMapper.writeValueAsString(content);
+            kafkaTemplate.send(TOPIC_NAME, jsonMessage);
+        } catch (JsonProcessingException e) {
+            log.error("Kafka 전송을 위한 JSON 변환 실패. ContentTitle: {}", content.getTitle(), e);
+            throw new KafkaMessageSerializationException(e);
+        }
     }
 
     private void updateSourceStatus(Source source, String newHash) {

@@ -1,8 +1,12 @@
 package com.leedahun.crawlservice.domain.crawl.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leedahun.crawlservice.common.message.ErrorMessage;
 import com.leedahun.crawlservice.domain.crawl.dto.CrawledContentDto;
 import com.leedahun.crawlservice.domain.crawl.dto.FeedItem;
 import com.leedahun.crawlservice.domain.crawl.entity.Source;
+import com.leedahun.crawlservice.domain.crawl.exception.KafkaMessageSerializationException;
 import com.leedahun.crawlservice.domain.crawl.repository.SourceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +23,7 @@ import java.util.List;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -37,7 +42,10 @@ class CrawlServiceTest {
     private RssFeedParser rssFeedParser;
 
     @Mock
-    private KafkaTemplate<String, CrawledContentDto> kafkaTemplate;
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     private static final String TEST_URL = "https://test-blog.com/feed";
     private static final String TOPIC_NAME = "content-topic";
@@ -49,10 +57,11 @@ class CrawlServiceTest {
 
     @Test
     @DisplayName("새로운 글이 발견되면 Kafka로 발행하고 Source의 상태를 최신 글 Hash로 업데이트한다")
-    void processSource_NewItemsFound() {
+    void processSource_NewItemsFound() throws JsonProcessingException {
         // given
         String oldHash = "hash-1";
         String newHash = "hash-2";
+        String jsonMessage = "{\"title\":\"New Title\"}";
 
         // DB에 저장된 소스 (마지막으로 hash-1까지 수집함)
         Source source = Source.builder()
@@ -68,13 +77,14 @@ class CrawlServiceTest {
         List<FeedItem> feedItems = List.of(newItem, oldItem);
 
         given(rssFeedParser.parse(TEST_URL)).willReturn(feedItems);
+        given(objectMapper.writeValueAsString(any(CrawledContentDto.class))).willReturn(jsonMessage);
 
         // when
         crawlService.processSource(source);
 
         // then
         // Kafka로 '새 글(hash-2)' 1건이 전송되었는지 검증
-        verify(kafkaTemplate, times(1)).send(eq(TOPIC_NAME), any(CrawledContentDto.class));
+        verify(kafkaTemplate, times(1)).send(eq(TOPIC_NAME), eq(jsonMessage));
 
         // Source 상태 업데이트 검증
         // lastItemHash가 'newHash'로 변경되었는지 확인
@@ -123,6 +133,38 @@ class CrawlServiceTest {
     }
 
     @Test
+    @DisplayName("JSON 변환 중 에러가 발생하면 KafkaMessageSerializationException을 던지고 롤백된다")
+    void processSource_JsonSerializationError() throws JsonProcessingException {
+        // given
+        String newHash = "hash-new";
+        Source source = Source.builder()
+                .id(1L)
+                .url(TEST_URL)
+                .lastItemHash("hash-old")
+                .build();
+
+        List<FeedItem> feedItems = List.of(createFeedItem(newHash, "New Title"));
+
+        given(rssFeedParser.parse(TEST_URL)).willReturn(feedItems);
+
+        // ObjectMapper가 예외를 던지도록 설정
+        given(objectMapper.writeValueAsString(any(CrawledContentDto.class)))
+                .willThrow(new JsonProcessingException("Serialization Error") {});
+
+        // when & then
+        assertThatThrownBy(() -> crawlService.processSource(source))
+                .isInstanceOf(KafkaMessageSerializationException.class) // 커스텀 예외 확인
+                .hasMessageContaining(ErrorMessage.KAFKA_MESSAGE_SERIALIZATION_FAIL.getMessage());
+
+        // verify
+        // 1. 예외 발생으로 인해 Kafka 전송이 호출되지 않아야 함
+        verify(kafkaTemplate, never()).send(any(), any());
+
+        // 2. 예외 발생으로 메서드가 중단되어 DB 저장(상태 업데이트)이 호출되지 않아야 함
+        verify(sourceRepository, never()).save(any(Source.class));
+    }
+
+    @Test
     @DisplayName("RSS 피드가 비어있으면 상태 업데이트(시간)만 수행한다")
     void processSource_EmptyFeed() {
         // given
@@ -145,7 +187,7 @@ class CrawlServiceTest {
 
     @Test
     @DisplayName("최초 수집(Hash가 null)일 경우 모든 글을 수집하고 최신 Hash를 저장한다")
-    void processSource_FirstCrawl() {
+    void processSource_FirstCrawl() throws JsonProcessingException {
         // given
         Source source = Source.builder()
                 .id(1L)
@@ -156,15 +198,17 @@ class CrawlServiceTest {
         FeedItem item1 = createFeedItem("hash-2", "Title 2");
         FeedItem item2 = createFeedItem("hash-1", "Title 1");
         List<FeedItem> feedItems = List.of(item1, item2);
+        String jsonMessage = "{\"title\":\"Any\"}";
 
         given(rssFeedParser.parse(TEST_URL)).willReturn(feedItems);
+        given(objectMapper.writeValueAsString(any(CrawledContentDto.class))).willReturn(jsonMessage);
 
         // when
         crawlService.processSource(source);
 
         // then
         // 2개의 글 모두 Kafka 전송
-        verify(kafkaTemplate, times(2)).send(eq(TOPIC_NAME), any(CrawledContentDto.class));
+        verify(kafkaTemplate, times(2)).send(eq(TOPIC_NAME), eq(jsonMessage));
 
         // Hash는 가장 최신 글(hash-2)로 업데이트
         assertThat(source.getLastItemHash()).isEqualTo("hash-2");
