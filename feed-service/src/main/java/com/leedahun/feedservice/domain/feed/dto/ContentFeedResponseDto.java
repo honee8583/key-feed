@@ -1,6 +1,6 @@
 package com.leedahun.feedservice.domain.feed.dto;
 
-import com.leedahun.feedservice.domain.feed.entity.Content;
+import com.leedahun.feedservice.domain.feed.document.ContentDocument;
 import java.time.LocalDateTime;
 import lombok.*;
 
@@ -11,7 +11,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ContentFeedResponseDto {
-    private Long contentId;
+    private String contentId;
     private String title;
     private String summary;
     private String sourceName;
@@ -22,7 +22,7 @@ public class ContentFeedResponseDto {
     // TODO
     private boolean isBookmarked;
 
-    public static ContentFeedResponseDto from(Content content) {
+    public static ContentFeedResponseDto from(ContentDocument content) {
         return ContentFeedResponseDto.builder()
                 .contentId(content.getId())
                 .title(content.getTitle())

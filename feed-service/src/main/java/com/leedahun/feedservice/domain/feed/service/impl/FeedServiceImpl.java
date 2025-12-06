@@ -7,17 +7,23 @@ import com.leedahun.feedservice.common.error.exception.InternalApiRequestExcepti
 import com.leedahun.feedservice.common.error.exception.InternalServerProcessingException;
 import com.leedahun.feedservice.common.response.CommonPageResponse;
 import com.leedahun.feedservice.domain.client.UserInternalApiClient;
+import com.leedahun.feedservice.domain.feed.document.ContentDocument;
 import com.leedahun.feedservice.domain.feed.dto.ContentFeedResponseDto;
 import com.leedahun.feedservice.domain.feed.dto.KeywordResponseDto;
-import com.leedahun.feedservice.domain.feed.entity.Content;
-import com.leedahun.feedservice.domain.feed.repository.ContentRepository;
+import com.leedahun.feedservice.domain.feed.repository.ContentDocumentRepository;
 import com.leedahun.feedservice.domain.feed.service.FeedService;
 import feign.FeignException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -27,8 +33,12 @@ import org.springframework.util.CollectionUtils;
 @RequiredArgsConstructor
 public class FeedServiceImpl implements FeedService {
 
-    private final ContentRepository contentRepository;
     private final UserInternalApiClient userInternalApiClient;
+    private final ContentDocumentRepository contentDocumentRepository;
+
+    private static final DateTimeFormatter ES_DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+                    .withZone(ZoneOffset.UTC);
 
     @Override
     public List<String> fetchActiveKeywordNames(Long userId) {
@@ -54,7 +64,7 @@ public class FeedServiceImpl implements FeedService {
 
     @Override
     @Transactional(readOnly = true)
-    public CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeed(List<String> keywords, Long lastId, int size) {
+    public CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeed(List<String> keywords, Long lastPublishedAt, int size) {
         if (CollectionUtils.isEmpty(keywords)) {
             return CommonPageResponse.<ContentFeedResponseDto>builder()
                     .content(Collections.emptyList())
@@ -63,21 +73,18 @@ public class FeedServiceImpl implements FeedService {
                     .build();
         }
 
-        String keywordSearchPattern = getKeywordPattern(keywords);
-        List<Content> contents = contentRepository.searchByKeywordsKeyset(
-                keywordSearchPattern,
-                lastId,
-                size + 1
-        );
+        String keywordSearchPattern = buildKeywordSearchPattern(keywords);  // multi_match 쿼리에서 공백은 OR 연산자로 동작
+        Pageable pageable = buildPageable(size);
+        List<ContentDocument> documents = searchDocuments(keywordSearchPattern, lastPublishedAt, pageable);
 
-        boolean hasNext = contents.size() > size;
-        List<Content> resultList = trimResultList(contents, hasNext, size);
-        Long nextCursorId = getNextCursorId(hasNext, resultList);
+        boolean hasNext = documents.size() > size;
+        List<ContentDocument> resultList = trimResultList(documents, hasNext, size);
 
         List<ContentFeedResponseDto> feeds = resultList.stream()
                 .map(ContentFeedResponseDto::from)
                 .collect(Collectors.toList());
 
+        Long nextCursorId = getNextPublishedAt(hasNext, resultList);
         return CommonPageResponse.<ContentFeedResponseDto>builder()
                 .content(feeds)
                 .hasNext(hasNext)
@@ -85,29 +92,42 @@ public class FeedServiceImpl implements FeedService {
                 .build();
     }
 
-    private List<Content> trimResultList(List<Content> contents, boolean hasNext, int size) {
-        List<Content> resultList = contents;
-        if (hasNext) {
-            resultList = contents.subList(0, size);
-        }
-        return resultList;
+    private String buildKeywordSearchPattern(List<String> keywords) {
+        return String.join(" ", keywords);
     }
 
-    private Long getNextCursorId(boolean hasNext, List<Content> contents) {
+    private Pageable buildPageable(int size) {
+        return PageRequest.of(0, size + 1, Sort.by(Sort.Direction.DESC, "publishedAt"));
+    }
+
+    private List<ContentDocument> searchDocuments(String keywordSearchPattern, Long lastId, Pageable pageable) {
+        if (lastId == null) {
+            return contentDocumentRepository.searchByKeywordsFirstPage(keywordSearchPattern, pageable);
+        }
+
+        String lastPublishedAt = convertCursorMillisToEsDate(lastId);
+        return contentDocumentRepository.searchByKeywordsAndCursor(keywordSearchPattern, lastPublishedAt, pageable);
+    }
+
+    private String convertCursorMillisToEsDate(Long cursorMillis) {
+        return ES_DATE_FORMATTER.format(Instant.ofEpochMilli(cursorMillis));
+    }
+
+    private List<ContentDocument> trimResultList(List<ContentDocument> contents, boolean hasNext, int size) {
         if (hasNext) {
-            return contents.get(contents.size() - 1).getId();
+            return contents.subList(0, size);
+        }
+        return contents;
+    }
+
+    private Long getNextPublishedAt(boolean hasNext, List<ContentDocument> contents) {
+        if (hasNext && !contents.isEmpty()) {
+            return contents.get(contents.size() - 1).getPublishedAt()
+                    .atZone(ZoneOffset.UTC)
+                    .toInstant()
+                    .toEpochMilli();
         }
         return null;
-    }
-
-    private String getKeywordPattern(List<String> keywords) {
-        return keywords.stream()
-                .map(this::escapeRegex)
-                .collect(Collectors.joining("|"));
-    }
-
-    private String escapeRegex(String text) {
-        return text.replaceAll("([\\\\.*+?\\[^\\]$(){}=!<>|:\\-])", "\\\\$1");
     }
 
 }
