@@ -64,6 +64,9 @@ dependencies {
     // test
     testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-stub-runner'
     implementation 'org.springframework.cloud:spring-cloud-contract-wiremock:4.3.0'
+
+    // elastic search
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 }
 
 dependencyManagement {

@@ -1,17 +1,31 @@
 package com.leedahun.feedservice.domain.feed.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.leedahun.feedservice.common.error.exception.InternalApiRequestException;
 import com.leedahun.feedservice.common.error.exception.InternalServerProcessingException;
 import com.leedahun.feedservice.common.response.CommonPageResponse;
 import com.leedahun.feedservice.domain.client.UserInternalApiClient;
+import com.leedahun.feedservice.domain.feed.document.ContentDocument;
 import com.leedahun.feedservice.domain.feed.dto.ContentFeedResponseDto;
 import com.leedahun.feedservice.domain.feed.dto.KeywordResponseDto;
-import com.leedahun.feedservice.domain.feed.entity.Content;
-import com.leedahun.feedservice.domain.feed.repository.ContentRepository;
+import com.leedahun.feedservice.domain.feed.repository.ContentDocumentRepository;
 import feign.FeignException;
 import feign.Request;
 import feign.Request.HttpMethod;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,18 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.IntStream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class FeedServiceTest {
@@ -39,10 +42,14 @@ class FeedServiceTest {
     private FeedServiceImpl feedService;
 
     @Mock
-    private ContentRepository contentRepository;
+    private ContentDocumentRepository contentDocumentRepository;
 
     @Mock
     private UserInternalApiClient userInternalApiClient;
+
+    private static final DateTimeFormatter ES_DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+                    .withZone(ZoneOffset.UTC);
 
     @Nested
     @DisplayName("활성 키워드 조회 테스트")
@@ -121,88 +128,98 @@ class FeedServiceTest {
     class GetPersonalizedFeedTest {
 
         @Test
-        @DisplayName("성공: 다음 페이지가 있는 경우")
-        void success_has_next() {
-            // given
-            List<String> keywords = List.of("C++", "Java");
-            Long lastId = 100L;
-            int size = 5;
-
-            // size + 1인 6개의 컨텐츠가 조회된다고 가정 (그래야 hasNext가 true)
-            List<Content> mockContents = IntStream.range(0, 6)
-                    .mapToObj(i -> createMockContent((long) i, "Content " + i))
-                    .toList();
-
-            // 정규식 검증: C++ -> C\+\+|Java 형태로 변환되어야 함
-            String expectedPattern = "C\\+\\+|Java";
-
-            when(contentRepository.searchByKeywordsKeyset(eq(expectedPattern), eq(lastId), eq(size + 1)))
-                    .thenReturn(mockContents);
-
-            // when
-            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeed(keywords, lastId, size);
-
-            // then
-            assertThat(response.getContent()).hasSize(5);
-            assertThat(response.isHasNext()).isTrue();
-            assertThat(response.getNextCursorId()).isEqualTo(4L);
-
-            verify(contentRepository).searchByKeywordsKeyset(eq(expectedPattern), eq(lastId), eq(size + 1));
-        }
-
-        @Test
-        @DisplayName("성공: 다음 페이지가 없는 경우 (hasNext=false)")
-        void success_no_next() {
-            // given
-            List<String> keywords = List.of("Spring");
-            Long lastId = null;
-            int size = 5;
-
-            // size보다 적은 3개의 컨텐츠 조회
-            List<Content> mockContents = IntStream.range(0, 3)
-                    .mapToObj(i -> createMockContent((long) i, "Content " + i))
-                    .toList();
-            when(contentRepository.searchByKeywordsKeyset(anyString(), eq(lastId), eq(size + 1))).thenReturn(mockContents);
-
-            // when
-            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeed(keywords, lastId, size);
-
-            // then
-            assertThat(response.getContent()).hasSize(3);
-            assertThat(response.isHasNext()).isFalse();  // 다음페이지가 존재하지 않아야함
-            assertThat(response.getNextCursorId()).isNull();
-        }
-
-        @Test
-        @DisplayName("성공: 키워드 리스트가 비어있으면 DB 조회 없이 빈 페이지를 반환한다")
-        void success_empty_keywords() {
+        @DisplayName("키워드가 없을 경우 빈 피드를 반환한다")
+        void getPersonalizedFeed_EmptyKeywords() {
             // given
             List<String> keywords = Collections.emptyList();
-            Long lastId = null;
-            int size = 10;
 
             // when
-            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeed(keywords, lastId, size);
+            CommonPageResponse<ContentFeedResponseDto> response =
+                    feedService.getPersonalizedFeed(keywords, null, 10);
 
             // then
             assertThat(response.getContent()).isEmpty();
             assertThat(response.isHasNext()).isFalse();
-            assertThat(response.getNextCursorId()).isNull();
 
-            // 중요: 키워드가 없으면 DB 조회를 아예 하지 않아야 함 (never() 검증)
-            verify(contentRepository, never()).searchByKeywordsKeyset(anyString(), any(), anyInt());
+            verify(contentDocumentRepository, times(0)).searchByKeywordsFirstPage(any(), any());
+            verify(contentDocumentRepository, times(0)).searchByKeywordsAndCursor(any(), any(), any());
         }
-    }
 
-    private Content createMockContent(Long id, String body) {
-        return Content.builder()
-                .id(id)
-                .sourceId(1L)
-                .title(body)
-                .summary(body)
-                .publishedAt(LocalDateTime.now())
-                .originalUrl("http://localhost:8080")
-                .thumbnailUrl("http://localhost:8080")
-                .build();
+        @Test
+        @DisplayName("첫 페이지 조회(lastId가 null) - 다음 페이지가 있는 경우")
+        void getPersonalizedFeed_FirstPage_HasNext() {
+            // given
+            List<String> keywords = List.of("Kafka", "Spring");
+            String searchPattern = "Kafka Spring";
+            int size = 2;
+
+            List<ContentDocument> documents = new ArrayList<>();
+            LocalDateTime now = LocalDateTime.now();
+
+            documents.add(createDocument(1L, "Title 1", now));
+            documents.add(createDocument(2L, "Title 2", now.minusHours(1)));
+            documents.add(createDocument(3L, "Title 3", now.minusHours(2)));
+
+            when(contentDocumentRepository.searchByKeywordsFirstPage(eq(searchPattern), any(Pageable.class))).thenReturn(documents);
+
+            // when
+            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeed(keywords, null, size);
+
+            // then
+            assertThat(response.getContent()).hasSize(2);
+            assertThat(response.getContent().get(0).getTitle()).isEqualTo("Title 1");
+            assertThat(response.getContent().get(1).getTitle()).isEqualTo("Title 2");
+
+            assertThat(response.isHasNext()).isTrue();
+
+            long expectedCursor = documents.get(1).getPublishedAt()
+                    .toInstant(ZoneOffset.UTC)
+                    .toEpochMilli();
+            assertThat(response.getNextCursorId()).isEqualTo(expectedCursor);
+        }
+
+        @Test
+        @DisplayName("두 번째 페이지 조회(lastId 존재) - 다음 페이지가 없는 경우")
+        void getPersonalizedFeed_NextPage_NoNext() {
+            // given
+            List<String> keywords = List.of("Kafka");
+            String searchPattern = "Kafka";
+            int size = 10;
+
+            LocalDateTime cursorTime = LocalDateTime.of(2025, 12, 6, 12, 0, 0);
+            long lastId = cursorTime.atZone(ZoneOffset.UTC).toInstant().toEpochMilli();
+
+            String expectedDateString = ES_DATE_FORMATTER.format(cursorTime.atZone(ZoneOffset.UTC));
+
+            List<ContentDocument> documents = List.of(
+                    createDocument(100L, "Old Article", cursorTime.minusDays(1))
+            );
+
+            when(contentDocumentRepository.searchByKeywordsAndCursor(eq(searchPattern), eq(expectedDateString), any(Pageable.class)))
+                    .thenReturn(documents);
+
+            // when
+            CommonPageResponse<ContentFeedResponseDto> response =
+                    feedService.getPersonalizedFeed(keywords, lastId, size);
+
+            // then
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.isHasNext()).isFalse();
+            assertThat(response.getNextCursorId()).isNull(); // 다음 페이지가 없으므로 null
+
+            verify(contentDocumentRepository, times(1))
+                    .searchByKeywordsAndCursor(eq(searchPattern), eq(expectedDateString), any(Pageable.class));
+        }
+
+        private ContentDocument createDocument(Long id, String title, LocalDateTime publishedAt) {
+            return ContentDocument.builder()
+                    .contentId(id)
+                    .title(title)
+                    .summary("Summary...")
+                    .publishedAt(publishedAt)
+                    .sourceName("Test Source")
+                    .originalUrl("http://test.com/" + id)
+                    .build();
+        }
     }
 }
