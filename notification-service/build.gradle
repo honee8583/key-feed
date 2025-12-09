@@ -37,6 +37,10 @@ dependencies {
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    // security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+
     // database
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'com.mysql:mysql-connector-j'
