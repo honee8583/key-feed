@@ -17,4 +17,10 @@ jasypt:
 app:
   kafka:
     topic:
-      notification: notification
+      notification: match.notification.requested
+    group-id:
+      notification: notification.alert.sender
+
+jdbc:
+  batch:
+    size: 1000
