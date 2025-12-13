@@ -2,6 +2,7 @@ package com.leedahun.matchservice.infra.kafka.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.matchservice.domain.content.service.ContentService;
+import com.leedahun.matchservice.domain.content.service.NotificationTriggerService;
 import com.leedahun.matchservice.infra.kafka.dto.CrawledContentDto;
 import com.leedahun.matchservice.infra.kafka.exception.KafkaMessageProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
 public class ContentEventConsumer {
 
     private final ContentService contentService;
+    private final NotificationTriggerService notificationTriggerService;
     private final ObjectMapper objectMapper;
 
     @KafkaListener(
@@ -34,6 +36,7 @@ public class ContentEventConsumer {
         try {
             CrawledContentDto crawledContent = objectMapper.readValue(message, CrawledContentDto.class);
             contentService.saveContent(crawledContent);
+            notificationTriggerService.matchAndSendNotification(crawledContent);  // 알림 카프카 메시지 전송
         } catch (Exception e) {
             log.error("메시지 처리 중 오류 발생: {}", e.getMessage(), e);
             throw new KafkaMessageProcessingException();
