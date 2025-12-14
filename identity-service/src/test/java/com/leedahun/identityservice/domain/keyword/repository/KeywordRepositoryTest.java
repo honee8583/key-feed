@@ -2,6 +2,7 @@ package com.leedahun.identityservice.domain.keyword.repository;
 
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.keyword.entity.Keyword;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -175,6 +176,52 @@ class KeywordRepositoryTest {
 
         // Then
         assertThat(zeroCount).isEqualTo(0L);
+    }
+
+    @Test
+    @DisplayName("findUserIdsByNames: 여러 키워드에 해당하는 유저 ID 목록을 조회한다 (다중 유저)")
+    void findUserIdsByNames_multipleUsers() {
+        // Given
+        // user1: Java, Spring
+        // user2: Docker
+        Set<String> searchKeywords = Set.of("Java", "Docker");
+
+        // When
+        List<Long> result = keywordRepository.findUserIdsByNames(searchKeywords);
+
+        // Then
+        // Java를 가진 user1과 Docker를 가진 user2가 모두 조회되어야 함
+        assertThat(result).hasSize(2)
+                .containsExactlyInAnyOrder(user1.getId(), user2.getId());
+    }
+
+    @Test
+    @DisplayName("findUserIdsByNames: 한 유저가 여러 키워드에 매칭되어도 ID는 중복 없이 반환된다 (DISTINCT)")
+    void findUserIdsByNames_distinct() {
+        // Given
+        // user1은 Java와 Spring을 모두 가지고 있음
+        Set<String> searchKeywords = Set.of("Java", "Spring");
+
+        // When
+        List<Long> result = keywordRepository.findUserIdsByNames(searchKeywords);
+
+        // Then
+        // user1의 ID가 2번 나오는 것이 아니라 1번만 나와야 함 (DISTINCT 검증)
+        assertThat(result).hasSize(1)
+                .containsExactly(user1.getId());
+    }
+
+    @Test
+    @DisplayName("findUserIdsByNames: 매칭되는 키워드가 없으면 빈 리스트를 반환한다")
+    void findUserIdsByNames_noMatch() {
+        // Given
+        Set<String> searchKeywords = Set.of("Python", "Kotlin"); // DB에 없는 키워드
+
+        // When
+        List<Long> result = keywordRepository.findUserIdsByNames(searchKeywords);
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
 }
