@@ -45,8 +45,6 @@ public class NotificationTriggerServiceImpl implements NotificationTriggerServic
             return;
         }
 
-        System.out.println(keywords);
-
         // 해당 키워드를 구독 중인 유저 조회
         List<Long> userIds = userInternalApiClient.findUserIdsByKeywords(keywords);
         if (userIds.isEmpty()) {
@@ -62,7 +60,6 @@ public class NotificationTriggerServiceImpl implements NotificationTriggerServic
     }
 
     private void sendNotificationKafkaMessage(Long userId, CrawledContentDto content) {
-        log.info("{}", System.currentTimeMillis());
         try {
             NotificationEventDto event = NotificationEventDto.builder()
                     .userId(userId)
