@@ -9,6 +9,10 @@ spring:
     hibernate:
       ddl-auto: validate
 
+jdbc:
+  batch:
+    size: 1000
+
 jasypt:
   encryptor:
     password: ${jasypt_key}
@@ -20,7 +24,3 @@ app:
       notification: match.notification.requested
     group-id:
       notification: notification.alert.sender
-
-jdbc:
-  batch:
-    size: 1000

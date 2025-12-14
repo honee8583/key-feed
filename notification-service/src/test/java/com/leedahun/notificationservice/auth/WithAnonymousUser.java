@@ -1,4 +1,4 @@
-package com.leedahun.feedservice.auth;
+package com.leedahun.notificationservice.auth;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

@@ -1,4 +1,4 @@
-package com.leedahun.feedservice.auth;
+package com.leedahun.notificationservice.auth;
 
 import java.util.List;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

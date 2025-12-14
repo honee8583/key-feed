@@ -89,7 +89,8 @@ jacocoTestReport {
                     '**/config/**',
                     '**/dto/**',
                     '**/entity/**',
-                    '**/constant/**'
+                    '**/constant/**',
+                    '**/*Application*'
             ])
         }))
     }
