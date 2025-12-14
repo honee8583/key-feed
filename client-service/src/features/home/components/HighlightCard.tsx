@@ -12,9 +12,7 @@ export type HighlightCardProps = {
   typeIcon: string
   typeLabel: string
   bookmarkIcon?: string
-  shareIcon?: string
   onBookmarkClick?: () => void
-  onShareClick?: () => void
 }
 
 export function HighlightCard({
@@ -29,11 +27,9 @@ export function HighlightCard({
   typeIcon,
   typeLabel,
   bookmarkIcon,
-  shareIcon,
   onBookmarkClick,
-  onShareClick,
 }: HighlightCardProps) {
-  const showActions = bookmarkIcon || shareIcon
+  const showActions = Boolean(bookmarkIcon)
   const isInteractive = Boolean(linkUrl)
 
   const handleCardClick = () => {
@@ -84,12 +80,7 @@ export function HighlightCard({
           <div className="card-actions">
             {bookmarkIcon ? (
               <button type="button" aria-label="저장" onClick={handleActionClick(onBookmarkClick)}>
-                <img src={bookmarkIcon} alt="" aria-hidden />
-              </button>
-            ) : null}
-            {shareIcon ? (
-              <button type="button" aria-label="공유" onClick={handleActionClick(onShareClick)}>
-                <img src={shareIcon} alt="" aria-hidden />
+                <img className="card-action-icon card-action-icon--bookmark" src={bookmarkIcon} alt="" aria-hidden />
               </button>
             ) : null}
           </div>

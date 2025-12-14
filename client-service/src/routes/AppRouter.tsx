@@ -1,8 +1,9 @@
-import { Suspense, type ReactNode } from 'react'
-import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
+import { Suspense, useEffect, type ReactNode } from 'react'
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { LoginPage, SignupPage, useAuth } from '../features/auth'
 import { MainPage } from '../features/home'
 import { ProfilePage, SourceManagementPage } from '../features/profile'
+import { NotificationPage } from '../features/notifications'
 import { BottomNavigation } from '../components/BottomNavigation'
 
 export function AppRouter() {
@@ -10,6 +11,7 @@ export function AppRouter() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Suspense fallback={<div className="app-loading">화면을 불러오는 중...</div>}>
         <Routes>
           <Route path="/" element={<Navigate to={isAuthenticated ? '/home' : '/login'} replace />} />
@@ -29,6 +31,16 @@ export function AppRouter() {
               <ProtectedRoute>
                 <AppLayout>
                   <ProfilePage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <NotificationPage />
                 </AppLayout>
               </ProtectedRoute>
             }
@@ -83,4 +95,14 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />
   }
   return <>{children}</>
+}
+
+function ScrollToTop() {
+  const location = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [location.pathname])
+
+  return null
 }
