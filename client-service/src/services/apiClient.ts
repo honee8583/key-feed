@@ -37,16 +37,7 @@ class ApiClient {
       throw new Error(await this.buildErrorMessage(response))
     }
 
-    if (response.status === 204) {
-      return undefined as T
-    }
-
-    const contentType = response.headers.get('content-type') ?? ''
-    if (contentType.includes('application/json')) {
-      return (await response.json()) as T
-    }
-
-    return (await response.text()) as T
+    return parseResponseBody<T>(response)
   }
 
   private prepareBody(body: RequestBody, headers: Headers) {
@@ -60,8 +51,17 @@ class ApiClient {
 
   private async buildErrorMessage(response: Response) {
     try {
-      const data = await response.json()
-      if (data?.message) return data.message as string
+      const text = await response.text()
+      if (!text) {
+        return `요청에 실패했습니다. (status: ${response.status})`
+      }
+      const data = parseJsonWithLargeIntSupport(text)
+      if (data && typeof data === 'object' && 'message' in data) {
+        const message = (data as { message?: unknown }).message
+        if (typeof message === 'string' && message) {
+          return message
+        }
+      }
     } catch (error) {
       console.warn('Failed to parse error response', error)
     }
@@ -172,3 +172,33 @@ const resolvedBaseUrl =
   (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim()) || 'http://localhost:8000/api'
 
 export const apiClient = new ApiClient(resolvedBaseUrl)
+
+async function parseResponseBody<T>(response: Response): Promise<T> {
+  if (response.status === 204) {
+    return undefined as T
+  }
+
+  const text = await response.text()
+  if (!text) {
+    return undefined as T
+  }
+
+  const contentType = response.headers.get('content-type') ?? ''
+  if (contentType.includes('application/json')) {
+    return parseJsonWithLargeIntSupport(text) as T
+  }
+
+  return text as T
+}
+
+export function parseJsonWithLargeIntSupport(text: string) {
+  const sanitized = text.replace(/(:\s*)(-?\d{16,})(\s*[,\}\]])/g, (_match, prefix, digits, suffix) => {
+    return `${prefix}"${digits}"${suffix}`
+  })
+  try {
+    return JSON.parse(sanitized)
+  } catch (error) {
+    console.warn('Failed to parse JSON with large integer support; falling back to default parser.', error)
+    return JSON.parse(text)
+  }
+}

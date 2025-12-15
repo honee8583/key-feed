@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 
 import com.leedahun.matchservice.domain.content.document.ContentDocument;
 import com.leedahun.matchservice.domain.content.repository.ContentDocumentRepository;
+import com.leedahun.matchservice.domain.content.service.impl.ContentServiceImpl;
 import com.leedahun.matchservice.infra.kafka.dto.CrawledContentDto;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ContentServiceTest {
 
     @InjectMocks
-    private ContentService contentService;
+    private ContentServiceImpl contentService;
 
     @Mock
     private ContentDocumentRepository contentDocumentRepository;

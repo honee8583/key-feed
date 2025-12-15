@@ -1,29 +1,42 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import feedIcon from '../assets/navigation/home_btn.png'
+import searchIcon from '../assets/navigation/search_btn.png'
+import bookmarkIcon from '../assets/navigation/bookmark_btn.png'
+import profileIcon from '../assets/navigation/profile_btn.png'
+import notificationIcon from '../assets/navigation/notification_btn.png'
 import './BottomNavigation.css'
 
-const NAV_ITEMS = [
+type NavItem = {
+  label: string
+  path?: string
+  icon: string
+  badge?: number
+}
+
+const NAV_ITEMS: NavItem[] = [
   {
     label: '피드',
     path: '/home',
-    icon: 'http://localhost:3845/assets/868bbbcae1aa6c1c740f92b2ff6fa54f75af995e.svg',
+    icon: feedIcon,
   },
   {
     label: '탐색',
-    icon: 'http://localhost:3845/assets/a935ae8594333cb5e22064fcf0ed7e7909b94395.svg',
+    icon: searchIcon,
   },
   {
-    label: '저장됨',
-    icon: 'http://localhost:3845/assets/3008441642aaa3a201a49a748114abcfe802ca2c.svg',
+    label: '북마크',
+    icon: bookmarkIcon,
   },
   {
     label: '알림',
-    icon: 'http://localhost:3845/assets/4526c92732d3e606769f4cbb7cb27589bc3e4d72.svg',
+    path: '/notifications',
+    icon: notificationIcon,
     badge: 3,
   },
   {
     label: '프로필',
     path: '/profile',
-    icon: 'http://localhost:3845/assets/1ff36808c7b560838b8db4a90b16bb121b10fcd2.svg',
+    icon: profileIcon,
   },
 ]
 
@@ -42,9 +55,17 @@ export function BottomNavigation() {
         }
 
         return (
-          <button key={label} type="button" className={isActive ? 'is-active' : undefined} onClick={handleClick}>
-            <img className="nav-icon" src={icon} alt="" aria-hidden loading="lazy" />
-            <span>{label}</span>
+          <button
+            key={label}
+            type="button"
+            className={isActive ? 'is-active' : undefined}
+            onClick={handleClick}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            <span className="nav-icon-ring" aria-hidden>
+              <img className="nav-icon" src={icon} alt="" loading="lazy" />
+            </span>
+            <span className="nav-label">{label}</span>
             {badge ? <span className="nav-badge">{badge}</span> : null}
           </button>
         )

@@ -8,6 +8,7 @@ import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.entity.Keyword;
 import com.leedahun.identityservice.domain.keyword.exception.KeywordLimitExceededException;
 import com.leedahun.identityservice.domain.keyword.repository.KeywordRepository;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -28,7 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class KeywordServiceImplTest {
+class KeywordServiceTest {
 
     @Mock
     private KeywordRepository keywordRepository;
@@ -290,4 +291,77 @@ class KeywordServiceImplTest {
             verify(keywordRepository, never()).delete(any());
         }
     }
+
+    @Nested
+    @DisplayName("키워드로 유저 ID 목록 조회")
+    class FindUserIdsByKeywords {
+
+        @Test
+        @DisplayName("성공: 키워드 목록에 매칭되는 유저 ID 리스트 반환")
+        void findUserIdsByKeywords_success() {
+            // Given
+            Set<String> keywords = Set.of("Java", "Spring", "Kafka");
+            List<Long> expectedUserIds = List.of(10L, 20L, 30L);
+
+            when(keywordRepository.findUserIdsByNames(keywords)).thenReturn(expectedUserIds);
+
+            // When
+            List<Long> result = keywordService.findUserIdsByKeywords(keywords);
+
+            // Then
+            assertThat(result).hasSize(3);
+            assertThat(result).containsExactly(10L, 20L, 30L); // 순서와 값 정확히 일치 확인
+
+            // 리포지토리 호출 검증
+            verify(keywordRepository, times(1)).findUserIdsByNames(keywords);
+        }
+
+        @Test
+        @DisplayName("성공: 매칭되는 유저가 없으면 빈 리스트 반환")
+        void findUserIdsByKeywords_success_noMatch() {
+            // Given
+            Set<String> keywords = Set.of("NonExisting");
+            when(keywordRepository.findUserIdsByNames(keywords)).thenReturn(List.of());
+
+            // When
+            List<Long> result = keywordService.findUserIdsByKeywords(keywords);
+
+            // Then
+            assertThat(result).isEmpty();
+            verify(keywordRepository, times(1)).findUserIdsByNames(keywords);
+        }
+
+        @Test
+        @DisplayName("성공: 입력된 키워드 Set이 비어있으면 빈 리스트 반환 (DB 조회 X)")
+        void findUserIdsByKeywords_emptyInput() {
+            // Given
+            Set<String> emptyKeywords = Set.of();
+
+            // When
+            List<Long> result = keywordService.findUserIdsByKeywords(emptyKeywords);
+
+            // Then
+            assertThat(result).isEmpty();
+
+            // DB 조회가 발생하지 않아야 함
+            verify(keywordRepository, never()).findUserIdsByNames(any());
+        }
+
+        @Test
+        @DisplayName("성공: 입력이 null이면 빈 리스트 반환 (DB 조회 X)")
+        void findUserIdsByKeywords_nullInput() {
+            // Given
+            Set<String> nullKeywords = null;
+
+            // When
+            List<Long> result = keywordService.findUserIdsByKeywords(nullKeywords);
+
+            // Then
+            assertThat(result).isEmpty();
+
+            // DB 조회가 발생하지 않아야 함
+            verify(keywordRepository, never()).findUserIdsByNames(any());
+        }
+    }
+
 }

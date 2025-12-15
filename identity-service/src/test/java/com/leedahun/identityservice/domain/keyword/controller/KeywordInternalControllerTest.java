@@ -1,19 +1,23 @@
 package com.leedahun.identityservice.domain.keyword.controller;
 
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.identityservice.domain.auth.config.SecurityConfig;
 import com.leedahun.identityservice.domain.auth.util.test.WithAnonymousUser;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.service.KeywordService;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +39,9 @@ class KeywordInternalControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockitoBean
     private KeywordService keywordService;
@@ -84,6 +91,46 @@ class KeywordInternalControllerTest {
         // when & then
         mockMvc.perform(get("/internal/users/{userId}/keywords", userId)
                         .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(0))
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    @DisplayName("[POST /internal/keywords/match-users] 키워드 목록으로 매칭되는 유저 ID 조회 성공 시 200 OK와 ID 리스트를 반환한다")
+    void findUserIdsByKeywords_Success() throws Exception {
+        // given
+        Set<String> keywords = Set.of("Java", "Spring", "Kafka");
+        List<Long> matchedUserIds = List.of(10L, 20L, 30L);
+
+        when(keywordService.findUserIdsByKeywords(anySet())).thenReturn(matchedUserIds);
+
+        // when & then
+        mockMvc.perform(post("/internal/keywords/match-users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(keywords)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(3))
+                .andExpect(jsonPath("$[0]").value(10L))
+                .andExpect(jsonPath("$[1]").value(20L))
+                .andExpect(jsonPath("$[2]").value(30L));
+
+        verify(keywordService).findUserIdsByKeywords(anySet());
+    }
+
+    @Test
+    @DisplayName("[POST /internal/keywords/match-users] 매칭되는 유저가 없는 경우 200 OK와 빈 리스트를 반환한다")
+    void findUserIdsByKeywords_NoMatch() throws Exception {
+        // given
+        Set<String> keywords = Set.of("NonExistentKeyword");
+
+        when(keywordService.findUserIdsByKeywords(anySet())).thenReturn(Collections.emptyList());
+
+        // when & then
+        mockMvc.perform(post("/internal/keywords/match-users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(keywords)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(0))

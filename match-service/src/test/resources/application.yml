@@ -22,3 +22,4 @@ app:
   kafka:
     topic:
       content: content-topic
+      notification: match.notification.requested

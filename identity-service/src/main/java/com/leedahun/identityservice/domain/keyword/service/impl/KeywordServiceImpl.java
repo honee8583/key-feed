@@ -9,6 +9,7 @@ import com.leedahun.identityservice.domain.keyword.entity.Keyword;
 import com.leedahun.identityservice.domain.keyword.exception.KeywordLimitExceededException;
 import com.leedahun.identityservice.domain.keyword.repository.KeywordRepository;
 import com.leedahun.identityservice.domain.keyword.service.KeywordService;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -74,6 +75,16 @@ public class KeywordServiceImpl implements KeywordService {
     public void deleteKeyword(Long userId, Long keywordId) {
         Keyword keyword = findKeywordByIdAndUserId(keywordId, userId);
         keywordRepository.delete(keyword);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> findUserIdsByKeywords(Set<String> keywords) {
+        if (keywords == null || keywords.isEmpty()) {
+            return List.of();
+        }
+
+        return keywordRepository.findUserIdsByNames(keywords);
     }
 
     private User findUserById(Long userId) {

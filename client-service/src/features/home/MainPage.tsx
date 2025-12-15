@@ -5,23 +5,21 @@ import { HighlightCard, type HighlightCardProps } from './components/HighlightCa
 import { feedApi, type FeedContent } from '../../services/feedApi'
 import type { CreatedSource } from '../../services/sourceApi'
 import { AddSourceSheet } from './components/AddSourceSheet'
+import bookmarkIcon from '../../assets/home/bookmark_btn.png'
+import addSourceIcon from '../../assets/home/source_add_btn.png'
 
 const keywordCategories = ['전체', 'Next.js', 'AI', '클린코드', 'TypeScript', 'Supabase', 'React']
 const contentTabs = ['전체', '블로그', '뉴스', '영상', '커뮤니티']
 
 const figureAssets = {
-  activity: 'http://localhost:3845/assets/3b89175f76bfa56aa096e96c1e1235951a7618c4.svg',
-  notification: 'http://localhost:3845/assets/660268a86e9d7f6b25abf7e75c638afff9a70c1a.svg',
-  bookmark: 'http://localhost:3845/assets/c4a9ab75aefebfb4d32e0ebf53a37170cbc23357.svg',
-  share: 'http://localhost:3845/assets/e8751628da9149053f4e3ee861dfb9c4aeedfdab.svg',
+  bookmark: bookmarkIcon,
 }
 
 type HighlightArticle = HighlightCardProps & { id: string }
 type AddSourceResult = { name: string; url: string; type: string; created: CreatedSource }
 
-const highlightCardActionIcons: Pick<HighlightCardProps, 'bookmarkIcon' | 'shareIcon'> = {
+const highlightCardActionIcons: Pick<HighlightCardProps, 'bookmarkIcon'> = {
   bookmarkIcon: figureAssets.bookmark,
-  shareIcon: figureAssets.share,
 }
 
 const FEED_PAGE_SIZE = 10
@@ -159,15 +157,6 @@ export function MainPage() {
             <h1>Discover</h1>
             <p>맞춤 콘텐츠를 탐색하세요</p>
           </div>
-          <div className="discover-hero__actions">
-            <button type="button" aria-label="피드 상태">
-              <img src={figureAssets.activity} alt="" aria-hidden />
-            </button>
-            <button type="button" aria-label="새로운 알림">
-              <img src={figureAssets.notification} alt="" aria-hidden />
-              <span className="notification-dot" />
-            </button>
-          </div>
         </header>
 
         <section className="keyword-pills" aria-label="활성 키워드">
@@ -234,7 +223,7 @@ export function MainPage() {
         aria-expanded={isAddSourceOpen}
         onClick={handleOpenAddSource}
       >
-        <img src="http://localhost:3845/assets/80de154a3b8eda19a183bf03406196a698c67620.svg" alt="" aria-hidden />
+        <img src={addSourceIcon} alt="" aria-hidden />
       </button>
 
       <AddSourceSheet isOpen={isAddSourceOpen} onClose={handleCloseAddSource} onSubmit={handleAddSourceSubmit} />

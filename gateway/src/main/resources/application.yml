@@ -32,6 +32,12 @@ spring:
                 - Path=/api/sources/**
               filters:
                 - JwtAuthenticationFilter
+            - id: notification-service
+              uri: lb://notification-service
+              predicates:
+                - Path=/api/notifications/**
+              filters:
+                - JwtAuthenticationFilter
           globalcors:
             cors-configurations:
               '[/**]':

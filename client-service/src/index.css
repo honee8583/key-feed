@@ -4,8 +4,8 @@
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #101828;
-  background-color: #f1f5f9;
+  color: #f8fafc;
+  background-color: #050505;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -21,11 +21,13 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f7f8fb;
+  background: #050505;
+  color: #f8fafc;
 }
 
 #root {
   min-height: 100vh;
+  background: #050505;
 }
 
 button,

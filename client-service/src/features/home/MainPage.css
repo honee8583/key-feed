@@ -60,43 +60,6 @@
   color: rgba(255, 255, 255, 0.65);
 }
 
-.discover-hero__actions {
-  display: flex;
-  gap: 12px;
-  position: relative;
-  z-index: 1;
-}
-
-.discover-hero__actions button {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
-}
-
-.discover-hero__actions img {
-  width: 22px;
-  height: 22px;
-  filter: invert(1);
-}
-
-.notification-dot {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-}
-
 .keyword-pills {
   display: flex;
   gap: 12px;
@@ -280,10 +243,14 @@
   justify-content: center;
 }
 
-.card-actions img {
+.card-action-icon {
   width: 18px;
   height: 18px;
   filter: invert(1);
+}
+
+.card-action-icon--bookmark {
+  filter: none;
 }
 
 .discover-footer {
@@ -336,8 +303,8 @@
 
 .add-source-fab {
   position: fixed;
-  right: 24px;
-  bottom: 120px;
+  right: max(16px, calc((100vw - 440px) / 2));
+  bottom: calc(24px + 120px);
   width: 56px;
   height: 56px;
   border: none;
@@ -373,6 +340,6 @@
 
 @media (min-width: 720px) {
   .add-source-fab {
-    bottom: 100px;
+    bottom: calc(40px + 120px);
   }
 }

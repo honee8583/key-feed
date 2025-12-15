@@ -3,6 +3,7 @@ package com.leedahun.matchservice.infra.kafka.consumer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.matchservice.domain.content.service.ContentService;
+import com.leedahun.matchservice.domain.content.service.NotificationTriggerService;
 import com.leedahun.matchservice.infra.kafka.dto.CrawledContentDto;
 import com.leedahun.matchservice.infra.kafka.exception.KafkaMessageProcessingException;
 import org.junit.jupiter.api.DisplayName;
@@ -27,6 +28,9 @@ class ContentEventConsumerTest {
     private ContentService contentService;
 
     @Mock
+    private NotificationTriggerService notificationTriggerService;
+
+    @Mock
     private ObjectMapper objectMapper;
 
     @Test
@@ -48,6 +52,8 @@ class ContentEventConsumerTest {
 
         // 변환된 DTO로 저장 서비스가 호출되었는지 검증
         verify(contentService, times(1)).saveContent(dto);
+
+        verify(notificationTriggerService, times(1)).matchAndSendNotification(dto);
     }
 
     @Test

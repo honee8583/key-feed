@@ -31,6 +31,7 @@ ext {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
     // openfeign
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
@@ -55,13 +56,17 @@ dependencies {
     implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
 
     // aspectj
-    implementation 'org.springframework.boot:spring-boot-starter-aop'\
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
 
     // kafka
     implementation 'org.springframework.kafka:spring-kafka'
 
     // elastic search
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+
+    implementation 'cn.hutool:hutool-core:5.8.25'
 }
 
 dependencyManagement {
