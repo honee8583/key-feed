@@ -42,3 +42,4 @@ jasypt:
 app:
   limits:
     keyword-max-count: 20
+    folder-max-count: 7

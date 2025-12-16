@@ -1,0 +1,240 @@
+package com.leedahun.identityservice.domain.bookmark.service.impl;
+
+import com.leedahun.identityservice.common.error.exception.EntityAlreadyExistsException;
+import com.leedahun.identityservice.common.error.exception.EntityNotFoundException;
+import com.leedahun.identityservice.common.response.CursorPage;
+import com.leedahun.identityservice.common.util.CursorPagination;
+import com.leedahun.identityservice.domain.auth.entity.User;
+import com.leedahun.identityservice.domain.auth.repository.UserRepository;
+import com.leedahun.identityservice.domain.bookmark.dto.BookmarkFolderRequestDto;
+import com.leedahun.identityservice.domain.bookmark.dto.BookmarkFolderResponseDto;
+import com.leedahun.identityservice.domain.bookmark.dto.BookmarkRequestDto;
+import com.leedahun.identityservice.domain.bookmark.dto.BookmarkResponseDto;
+import com.leedahun.identityservice.domain.bookmark.entity.Bookmark;
+import com.leedahun.identityservice.domain.bookmark.entity.BookmarkFolder;
+import com.leedahun.identityservice.domain.bookmark.exception.FolderAccessDeniedException;
+import com.leedahun.identityservice.domain.bookmark.exception.FolderLimitExceededException;
+import com.leedahun.identityservice.domain.bookmark.repository.BookmarkFolderRepository;
+import com.leedahun.identityservice.domain.bookmark.repository.BookmarkRepository;
+import com.leedahun.identityservice.domain.bookmark.service.BookmarkService;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class BookmarkServiceImpl implements BookmarkService {
+
+    private final BookmarkRepository bookmarkRepository;
+    private final BookmarkFolderRepository folderRepository;
+    private final UserRepository userRepository;
+
+    @Value("${app.limits.folder-max-count}")
+    private int folderMaxCount;
+
+    /**
+     * 폴더 생성
+     */
+    @Override
+    @Transactional
+    public Long createFolder(Long userId, BookmarkFolderRequestDto request) {
+        User user = getUser(userId);
+
+        validateFolderNameNotDuplicated(userId, request.getName());
+        validateFolderCountLimit(userId);
+
+        BookmarkFolder folder = BookmarkFolder.builder()
+                .user(user)
+                .name(request.getName())
+                .build();
+        folderRepository.save(folder);
+
+        return folder.getId();
+    }
+
+    /**
+     * 북마크 추가
+     */
+    @Override
+    @Transactional
+    public Long addBookmark(Long userId, BookmarkRequestDto request) {
+        User user = getUser(userId);
+
+        validateBookmarkNotDuplicated(userId, request.getContentId());
+
+        BookmarkFolder folder = resolveFolder(request.getFolderId());
+
+        Bookmark bookmark = Bookmark.builder()
+                .user(user)
+                .contentId(request.getContentId())
+                .bookmarkFolder(folder)
+                .build();
+        bookmarkRepository.save(bookmark);
+
+        return bookmark.getId();
+    }
+
+    /**
+     * 북마크 목록 조회
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<BookmarkResponseDto> getBookmarks(Long userId,
+                                                        Long lastId,
+                                                        Long folderId,
+                                                        int size) {
+        Pageable pageable = PageRequest.of(0, size + 1);  // size + 1 만큼 조회 (다음 페이지 존재 여부 판단용)
+        List<Bookmark> bookmarks = findBookmarksByFolderCondition(userId, lastId, folderId, pageable);
+        List<BookmarkResponseDto> dtos = bookmarks.stream()
+                .map(BookmarkResponseDto::from)
+                .toList();
+        return CursorPagination.paginate(dtos, size, BookmarkResponseDto::getBookmarkId);
+    }
+
+    /**
+     * 북마크 삭제
+     */
+    @Override
+    @Transactional
+    public void deleteBookmark(Long userId, Long bookmarkId) {
+        Bookmark bookmark = getBookmarkOwnedByUser(userId, bookmarkId);
+        bookmarkRepository.delete(bookmark);
+    }
+
+    /**
+     * 북마크를 폴더에서 제거
+     */
+    @Override
+    @Transactional
+    public void removeBookmarkFromFolder(Long userId, Long bookmarkId) {
+        Bookmark bookmark = getBookmarkOwnedByUser(userId, bookmarkId);
+        bookmark.removeFolder();
+    }
+
+    /**
+     * 북마크의 폴더 이동
+     */
+    @Override
+    @Transactional
+    public void moveBookmark(Long userId, Long bookmarkId, Long folderId) {
+        Bookmark bookmark = getBookmarkOwnedByUser(userId, bookmarkId);
+        BookmarkFolder folder = resolveFolderForMove(userId, folderId);
+        bookmark.changeFolder(folder);
+    }
+
+    @Override
+    public List<BookmarkFolderResponseDto> getFolders(Long userId) {
+        return folderRepository.findAllByUserIdOrderById(userId).stream()
+                .map(BookmarkFolderResponseDto::from)
+                .toList();
+    }
+
+    // 북마크 폴더 이름이 중복되는지 검증
+    private void validateFolderNameNotDuplicated(Long userId, String folderName) {
+        if (folderRepository.existsByUserIdAndName(userId, folderName)) {
+            throw new EntityAlreadyExistsException("BookmarkFolder", "name: " + folderName);
+        }
+    }
+
+    // 북마크 폴더 최대 개수를 넘지 않는지 검증
+    private void validateFolderCountLimit(Long userId) {
+        if (folderRepository.countByUserId(userId) >= folderMaxCount) {
+            throw new FolderLimitExceededException();
+        }
+    }
+
+    // 북마크가 이미 존재하는지 검증
+    private void validateBookmarkNotDuplicated(Long userId, Long contentId) {
+        if (bookmarkRepository.existsByUserIdAndContentId(userId, contentId)) {
+            throw new EntityAlreadyExistsException("Bookmark", contentId);
+        }
+    }
+
+    // 폴더 조회
+    private BookmarkFolder resolveFolder(Long folderId) {
+        if (folderId == null) {
+            return null;
+        }
+        return getBookmarkFolder(folderId);
+    }
+
+    // 이동할 폴더 조회 및 검증
+    private BookmarkFolder resolveFolderForMove(Long userId, Long folderId) {
+        if (folderId == null) {
+            return null;
+        }
+
+        BookmarkFolder folder = getBookmarkFolder(folderId);
+        validateFolderOwner(userId, folder);
+        return folder;
+    }
+
+    // 북마크 폴더의 주인인지 확인
+    private void validateFolderOwner(Long userId, BookmarkFolder folder) {
+        if (!folder.getUser().getId().equals(userId)) {
+            throw new FolderAccessDeniedException();
+        }
+    }
+
+    private List<Bookmark> findBookmarksByFolderCondition(Long userId,
+                                                          Long lastId,
+                                                          Long folderId,
+                                                          Pageable pageable) {
+        if (folderId == null) {
+            return findAllBookmarks(userId, lastId, pageable);
+        }
+        if (folderId == 0) {
+            return findUncategorizedBookmarks(userId, lastId, pageable);
+        }
+        return findBookmarksInFolder(userId, lastId, folderId, pageable);
+    }
+
+    // 모든 북마크 조회 (커서 페이징)
+    private List<Bookmark> findAllBookmarks(Long userId, Long lastId, Pageable pageable) {
+        if (lastId == null) {
+            return bookmarkRepository.findAllByUserIdOrderByIdDesc(userId, pageable);
+        }
+        return bookmarkRepository.findAllByUserIdAndIdLessThanOrderByIdDesc(
+                userId, lastId, pageable
+        );
+    }
+
+    // 폴더가 없는 북마크 조회
+    private List<Bookmark> findUncategorizedBookmarks(Long userId, Long lastId, Pageable pageable) {
+        if (lastId == null) {
+            return bookmarkRepository.findAllByUserIdAndBookmarkFolderIsNullOrderByIdDesc(userId, pageable);
+        }
+        return bookmarkRepository
+                .findAllByUserIdAndBookmarkFolderIsNullAndIdLessThanOrderByIdDesc(userId, lastId, pageable);
+    }
+
+    // 특정 폴더의 북마크 목록 조회
+    private List<Bookmark> findBookmarksInFolder(Long userId,
+                                                 Long lastId,
+                                                 Long folderId,
+                                                 Pageable pageable) {
+        if (lastId == null) {
+            return bookmarkRepository.findAllByUserIdAndBookmarkFolderIdOrderByIdDesc(userId, folderId, pageable);
+        }
+        return bookmarkRepository.findAllByUserIdAndBookmarkFolderIdAndIdLessThanOrderByIdDesc(userId, folderId, lastId, pageable);
+    }
+
+    private Bookmark getBookmarkOwnedByUser(Long userId, Long bookmarkId) {
+        return bookmarkRepository.findByIdAndUserId(bookmarkId, userId)
+                .orElseThrow(() -> new EntityNotFoundException("Bookmark", bookmarkId));
+    }
+
+    private BookmarkFolder getBookmarkFolder(Long folderId) {
+        return folderRepository.findById(folderId).orElseThrow(() -> new EntityNotFoundException("BookmarkFolder", folderId));
+    }
+
+    private User getUser(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User", userId));
+    }
+
+}

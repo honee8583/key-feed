@@ -28,7 +28,9 @@ public enum ErrorMessage {
 
     KEYWORD_LIMIT_EXCEEDED("키워드 등록 한도를 넘었습니다."),
 
-    INVALID_RSS_URL("해당 URL에 접근할 수 없거나 유효한 웹사이트가 아닙니다.");
+    INVALID_RSS_URL("해당 URL에 접근할 수 없거나 유효한 웹사이트가 아닙니다."),
+
+    BOOKMARK_FOLDER_LIMIT_EXCEEDED("북마크 폴더 생성 한도를 넘었습니다.");
 
     private final String message;
 }
