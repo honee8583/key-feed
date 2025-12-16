@@ -31,6 +31,6 @@ public final class CursorPagination {
             nextCursorId = idExtractor.apply(lastItem);
         }
 
-        return new CursorPage<>(trimmedItems, hasNext, nextCursorId);
+        return new CursorPage<>(trimmedItems, nextCursorId, hasNext);
     }
 }
