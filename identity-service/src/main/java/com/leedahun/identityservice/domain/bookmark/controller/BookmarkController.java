@@ -4,11 +4,13 @@ import com.leedahun.identityservice.common.message.SuccessMessage;
 import com.leedahun.identityservice.common.response.CursorPage;
 import com.leedahun.identityservice.common.response.HttpResponse;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkFolderRequestDto;
+import com.leedahun.identityservice.domain.bookmark.dto.BookmarkFolderResponseDto;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkMoveRequestDto;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkRequestDto;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkResponseDto;
 import com.leedahun.identityservice.domain.bookmark.service.BookmarkService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,6 +63,16 @@ public class BookmarkController {
         bookmarkService.moveBookmark(userId, bookmarkId, request.getFolderId());
         return ResponseEntity.ok()
                 .body(new HttpResponse(HttpStatus.OK, SuccessMessage.UPDATE_SUCCESS.getMessage(), null));
+    }
+
+    /**
+     * 북마크 폴더 목록 조회
+     */
+    @GetMapping("/folders")
+    public ResponseEntity<?> getFolders(@AuthenticationPrincipal Long userId) {
+        List<BookmarkFolderResponseDto> folders = bookmarkService.getFolders(userId);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.READ_SUCCESS.getMessage(), folders));
     }
 
     /**

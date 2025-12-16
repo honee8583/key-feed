@@ -2,8 +2,10 @@ package com.leedahun.identityservice.domain.bookmark.service;
 
 import com.leedahun.identityservice.common.response.CursorPage;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkFolderRequestDto;
+import com.leedahun.identityservice.domain.bookmark.dto.BookmarkFolderResponseDto;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkRequestDto;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkResponseDto;
+import java.util.List;
 
 public interface BookmarkService {
 
@@ -18,5 +20,7 @@ public interface BookmarkService {
     void removeBookmarkFromFolder(Long userId, Long bookmarkId);
 
     void moveBookmark(Long userId, Long bookmarkId, Long folderId);
+
+    List<BookmarkFolderResponseDto> getFolders(Long userId);
 
 }

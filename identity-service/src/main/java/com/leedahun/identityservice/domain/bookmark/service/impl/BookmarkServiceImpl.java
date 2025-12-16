@@ -7,6 +7,7 @@ import com.leedahun.identityservice.common.util.CursorPagination;
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkFolderRequestDto;
+import com.leedahun.identityservice.domain.bookmark.dto.BookmarkFolderResponseDto;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkRequestDto;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkResponseDto;
 import com.leedahun.identityservice.domain.bookmark.entity.Bookmark;
@@ -124,6 +125,13 @@ public class BookmarkServiceImpl implements BookmarkService {
         Bookmark bookmark = getBookmarkOwnedByUser(userId, bookmarkId);
         BookmarkFolder folder = resolveFolderForMove(userId, folderId);
         bookmark.changeFolder(folder);
+    }
+
+    @Override
+    public List<BookmarkFolderResponseDto> getFolders(Long userId) {
+        return folderRepository.findAllByUserIdOrderById(userId).stream()
+                .map(BookmarkFolderResponseDto::from)
+                .toList();
     }
 
     // 북마크 폴더 이름이 중복되는지 검증
