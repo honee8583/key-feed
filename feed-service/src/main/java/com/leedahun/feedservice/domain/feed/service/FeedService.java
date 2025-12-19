@@ -10,4 +10,6 @@ public interface FeedService {
 
     CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeed(List<String> keywords, Long lastId, int size);
 
+    List<ContentFeedResponseDto> getContentsByIds(List<String> contentIds);
+
 }
