@@ -48,9 +48,9 @@ class BookmarkRepositoryTest {
         @DisplayName("첫 페이지 조회: ID 내림차순으로 정렬되어 반환된다")
         void findAllByUserIdOrderByIdDesc() {
             // given
-            createBookmark(101L, null); // id=1
-            createBookmark(102L, folder); // id=2
-            createBookmark(103L, null); // id=3
+            createBookmark("101", null); // id=1
+            createBookmark("102", folder); // id=2
+            createBookmark("103", null); // id=3
 
             Pageable pageable = PageRequest.of(0, 2);
 
@@ -59,8 +59,8 @@ class BookmarkRepositoryTest {
 
             // then
             assertThat(result).hasSize(2);
-            assertThat(result.get(0).getContentId()).isEqualTo(103L); // 가장 최근 것
-            assertThat(result.get(1).getContentId()).isEqualTo(102L);
+            assertThat(result.get(0).getContentId()).isEqualTo("103"); // 가장 최근 것
+            assertThat(result.get(1).getContentId()).isEqualTo("102");
 
             // Fetch Join 확인: 폴더가 있는 객체의 폴더 정보가 로딩되었는지
             assertThat(result.get(1).getBookmarkFolder()).isNotNull();
@@ -71,9 +71,9 @@ class BookmarkRepositoryTest {
         @DisplayName("다음 페이지 조회: Cursor(lastId)보다 작은 ID만 반환된다")
         void findAllByUserIdAndIdLessThanOrderByIdDesc() {
             // given
-            Bookmark b1 = createBookmark(101L, null); // 가장 먼저 생성 (ID 작음)
-            Bookmark b2 = createBookmark(102L, folder);
-            Bookmark b3 = createBookmark(103L, null); // 가장 나중에 생성 (ID 큼)
+            Bookmark b1 = createBookmark("101", null); // 가장 먼저 생성 (ID 작음)
+            Bookmark b2 = createBookmark("102", folder);
+            Bookmark b3 = createBookmark("103", null); // 가장 나중에 생성 (ID 큼)
 
             // lastId를 b3의 ID로 설정 (b3보다 작은 것들을 조회)
             Long lastId = b3.getId();
@@ -98,13 +98,13 @@ class BookmarkRepositoryTest {
         @DisplayName("특정 폴더에 속한 북마크만 조회된다")
         void findInFolder() {
             // given
-            createBookmark(101L, null); // 미분류
-            createBookmark(102L, folder); // 대상 폴더
-            createBookmark(103L, folder); // 대상 폴더
+            createBookmark("101", null); // 미분류
+            createBookmark("102", folder); // 대상 폴더
+            createBookmark("103", folder); // 대상 폴더
 
             // 다른 폴더 생성
             BookmarkFolder otherFolder = folderRepository.save(BookmarkFolder.builder().user(user).name("Other").build());
-            createBookmark(104L, otherFolder);
+            createBookmark("104", otherFolder);
 
             Pageable pageable = PageRequest.of(0, 10);
 
@@ -115,16 +115,16 @@ class BookmarkRepositoryTest {
 
             // then
             assertThat(result).hasSize(2);
-            assertThat(result.get(0).getContentId()).isEqualTo(103L);
-            assertThat(result.get(1).getContentId()).isEqualTo(102L);
+            assertThat(result.get(0).getContentId()).isEqualTo("103");
+            assertThat(result.get(1).getContentId()).isEqualTo("102");
         }
 
         @Test
         @DisplayName("특정 폴더 다음 페이지 조회 (Cursor)")
         void findInFolderNextPage() {
             // given
-            Bookmark b1 = createBookmark(101L, folder);
-            Bookmark b2 = createBookmark(102L, folder);
+            Bookmark b1 = createBookmark("101", folder);
+            Bookmark b2 = createBookmark("102", folder);
 
             Long lastId = b2.getId();
             Pageable pageable = PageRequest.of(0, 10);
@@ -148,9 +148,9 @@ class BookmarkRepositoryTest {
         @DisplayName("폴더가 없는(null) 북마크만 조회된다")
         void findUncategorized() {
             // given
-            createBookmark(101L, folder); // 폴더 있음
-            createBookmark(102L, null);   // 미분류
-            createBookmark(103L, null);   // 미분류
+            createBookmark("101", folder); // 폴더 있음
+            createBookmark("102", null);   // 미분류
+            createBookmark("103", null);   // 미분류
 
             Pageable pageable = PageRequest.of(0, 10);
 
@@ -161,8 +161,8 @@ class BookmarkRepositoryTest {
 
             // then
             assertThat(result).hasSize(2);
-            assertThat(result.get(0).getContentId()).isEqualTo(103L);
-            assertThat(result.get(1).getContentId()).isEqualTo(102L);
+            assertThat(result.get(0).getContentId()).isEqualTo("103");
+            assertThat(result.get(1).getContentId()).isEqualTo("102");
             assertThat(result.get(0).getBookmarkFolder()).isNull();
         }
 
@@ -170,8 +170,8 @@ class BookmarkRepositoryTest {
         @DisplayName("미분류 북마크 다음 페이지 조회")
         void findUncategorizedNextPage() {
             // given
-            Bookmark b1 = createBookmark(101L, null);
-            Bookmark b2 = createBookmark(102L, null);
+            Bookmark b1 = createBookmark("101", null);
+            Bookmark b2 = createBookmark("102", null);
 
             Long lastId = b2.getId();
             Pageable pageable = PageRequest.of(0, 10);
@@ -195,11 +195,11 @@ class BookmarkRepositoryTest {
         @DisplayName("이미 저장된 콘텐츠 ID라면 true를 반환한다")
         void existsByUserIdAndContentId() {
             // given
-            createBookmark(999L, null);
+            createBookmark("999", null);
 
             // when
-            boolean exists = bookmarkRepository.existsByUserIdAndContentId(user.getId(), 999L);
-            boolean notExists = bookmarkRepository.existsByUserIdAndContentId(user.getId(), 888L);
+            boolean exists = bookmarkRepository.existsByUserIdAndContentId(user.getId(), "999");
+            boolean notExists = bookmarkRepository.existsByUserIdAndContentId(user.getId(), "888");
 
             // then
             assertThat(exists).isTrue();
@@ -210,7 +210,7 @@ class BookmarkRepositoryTest {
         @DisplayName("내 북마크 조회 성공 (findByIdAndUserId)")
         void findByIdAndUserId_success() {
             // given
-            Bookmark bookmark = createBookmark(101L, null);
+            Bookmark bookmark = createBookmark("101", null);
 
             // when
             Optional<Bookmark> result = bookmarkRepository.findByIdAndUserId(bookmark.getId(), user.getId());
@@ -227,7 +227,7 @@ class BookmarkRepositoryTest {
             User otherUser = userRepository.save(User.builder().email("other@test.com").build());
             Bookmark bookmark = bookmarkRepository.save(Bookmark.builder()
                     .user(otherUser)
-                    .contentId(101L)
+                    .contentId("101")
                     .build());
 
             // when
@@ -238,7 +238,7 @@ class BookmarkRepositoryTest {
         }
     }
 
-    private Bookmark createBookmark(Long contentId, BookmarkFolder folder) {
+    private Bookmark createBookmark(String contentId, BookmarkFolder folder) {
         Bookmark bookmark = Bookmark.builder()
                 .user(user)
                 .contentId(contentId)

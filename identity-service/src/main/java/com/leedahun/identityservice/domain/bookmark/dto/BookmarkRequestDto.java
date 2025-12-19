@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookmarkRequestDto {
-    private Long contentId;
+    private String contentId;
     private Long folderId;
 }
