@@ -148,7 +148,7 @@ class BookmarkServiceImplTest {
             // given
             Long userId = 1L;
             BookmarkRequestDto request = BookmarkRequestDto.builder()
-                    .contentId(10L)
+                    .contentId("10")
                     .folderId(null)
                     .build();
             User user = User.builder()
@@ -156,7 +156,7 @@ class BookmarkServiceImplTest {
                     .build();
 
             when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-            when(bookmarkRepository.existsByUserIdAndContentId(userId, 10L)).thenReturn(false);
+            when(bookmarkRepository.existsByUserIdAndContentId(userId, "10")).thenReturn(false);
 
             when(bookmarkRepository.save(any(Bookmark.class))).thenAnswer(invocation -> {
                 Bookmark bookmark = invocation.getArgument(0);
@@ -178,12 +178,12 @@ class BookmarkServiceImplTest {
             // given
             Long userId = 1L;
             Long folderId = 50L;
-            BookmarkRequestDto request = new BookmarkRequestDto(10L, folderId);
+            BookmarkRequestDto request = new BookmarkRequestDto("10", folderId);
             User user = User.builder().id(userId).build();
             BookmarkFolder folder = BookmarkFolder.builder().id(folderId).build();
 
             when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-            when(bookmarkRepository.existsByUserIdAndContentId(userId, 10L)).thenReturn(false);
+            when(bookmarkRepository.existsByUserIdAndContentId(userId, "10")).thenReturn(false);
             when(folderRepository.findById(folderId)).thenReturn(Optional.of(folder));
 
             when(bookmarkRepository.save(any(Bookmark.class))).thenAnswer(invocation -> {
@@ -204,11 +204,11 @@ class BookmarkServiceImplTest {
         void addBookmark_fail_duplicated() {
             // given
             Long userId = 1L;
-            BookmarkRequestDto request = new BookmarkRequestDto(10L, null);
+            BookmarkRequestDto request = new BookmarkRequestDto("10", null);
             User user = User.builder().id(userId).build();
 
             when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-            when(bookmarkRepository.existsByUserIdAndContentId(userId, 10L)).thenReturn(true);
+            when(bookmarkRepository.existsByUserIdAndContentId(userId, "10")).thenReturn(true);
 
             // when & then
             assertThatThrownBy(() -> bookmarkService.addBookmark(userId, request))
@@ -221,7 +221,7 @@ class BookmarkServiceImplTest {
             // given
             Long userId = 1L;
             Long invalidFolderId = 999L;
-            BookmarkRequestDto request = new BookmarkRequestDto(10L, invalidFolderId);
+            BookmarkRequestDto request = new BookmarkRequestDto("10", invalidFolderId);
 
             when(userRepository.findById(userId)).thenReturn(Optional.of(User.builder().id(userId).build()));
             when(folderRepository.findById(invalidFolderId)).thenReturn(Optional.empty());

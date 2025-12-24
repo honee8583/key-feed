@@ -25,6 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     label: '북마크',
+    path: '/bookmarks',
     icon: bookmarkIcon,
   },
   {

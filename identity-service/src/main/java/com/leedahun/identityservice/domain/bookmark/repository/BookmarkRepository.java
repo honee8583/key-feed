@@ -52,7 +52,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     List<Bookmark> findAllByUserIdAndBookmarkFolderIsNullAndIdLessThanOrderByIdDesc(Long userId, Long id, Pageable pageable);
 
     // 중복 체크용
-    boolean existsByUserIdAndContentId(Long userId, Long contentId);
+    boolean existsByUserIdAndContentId(Long userId, String contentId);
 
     // 본인의 북마크인지 확인하며 단건 조회
     Optional<Bookmark> findByIdAndUserId(Long id, Long userId);

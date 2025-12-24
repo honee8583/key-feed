@@ -2,6 +2,7 @@ package com.leedahun.identityservice.domain.bookmark.dto;
 
 import com.leedahun.identityservice.domain.bookmark.entity.Bookmark;
 import com.leedahun.identityservice.domain.bookmark.entity.BookmarkFolder;
+import com.leedahun.identityservice.infra.client.dto.ContentFeedResponseDto;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,16 +12,18 @@ import java.time.LocalDateTime;
 @Builder
 public class BookmarkResponseDto {
     private Long bookmarkId;
-    private Long contentId;
     private Long folderId;
     private String folderName;
     private LocalDateTime createdAt;
 
-    public static BookmarkResponseDto from(Bookmark bookmark) {
+    private ContentFeedResponseDto content;
+
+    public static BookmarkResponseDto of(Bookmark bookmark, ContentFeedResponseDto content) {
         BookmarkFolder folder = bookmark.getBookmarkFolder();
 
         Long folderId = null;
         String folderName = null;
+
         if (folder != null) {
             folderId = folder.getId();
             folderName = folder.getName();
@@ -28,10 +31,10 @@ public class BookmarkResponseDto {
 
         return BookmarkResponseDto.builder()
                 .bookmarkId(bookmark.getId())
-                .contentId(bookmark.getContentId())
                 .folderId(folderId)
                 .folderName(folderName)
                 .createdAt(bookmark.getCreatedAt())
+                .content(content) // 컨텐츠 정보 매핑
                 .build();
     }
 }

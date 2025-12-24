@@ -17,7 +17,12 @@ import com.leedahun.identityservice.domain.bookmark.exception.FolderLimitExceede
 import com.leedahun.identityservice.domain.bookmark.repository.BookmarkFolderRepository;
 import com.leedahun.identityservice.domain.bookmark.repository.BookmarkRepository;
 import com.leedahun.identityservice.domain.bookmark.service.BookmarkService;
+import com.leedahun.identityservice.infra.client.FeedInternalApiClient;
+import com.leedahun.identityservice.infra.client.dto.ContentFeedResponseDto;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +38,7 @@ public class BookmarkServiceImpl implements BookmarkService {
     private final BookmarkRepository bookmarkRepository;
     private final BookmarkFolderRepository folderRepository;
     private final UserRepository userRepository;
+    private final FeedInternalApiClient feedInternalApiClient;
 
     @Value("${app.limits.folder-max-count}")
     private int folderMaxCount;
@@ -90,10 +96,23 @@ public class BookmarkServiceImpl implements BookmarkService {
                                                         int size) {
         Pageable pageable = PageRequest.of(0, size + 1);  // size + 1 만큼 조회 (다음 페이지 존재 여부 판단용)
         List<Bookmark> bookmarks = findBookmarksByFolderCondition(userId, lastId, folderId, pageable);
-        List<BookmarkResponseDto> dtos = bookmarks.stream()
-                .map(BookmarkResponseDto::from)
+
+        List<String> contentIds = bookmarks.stream()
+                .map(Bookmark::getContentId)
                 .toList();
-        return CursorPagination.paginate(dtos, size, BookmarkResponseDto::getBookmarkId);
+        List<ContentFeedResponseDto> contents = feedInternalApiClient.getContentsByIds(contentIds);
+
+        Map<String, ContentFeedResponseDto> contentMap = contents.stream()
+                .collect(Collectors.toMap(ContentFeedResponseDto::getContentId, Function.identity()));
+
+        List<BookmarkResponseDto> responseContent = bookmarks.stream()
+                .map(bookmark -> {
+                    ContentFeedResponseDto content = contentMap.get(bookmark.getContentId());
+                    return BookmarkResponseDto.of(bookmark, content);
+                })
+                .toList();
+
+        return CursorPagination.paginate(responseContent, size, BookmarkResponseDto::getBookmarkId);
     }
 
     /**
@@ -149,7 +168,7 @@ public class BookmarkServiceImpl implements BookmarkService {
     }
 
     // 북마크가 이미 존재하는지 검증
-    private void validateBookmarkNotDuplicated(Long userId, Long contentId) {
+    private void validateBookmarkNotDuplicated(Long userId, String contentId) {
         if (bookmarkRepository.existsByUserIdAndContentId(userId, contentId)) {
             throw new EntityAlreadyExistsException("Bookmark", contentId);
         }

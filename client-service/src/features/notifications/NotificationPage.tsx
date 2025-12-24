@@ -1,19 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import './NotificationPage.css'
 import { notificationApi, type NotificationDto } from '../../services/notificationApi'
+import { NotificationCard, NotificationStatus } from './components'
+import type { NotificationItem } from './types'
 
 const LAST_EVENT_STORAGE_KEY = 'notification:lastEventId'
-
-type NotificationItem = {
-  id: string
-  title: string
-  description: string
-  time: string
-  tag?: string
-  icon: string
-  linkUrl?: string
-  isLive?: boolean
-}
 
 export function NotificationPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
@@ -161,19 +152,17 @@ export function NotificationPage() {
 
         <section className="notifications-list" aria-label="알림 목록">
           {isLoading && !notifications.length ? (
-            <div className="notifications-status" role="status">
-              알림을 불러오는 중입니다...
-            </div>
+            <NotificationStatus role="status">알림을 불러오는 중입니다...</NotificationStatus>
           ) : null}
 
           {error && !notifications.length ? (
-            <div className="notifications-status is-error" role="alert">
+            <NotificationStatus variant="error" role="alert">
               {error}
-            </div>
+            </NotificationStatus>
           ) : null}
 
           {!isLoading && !error && !notifications.length ? (
-            <div className="notifications-status">표시할 알림이 없어요.</div>
+            <NotificationStatus>표시할 알림이 없어요.</NotificationStatus>
           ) : null}
 
           {notifications.map((notification) => (
@@ -183,45 +172,13 @@ export function NotificationPage() {
           <div ref={loadMoreRef} className="notifications-load-more-trigger" aria-hidden />
 
           {isFetchingNext ? (
-            <div className="notifications-status is-inline" role="status">
+            <NotificationStatus variant="inline" role="status">
               이전 알림을 불러오는 중입니다...
-            </div>
+            </NotificationStatus>
           ) : null}
         </section>
       </div>
     </div>
-  )
-}
-
-function NotificationCard({ item }: { item: NotificationItem }) {
-  const { title, description, time, tag, icon, linkUrl, isLive } = item
-  return (
-    <article className="notification-card">
-      <div className="notification-icon" aria-hidden>
-        <span>{icon}</span>
-      </div>
-      <div className="notification-content">
-        <div className="notification-title-row">
-          <p className="notification-title">{title}</p>
-        </div>
-        <p className="notification-description">{description}</p>
-        <div className="notification-meta">
-          <span className="notification-time" aria-label={`${time}에 받은 알림`}>
-            <span className={`notification-time__dot${isLive ? ' is-live' : ''}`} aria-hidden />
-            {time}
-          </span>
-          {tag ? <span className="notification-tag">{tag}</span> : null}
-          {linkUrl ? (
-            <a className="notification-link" href={linkUrl} target="_blank" rel="noreferrer">
-              원문 보기
-            </a>
-          ) : null}
-        </div>
-      </div>
-      <button type="button" className="notification-menu" aria-label="알림 옵션">
-        <span aria-hidden>⋯</span>
-      </button>
-    </article>
   )
 }
 

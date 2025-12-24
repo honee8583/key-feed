@@ -16,6 +16,7 @@ import feign.FeignException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -90,6 +91,18 @@ public class FeedServiceImpl implements FeedService {
                 .hasNext(hasNext)
                 .nextCursorId(nextCursorId)
                 .build();
+    }
+
+    @Override
+    public List<ContentFeedResponseDto> getContentsByIds(List<String> contentIds) {
+        Iterable<ContentDocument> contentDocuments = contentDocumentRepository.findAllById(contentIds);
+
+        List<ContentFeedResponseDto> contents = new ArrayList<>();
+        for (ContentDocument contentDocument : contentDocuments) {
+            contents.add(ContentFeedResponseDto.from(contentDocument));
+        }
+
+        return contents;
     }
 
     private String buildKeywordSearchPattern(List<String> keywords) {

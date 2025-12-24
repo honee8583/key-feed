@@ -133,7 +133,7 @@ class BookmarkControllerTest {
     @DisplayName("[POST /api/bookmarks] 북마크 등록 성공 시 201 Created와 ID를 반환한다")
     void addBookmark_success() throws Exception {
         // given
-        BookmarkRequestDto request = new BookmarkRequestDto(100L, null);
+        BookmarkRequestDto request = new BookmarkRequestDto("100", null);
         Long createdBookmarkId = 55L;
 
         when(bookmarkService.addBookmark(any(), any(BookmarkRequestDto.class)))
@@ -159,7 +159,9 @@ class BookmarkControllerTest {
         Long lastId = 100L;
         int size = 10;
 
-        BookmarkResponseDto bookmark = BookmarkResponseDto.builder().bookmarkId(10L).contentId(200L).build();
+        BookmarkResponseDto bookmark = BookmarkResponseDto.builder()
+                .bookmarkId(10L)
+                .build();
         CursorPage<BookmarkResponseDto> cursorPage = CursorPage.<BookmarkResponseDto>builder()
                 .content(List.of(bookmark))
                 .hasNext(false)

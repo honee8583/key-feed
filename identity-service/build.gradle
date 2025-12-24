@@ -71,6 +71,10 @@ dependencies {
 
     // Jsoup
     implementation 'org.jsoup:jsoup:1.21.2'
+
+    // openfeign
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
 }
 
 dependencyManagement {
