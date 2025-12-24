@@ -3,6 +3,7 @@ import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react
 import { LoginPage, SignupPage, useAuth } from '../features/auth'
 import { MainPage } from '../features/home'
 import { BookmarksPage } from '../features/bookmarks'
+import { FolderManagementPage } from '../features/bookmarks/FolderManagementPage'
 import { ProfilePage, SourceManagementPage } from '../features/profile'
 import { NotificationPage } from '../features/notifications'
 import { BottomNavigation } from '../components/BottomNavigation'
@@ -42,6 +43,16 @@ export function AppRouter() {
               <ProtectedRoute>
                 <AppLayout>
                   <BookmarksPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookmarks/folders"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <FolderManagementPage />
                 </AppLayout>
               </ProtectedRoute>
             }

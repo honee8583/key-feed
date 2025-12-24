@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './BookmarksPage.css'
 import { bookmarkApi, type BookmarkFolderDto } from '../../services/bookmarkApi'
 
@@ -71,6 +72,7 @@ const mockBookmarks: BookmarkItem[] = [
 ]
 
 export function BookmarksPage() {
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState(categoryTabs[0])
   const [activeQuickFilter, setActiveQuickFilter] = useState(quickFilters[0])
@@ -111,9 +113,6 @@ export function BookmarksPage() {
     })
   }, [activeCategory, searchTerm, activeFolderId])
 
-  const bookmarkCount = mockBookmarks.length
-  const newItemsCount = mockBookmarks.filter((item) => item.highlight).length
-
   return (
     <div className="bookmarks-page">
       <header className="bookmarks-hero">
@@ -123,27 +122,9 @@ export function BookmarksPage() {
           <p className="bookmarks-hero__subtitle">인사이트를 저장하고 다시 찾아보세요</p>
         </div>
         <div className="bookmarks-hero__action">
-          <button type="button">폴더 관리</button>
+          <button type="button" onClick={() => navigate('/bookmarks/folders')}>폴더 관리</button>
         </div>
       </header>
-
-      <section className="bookmark-stats" aria-label="북마크 요약">
-        <article>
-          <p className="bookmark-stats__label">전체 북마크</p>
-          <p className="bookmark-stats__value">{bookmarkCount}</p>
-          <p className="bookmark-stats__hint">최근 7일 기준</p>
-        </article>
-        <article>
-          <p className="bookmark-stats__label">새로 저장됨</p>
-          <p className="bookmark-stats__value accent">{newItemsCount}</p>
-          <p className="bookmark-stats__hint">하이라이트 포함</p>
-        </article>
-        <article>
-          <p className="bookmark-stats__label">읽지 않은 항목</p>
-          <p className="bookmark-stats__value">3</p>
-          <p className="bookmark-stats__hint">태그별 정리 필요</p>
-        </article>
-      </section>
 
       <section className="bookmark-folders" aria-label="북마크 폴더 목록">
         <div className="bookmark-folders__header">
