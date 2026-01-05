@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identity-service
+  template:
+    metadata:
+      labels:
+        app: identity-service
+    spec:
+      containers:
+        - name: identity-service
+          image: honee8583/identity-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+
+          # [헬스체크] K3s가 파드 상태를 확인하는 방법
+          # readinessProbe:
+          # httpGet:
+          #   path: /actuator/health
+          #   port: 8081
+          # initialDelaySeconds: 40   # 첫 체크 지연 시간
+          # periodSeconds: 30         # 체크 주기
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_PORT
+
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://$(DB_HOST):$(DB_PORT)/key_feed_identity?serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_KEY
+            - name: JASYPT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JASYPT_KEY
+
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi" # OOM 방지를 위한 제한
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service # 내부 DNS 이름 (http://identity-service 로 호출됨)
+spec:
+  selector:
+    app: identity-service
+  ports:
+    - protocol: TCP
+      port: 80        # 다른 서비스가 호출할 때 사용하는 포트
+      targetPort: 8081 # 실제 컨테이너 내부 포트

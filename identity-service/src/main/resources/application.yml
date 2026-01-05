@@ -2,6 +2,9 @@ server:
   port: 8081
 
 spring:
+  application:
+    name: identity-service
+
   profiles:
     active: prod
 
@@ -17,8 +20,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ENC(dDFakmi/a0d7f5V6UdW7q9tBuKZYEqdVK5fCFxPGlVI=)
-    password: ENC(UBKt8Z9GLNO3+6hqOBKBElzaysOyIqxHXrVwNG7clB8=)
+    username: ENC(F/qVboiQE87bFp73aVzXTYcBK6QV6jiIkMxz0Q3qFA4=)
+    password: ENC(HAgjsskaK10+kw+Eo2paNTlyvZj0SbG+ZtDa68QEX4M=)
     properties:
       mail:
         smtp:
