@@ -19,7 +19,7 @@ type SocialButtonConfig = {
 const SOCIAL_BUTTONS: SocialButtonConfig[] = [
   {
     id: 'kakao',
-    label: '카카오로 시작하기',
+    label: '카카오로 계속하기',
     background: '#fee500',
     border: 'rgba(253,199,0,0.3)',
     textColor: '#101828',
@@ -29,7 +29,7 @@ const SOCIAL_BUTTONS: SocialButtonConfig[] = [
   },
   {
     id: 'naver',
-    label: '네이버로 시작하기',
+    label: '네이버로 계속하기',
     background: '#03c75a',
     border: 'rgba(0,201,80,0.3)',
     textColor: '#ffffff',
@@ -39,7 +39,7 @@ const SOCIAL_BUTTONS: SocialButtonConfig[] = [
   },
   {
     id: 'google',
-    label: '구글로 시작하기',
+    label: '구글로 계속하기',
     background: '#ffffff',
     border: 'rgba(15,23,42,0.08)',
     textColor: '#101828',
@@ -110,30 +110,17 @@ export function LoginPage() {
 
   return (
     <div className="login-page">
-      <div className="login-page__blur login-page__blur--one" aria-hidden />
-      <div className="login-page__blur login-page__blur--two" aria-hidden />
       <div className="login-page__container">
-        <section className="login-page__hero">
-          <div className="login-page__hero-icon" aria-hidden="true">
+        <div className="login-page__header">
+          <div className="login-page__icon">
             <span>📰</span>
           </div>
-          <div className="login-page__hero-text">
-            <h1>
-              콘텐츠 큐레이터
-              <span className="login-page__sparkle" role="img" aria-label="sparkles">
-                ✨
-              </span>
-            </h1>
-            <p>나만의 정보 피드를 만들어보세요</p>
-          </div>
-        </section>
+          <h1>로그인</h1>
+          <p>나만의 맞춤 콘텐츠 피드를 만나보세요</p>
+        </div>
 
-        <section className="login-card" aria-label="로그인 폼">
-          <header className="login-card__header">
-            <p>환영합니다! 👋</p>
-          </header>
-
-          <div className="login-card__socials">
+        <div className="login-page__content">
+          <div className="login-page__socials">
             {SOCIAL_BUTTONS.map(
               ({ id, label, background, border, textColor, iconBackground, iconColor, icon }) => (
                 <button
@@ -152,17 +139,20 @@ export function LoginPage() {
                   onClick={() => handleSocialLogin(id)}
                   disabled={isLoading}
                 >
-                  <span className="social-button__icon" aria-hidden>
-                    {icon}
-                  </span>
-                  <span>{label}</span>
+                  <div className="social-button__left">
+                    <span className="social-button__icon" aria-hidden>
+                      {icon}
+                    </span>
+                    <span>{label}</span>
+                  </div>
+                  <ArrowRightIcon />
                 </button>
               ),
             )}
           </div>
 
-          <div className="login-card__divider">
-            <span>또는 이메일로 계속하기</span>
+          <div className="login-page__divider">
+            <span>또는</span>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>
@@ -199,17 +189,17 @@ export function LoginPage() {
                 />
                 <button
                   type="button"
-                  className="ghost-icon-button"
+                  className="password-toggle"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
                 >
-                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                  <EyeIcon />
                 </button>
               </div>
             </label>
 
             <div className="login-form__actions">
-              <label className="stay-signed-in">
+              <label className="checkbox-label">
                 <input
                   type="checkbox"
                   checked={staySignedIn}
@@ -227,39 +217,53 @@ export function LoginPage() {
           </form>
 
           {feedback !== 'idle' && (
-            <p className={`login-card__feedback ${feedback === 'error' ? 'is-error' : 'is-success'}`}>
+            <p className={`login-page__feedback ${feedback === 'error' ? 'is-error' : 'is-success'}`}>
               {message}
             </p>
           )}
 
-          <footer className="login-card__footer">
+          <div className="login-page__footer">
             <span>아직 계정이 없으신가요?</span>
-            <Link to="/signup" className="text-link">
+            <Link to="/signup" className="text-link text-link--white">
               회원가입
             </Link>
-          </footer>
-        </section>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-function MailIcon() {
+function ArrowRightIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="form-icon">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="arrow-icon">
       <path
-        d="M4 6.8A2.8 2.8 0 0 1 6.8 4h10.4A2.8 2.8 0 0 1 20 6.8v10.4A2.8 2.8 0 0 1 17.2 20H6.8A2.8 2.8 0 0 1 4 17.2z"
+        d="M7.5 15L12.5 10L7.5 5"
         stroke="currentColor"
-        strokeWidth="1.6"
-        fill="none"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path
-        d="m5 8 7 5 7-5"
+    </svg>
+  )
+}
+
+function MailIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="form-icon">
+      <rect
+        x="3"
+        y="5"
+        width="14"
+        height="10"
+        rx="2"
         stroke="currentColor"
-        strokeWidth="1.6"
-        fill="none"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M3 7L10 11L17 7"
+        stroke="currentColor"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -269,70 +273,42 @@ function MailIcon() {
 
 function LockIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="form-icon">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="form-icon">
       <rect
-        x="4.5"
-        y="10"
-        width="15"
-        height="10"
-        rx="2.5"
+        x="4"
+        y="9"
+        width="12"
+        height="8"
+        rx="2"
         stroke="currentColor"
-        strokeWidth="1.6"
-        fill="none"
+        strokeWidth="1.5"
       />
       <path
-        d="M8.5 10V7.5A3.5 3.5 0 0 1 12 4a3.5 3.5 0 0 1 3.5 3.5V10"
+        d="M7 9V6.5C7 4.57 8.34 3 10 3C11.66 3 13 4.57 13 6.5V9"
         stroke="currentColor"
-        strokeWidth="1.6"
-        fill="none"
+        strokeWidth="1.5"
+        strokeLinecap="round"
       />
-      <circle cx="12" cy="15" r="1.2" fill="currentColor" />
     </svg>
   )
 }
 
 function EyeIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="form-icon">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="form-icon">
       <path
-        d="M2.5 12s3.2-6 9.5-6 9.5 6 9.5 6-3.2 6-9.5 6-9.5-6-9.5-6Z"
+        d="M10 6.25C6.25 6.25 3.75 10 3.75 10C3.75 10 6.25 13.75 10 13.75C13.75 13.75 16.25 10 16.25 10C16.25 10 13.75 6.25 10 6.25Z"
         stroke="currentColor"
-        strokeWidth="1.6"
-        fill="none"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.6" fill="none" />
-    </svg>
-  )
-}
-
-function EyeOffIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="form-icon">
-      <path
-        d="M3 3.5 21 20"
+      <circle
+        cx="10"
+        cy="10"
+        r="2"
         stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <path
-        d="M6.5 6.8C4.5 8.5 3 12 3 12s3.2 6 9.5 6a11 11 0 0 0 4.1-.8m3.4-3c1.3-1.4 2-2.2 2-2.2s-3.2-6-9.5-6a11 11 0 0 0-3.2.4"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <path
-        d="M9.5 9.6a3 3 0 0 1 4.2 4.2"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
+        strokeWidth="1.5"
       />
     </svg>
   )

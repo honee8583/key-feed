@@ -61,7 +61,11 @@ dependencies {
     implementation 'com.rometools:rome:2.1.0'
     implementation 'org.jsoup:jsoup:1.21.2'
 
+    // kafka
     implementation 'org.springframework.kafka:spring-kafka'
+
+    // actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 dependencyManagement {
@@ -91,4 +95,8 @@ jacocoTestReport {
             ])
         }))
     }
+}
+
+jar {
+    enabled = false
 }

@@ -5,6 +5,9 @@ spring:
   profiles:
     active: prod
 
+  application:
+    name: notification-service
+
   jpa:
     hibernate:
       ddl-auto: validate

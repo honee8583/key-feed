@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crawl-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crawl-service
+  template:
+    metadata:
+      labels:
+        app: crawl-service
+    spec:
+      containers:
+        - name: crawl-service
+          image: honee8583/crawl-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8083
+
+          #readinessProbe:
+          # httpGet:
+          #   path: /actuator/health
+          #   port: 8083
+          # initialDelaySeconds: 40
+          # periodSeconds: 30
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+
+            # [1] DB 설정
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_PORT
+
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://$(DB_HOST):$(DB_PORT)/key_feed_crawl?serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+
+            # [2] Kafka 설정 (수정됨)
+            # ConfigMap에 정의된 KAFKA_HOST, KAFKA_PORT를 가져와서 주소 조합
+            - name: KAFKA_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KAFKA_HOST
+            - name: KAFKA_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KAFKA_PORT
+
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "$(KAFKA_HOST):$(KAFKA_PORT)"
+
+            # [3] 시크릿 참조
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_KEY
+            - name: JASYPT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JASYPT_KEY
+
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crawl-service
+spec:
+  selector:
+    app: crawl-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8083

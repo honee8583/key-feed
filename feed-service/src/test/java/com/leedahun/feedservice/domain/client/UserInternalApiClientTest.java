@@ -24,7 +24,8 @@ import org.springframework.http.MediaType;
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
                 "spring.cloud.discovery.enabled=false",
-                "spring.cloud.openfeign.client.config.identity-service.url=http://localhost:${wiremock.server.port}"
+//                "spring.cloud.openfeign.client.config.identity-service.url=http://localhost:${wiremock.server.port}"
+                "feign.client.identity-service.url=http://localhost:${wiremock.server.port}"
         }
 )
 @AutoConfigureWireMock(port = 0)

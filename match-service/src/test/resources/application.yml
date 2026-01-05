@@ -23,3 +23,7 @@ app:
     topic:
       content: content-topic
       notification: match.notification.requested
+
+snowflake:
+  worker-id: 1
+  datacenter-id: 1

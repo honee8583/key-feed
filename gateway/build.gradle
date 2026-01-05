@@ -37,6 +37,9 @@ dependencies {
 
     // service discovery
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+    // actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 dependencyManagement {
@@ -47,4 +50,8 @@ dependencyManagement {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+jar {
+   enabled = false
 }

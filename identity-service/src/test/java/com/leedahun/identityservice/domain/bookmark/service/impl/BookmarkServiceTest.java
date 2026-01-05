@@ -2,9 +2,7 @@ package com.leedahun.identityservice.domain.bookmark.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -23,8 +21,12 @@ import com.leedahun.identityservice.domain.bookmark.exception.FolderAccessDenied
 import com.leedahun.identityservice.domain.bookmark.exception.FolderLimitExceededException;
 import com.leedahun.identityservice.domain.bookmark.repository.BookmarkFolderRepository;
 import com.leedahun.identityservice.domain.bookmark.repository.BookmarkRepository;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import com.leedahun.identityservice.infra.client.FeedInternalApiClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -50,6 +52,9 @@ class BookmarkServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private FeedInternalApiClient feedInternalApiClient;
 
     private final int FOLDER_MAX_COUNT = 5;
 
@@ -250,11 +255,16 @@ class BookmarkServiceImplTest {
             when(bookmarkRepository.findAllByUserIdOrderByIdDesc(eq(userId), any(Pageable.class)))
                     .thenReturn(List.of());
 
+            // Mock 객체는 별도 설정을 안하면 기본적으로 빈 리스트를 반환하므로 when(...).thenReturn(Collections.emptyList()) 생략 가능
+            // 하지만 명시적으로 작성해주면 더 안전합니다.
+            when(feedInternalApiClient.getContentsByIds(anyList())).thenReturn(Collections.emptyList());
+
             // when
             bookmarkService.getBookmarks(userId, lastId, folderId, size);
 
             // then
             verify(bookmarkRepository).findAllByUserIdOrderByIdDesc(eq(userId), any(Pageable.class));
+            verify(feedInternalApiClient).getContentsByIds(anyList());
         }
 
         @Test
@@ -266,6 +276,7 @@ class BookmarkServiceImplTest {
 
             when(bookmarkRepository.findAllByUserIdAndIdLessThanOrderByIdDesc(eq(userId), eq(lastId), any(Pageable.class)))
                     .thenReturn(List.of());
+            when(feedInternalApiClient.getContentsByIds(anyList())).thenReturn(Collections.emptyList());
 
             // when
             bookmarkService.getBookmarks(userId, lastId, folderId, size);
@@ -283,6 +294,7 @@ class BookmarkServiceImplTest {
 
             when(bookmarkRepository.findAllByUserIdAndBookmarkFolderIsNullOrderByIdDesc(eq(userId), any(Pageable.class)))
                     .thenReturn(List.of());
+            when(feedInternalApiClient.getContentsByIds(anyList())).thenReturn(Collections.emptyList());
 
             // when
             bookmarkService.getBookmarks(userId, lastId, folderId, size);
@@ -300,6 +312,7 @@ class BookmarkServiceImplTest {
 
             when(bookmarkRepository.findAllByUserIdAndBookmarkFolderIsNullAndIdLessThanOrderByIdDesc(eq(userId), eq(lastId), any(Pageable.class)))
                     .thenReturn(List.of());
+            when(feedInternalApiClient.getContentsByIds(anyList())).thenReturn(Collections.emptyList());
 
             // when
             bookmarkService.getBookmarks(userId, lastId, folderId, size);
@@ -317,6 +330,7 @@ class BookmarkServiceImplTest {
 
             when(bookmarkRepository.findAllByUserIdAndBookmarkFolderIdOrderByIdDesc(eq(userId), eq(folderId), any(Pageable.class)))
                     .thenReturn(List.of());
+            when(feedInternalApiClient.getContentsByIds(anyList())).thenReturn(Collections.emptyList());
 
             // when
             bookmarkService.getBookmarks(userId, lastId, folderId, size);
@@ -334,6 +348,7 @@ class BookmarkServiceImplTest {
 
             when(bookmarkRepository.findAllByUserIdAndBookmarkFolderIdAndIdLessThanOrderByIdDesc(eq(userId), eq(folderId), eq(lastId), any(Pageable.class)))
                     .thenReturn(List.of());
+            when(feedInternalApiClient.getContentsByIds(anyList())).thenReturn(Collections.emptyList());
 
             // when
             bookmarkService.getBookmarks(userId, lastId, folderId, size);
