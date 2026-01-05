@@ -67,6 +67,9 @@ dependencies {
 
     // elastic search
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
+    // actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 dependencyManagement {
@@ -98,3 +101,6 @@ jacocoTestReport {
     }
 }
 
+jar {
+    enabled = false
+}
