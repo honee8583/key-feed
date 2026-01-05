@@ -5,6 +5,9 @@ spring:
   profiles:
     active: prod
 
+  application:
+    name: match-service
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -21,10 +24,6 @@ feign:
         connectTimeout: 5000
         readTimeout: 5000
         loggerLevel: BASIC
-
-client:
-  identity-service:
-    access-url: http://identity-service
 
 app:
   kafka:
