@@ -16,7 +16,7 @@ public class CookieUtil {
         refreshToken = refreshToken.replace(JwtConstants.TOKEN_PREFIX, "");
         return ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .sameSite("None")
                 .path("/api/auth/refresh")
                 .maxAge(Duration.ofMillis(maxAge))
