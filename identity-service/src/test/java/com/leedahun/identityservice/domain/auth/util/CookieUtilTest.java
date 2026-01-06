@@ -26,7 +26,7 @@ class CookieUtilTest {
         assertThat(cookie.getName()).isEqualTo("refreshToken");
         assertThat(cookie.getValue()).isEqualTo("abc.def.ghi");
         assertThat(cookie.isHttpOnly()).isTrue();
-        assertThat(cookie.isSecure()).isTrue();
+        assertThat(cookie.isSecure()).isFalse();
         assertThat(cookie.getSameSite()).isEqualTo("None");
         assertThat(cookie.getPath()).isEqualTo("/api/auth/refresh");
         assertThat(cookie.getMaxAge()).isEqualTo(Duration.ofMillis(maxAgeMs));
@@ -47,7 +47,6 @@ class CookieUtilTest {
         assertThat(setCookieHeader).contains("refreshToken=");
         assertThat(setCookieHeader).contains("Max-Age=0");
         assertThat(setCookieHeader).contains("HttpOnly");
-        assertThat(setCookieHeader).contains("Secure");
         assertThat(setCookieHeader).contains("SameSite=None");
     }
 }

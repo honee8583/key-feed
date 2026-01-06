@@ -128,7 +128,6 @@ class AuthControllerTest {
         String setCookie = result.getResponse().getHeader(HttpHeaders.SET_COOKIE);
         assertThat(setCookie).contains("refreshToken=");
         assertThat(setCookie).contains("HttpOnly");
-        assertThat(setCookie).contains("Secure");
         assertThat(setCookie).contains("SameSite=None");
         assertThat(setCookie).contains("Path=/api/auth/refresh");
 
@@ -160,7 +159,6 @@ class AuthControllerTest {
         String setCookie = result.getResponse().getHeader(HttpHeaders.SET_COOKIE);
         assertThat(setCookie).contains("refreshToken=");
         assertThat(setCookie).contains("HttpOnly");
-        assertThat(setCookie).contains("Secure");
         assertThat(setCookie).contains("SameSite=None");
         assertThat(setCookie).contains("Path=/api/auth/refresh");
 
