@@ -7,10 +7,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(name = "feed-service", path = "/internal/feeds")
+@FeignClient(
+        name = "feed-service",
+        url = "${feign.client.feed-service.url:}"
+)
 public interface FeedInternalApiClient {
 
-    @PostMapping("/contents")
+    @PostMapping("/internal/feeds/contents")
     List<ContentFeedResponseDto> getContentsByIds(@RequestBody List<String> contentIds);
 
 }
