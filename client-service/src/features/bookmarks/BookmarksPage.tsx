@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import './BookmarksPage.css'
 import { bookmarkApi, type BookmarkFolderDto, type BookmarkItemDto } from '../../services/bookmarkApi'
 
 const quickFilters = ['최신순', '읽지 않음', '노트 있음', '원문 링크']
@@ -89,21 +88,21 @@ export function BookmarksPage() {
   }
 
   return (
-    <div className="bookmarks-page">
-      <header className="bookmarks-header">
-        <div className="bookmarks-header__top">
-          <h1>저장된 콘텐츠</h1>
+    <div className="min-h-screen bg-black p-0 flex flex-col gap-0 text-slate-50 font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif]">
+      <header className="bg-black border-b border-[#1e2939] px-4 pt-3 sticky top-0 z-10">
+        <div className="flex justify-between items-center h-9 mb-3">
+          <h1 className="m-0 text-xl font-bold text-white tracking-[-0.45px]">저장된 콘텐츠</h1>
         </div>
 
-        <div className="bookmarks-folders-scroll">
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-none">
           <button
             type="button"
-            className={`folder-chip folder-chip--all${activeFolderId === null ? ' is-active' : ''}`}
+            className={`${activeFolderId === null ? 'bg-white text-black border-white' : 'bg-[#1e2939] text-[#d1d5dc] border-[#364153]'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85`}
             onClick={() => setActiveFolderId(null)}
           >
             <FolderIcon />
             <span>전체</span>
-            <span className="folder-chip__badge">5</span>
+            <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium">5</span>
           </button>
           {!isLoadingFolders && folders.length ? (
             folders.map((folder) => {
@@ -112,22 +111,25 @@ export function BookmarksPage() {
                 <button
                   key={folder.folderId}
                   type="button"
-                  className={`folder-chip${isActive ? ' is-active' : ''}`}
+                  className={`${isActive ? 'opacity-100' : 'opacity-95 hover:opacity-85'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity text-[14px]`}
                   style={{
-                    '--folder-color': folder.color || '#ad46ff',
+                    // 색상 커스터마이징이 있으면 border/background 색으로 반영
+                    borderColor: (folder.color || '#ad46ff') + '33',
+                    background: (folder.color || '#ad46ff') + '1A',
+                    color: (folder.color || '#ad46ff'),
                   } as React.CSSProperties}
                   onClick={() => setActiveFolderId(folder.folderId)}
                 >
                   <FolderIcon />
                   <span>{folder.name}</span>
-                  <span className="folder-chip__badge">0</span>
+                  <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-white/10 text-white text-[12px] font-medium">0</span>
                 </button>
               )
             })
           ) : null}
           <button
             type="button"
-            className="folder-chip folder-chip--manage"
+            className="inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border border-[#364153] bg-[#1e2939] text-[#d1d5dc] whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85"
             onClick={() => navigate('/bookmarks/folders')}
           >
             <PlusIcon />
@@ -136,36 +138,44 @@ export function BookmarksPage() {
         </div>
       </header>
 
-      <div className="bookmark-search">
-        <div className="bookmark-search__field">
+      <div className="flex flex-col gap-3 bg-[rgba(15,15,20,0.8)] border border-white/10 rounded-[24px] p-[18px] m-4 text-slate-50">
+        <div>
           <input
+            className="w-full rounded-[14px] border border-white/10 bg-[rgba(2,6,23,0.6)] px-3.5 py-3 text-[14px] placeholder:text-slate-300/70"
             type="search"
             placeholder="저장한 콘텐츠 검색"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
           />
         </div>
-        <div className="bookmark-search__filters" aria-label="빠른 정렬">
-          {quickFilters.map((filter) => (
-            <button
-              key={filter}
-              type="button"
-              className={filter === activeQuickFilter ? 'is-active' : undefined}
-              onClick={() => setActiveQuickFilter(filter)}
-            >
-              {filter}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-2" aria-label="빠른 정렬">
+          {quickFilters.map((filter) => {
+            const isActive = filter === activeQuickFilter
+            return (
+              <button
+                key={filter}
+                type="button"
+                className={`${isActive ? 'bg-[rgba(59,130,246,0.2)] text-[#bfdbfe] border-[rgba(59,130,246,0.5)]' : 'bg-transparent text-slate-300/95 border-white/10'} rounded-full border px-[14px] py-[6px] text-[13px] cursor-pointer`}
+                onClick={() => setActiveQuickFilter(filter)}
+              >
+                {filter}
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      <section className="bookmark-list" aria-label="저장된 콘텐츠 목록">
+      <section className="flex flex-col gap-[18px] px-4 pb-[140px]" aria-label="저장된 콘텐츠 목록">
         {bookmarkError ? (
-          <div className="bookmark-status bookmark-status--error">{bookmarkError}</div>
+          <div className="p-[22px] rounded-[20px] border border-[rgba(239,68,68,0.5)] bg-[rgba(239,68,68,0.05)] text-[#fca5a5] text-center text-[14px]">
+            {bookmarkError}
+          </div>
         ) : null}
 
         {isLoadingBookmarks && !bookmarks.length ? (
-          <div className="bookmark-status">북마크를 불러오는 중...</div>
+          <div className="p-[22px] rounded-[20px] border border-white/20 bg-[rgba(255,255,255,0.03)] text-slate-50/80 text-center text-[14px]">
+            북마크를 불러오는 중...
+          </div>
         ) : null}
 
         {filteredBookmarks.map((bookmark) => (
@@ -173,17 +183,21 @@ export function BookmarksPage() {
         ))}
 
         {!isLoadingBookmarks && !filteredBookmarks.length && !bookmarkError ? (
-          <div className="bookmark-status">저장된 북마크가 없어요.</div>
+          <div className="p-[22px] rounded-[20px] border border-white/20 bg-[rgba(255,255,255,0.03)] text-slate-50/80 text-center text-[14px]">
+            저장된 북마크가 없어요.
+          </div>
         ) : null}
 
         {hasMore && !isLoadingBookmarks ? (
-          <button className="load-more-button" onClick={handleLoadMore}>
+          <button className="w-full p-4 rounded-[16px] border border-white/20 bg-[rgba(15,15,20,0.8)] text-slate-50 text-[14px] font-medium cursor-pointer transition hover:bg-white/10 hover:border-white/30" onClick={handleLoadMore}>
             더 보기
           </button>
         ) : null}
 
         {isLoadingBookmarks && bookmarks.length > 0 ? (
-          <div className="bookmark-status">추가 북마크를 불러오는 중...</div>
+          <div className="p-[22px] rounded-[20px] border border-white/20 bg-[rgba(255,255,255,0.03)] text-slate-50/80 text-center text-[14px]">
+            추가 북마크를 불러오는 중...
+          </div>
         ) : null}
       </section>
     </div>
@@ -211,22 +225,22 @@ function BookmarkCard({ item }: { item: BookmarkItemDto }) {
   }).format(new Date(publishedAt))
 
   return (
-    <article className="bookmark-card">
-      <div className="bookmark-card__meta">
-        <span className="bookmark-card__category">{folderName || '전체'}</span>
-        <span className="bookmark-card__date">{formattedCreatedDate}</span>
+    <article className="rounded-[24px] border border-white/10 bg-gradient-to-br from-[rgba(12,12,18,0.92)] to-[rgba(9,9,14,0.85)] p-5 shadow-[0_18px_36px_rgba(2,6,23,0.55)] flex flex-col gap-3">
+      <div className="flex justify-between text-[12px] text-slate-300/90">
+        <span className="font-semibold text-[#a5b4fc]">{folderName || '전체'}</span>
+        <span>{formattedCreatedDate}</span>
       </div>
-      <h2>{title}</h2>
-      <p className="bookmark-card__summary">{summary}</p>
+      <h2 className="m-0 text-[18px] font-semibold text-slate-50 leading-tight">{title}</h2>
+      <p className="m-0 text-slate-50/75 leading-relaxed text-[14px]">{summary}</p>
 
-      <div className="bookmark-card__footer">
+      <div className="flex justify-between items-center gap-3 flex-wrap">
         <div>
-          <p className="bookmark-card__source">{sourceName}</p>
-          <p className="bookmark-card__reading">{formattedPublishedDate}</p>
+          <p className="m-0 text-[13px] font-semibold text-slate-50/85">{sourceName}</p>
+          <p className="m-0 mt-0.5 text-[12px] text-slate-400/90">{formattedPublishedDate}</p>
         </div>
-        <div className="bookmark-card__cta">
+        <div className="inline-flex items-center gap-3">
           {originalUrl ? (
-            <a href={originalUrl} target="_blank" rel="noreferrer">
+            <a className="rounded-[12px] border border-white/20 px-3.5 py-2 bg-white/5 text-slate-50 text-[13px] no-underline hover:bg-white/10" href={originalUrl} target="_blank" rel="noreferrer">
               원문 보기
             </a>
           ) : null}

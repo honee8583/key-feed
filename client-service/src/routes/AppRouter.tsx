@@ -14,7 +14,13 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <Suspense fallback={<div className="app-loading">화면을 불러오는 중...</div>}>
+      <Suspense
+        fallback={
+          <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-base text-[#101828] text-center">
+            화면을 불러오는 중...
+          </div>
+        }
+      >
         <Routes>
           <Route path="/" element={<Navigate to={isAuthenticated ? '/home' : '/login'} replace />} />
           <Route
@@ -95,7 +101,7 @@ export function AppRouter() {
 
 function AppLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="app-shell">
+    <div className="min-h-screen pt-0 pb-[96px]">
       {children}
       <BottomNavigation />
     </div>
@@ -104,9 +110,11 @@ function AppLayout({ children }: { children: ReactNode }) {
 
 function NotFoundPage() {
   return (
-    <div className="not-found">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-base text-[#101828] text-center">
       <p>요청하신 페이지를 찾지 못했어요.</p>
-      <Link to="/login">로그인 화면으로 돌아가기</Link>
+      <Link to="/login" className="text-[#5a4cf5] font-semibold no-underline hover:underline">
+        로그인 화면으로 돌아가기
+      </Link>
     </div>
   )
 }

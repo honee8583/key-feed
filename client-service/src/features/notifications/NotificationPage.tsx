@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import './NotificationPage.css'
 import { notificationApi, type NotificationDto } from '../../services/notificationApi'
 import { NotificationCard, NotificationStatus } from './components'
 import type { NotificationItem } from './types'
@@ -135,22 +134,26 @@ export function NotificationPage() {
   }, [fetchNextPage, hasNext])
 
   return (
-    <div className="notifications-page">
-      <div className="notifications-page__content">
-        <header className="notifications-header">
-          <div className="notifications-header__top">
-            <div className="notifications-title">
-              <h1>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.08),transparent_45%),#050505] py-7 pb-40 flex justify-center text-slate-50 font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif]">
+      <div className="w-full max-w-[420px] flex flex-col gap-[18px]">
+        <header className="bg-gradient-to-br from-[rgba(15,15,20,0.95)] to-[rgba(10,10,16,0.85)] border border-white/8 shadow-[0_18px_30px_rgba(2,6,23,0.4)] rounded-[28px] p-6 flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="inline-flex items-center gap-2.5">
+              <h1 className="m-0 text-[26px] tracking-[-0.02em] inline-flex items-center gap-2 text-slate-50">
                 알림
               </h1>
             </div>
-            <button type="button" className="notifications-icon-button" aria-label="알림 설정 및 옵션">
+            <button
+              type="button"
+              className="w-10 h-10 rounded-2xl border border-white/18 bg-white/8 shadow-[0_10px_24px_rgba(2,6,23,0.5)] inline-flex items-center justify-center cursor-pointer text-slate-50/70 text-lg hover:bg-white/12"
+              aria-label="알림 설정 및 옵션"
+            >
               <span aria-hidden>⋯</span>
             </button>
           </div>
         </header>
 
-        <section className="notifications-list" aria-label="알림 목록">
+        <section className="flex flex-col gap-3.5" aria-label="알림 목록">
           {isLoading && !notifications.length ? (
             <NotificationStatus role="status">알림을 불러오는 중입니다...</NotificationStatus>
           ) : null}
@@ -169,7 +172,7 @@ export function NotificationPage() {
             <NotificationCard key={notification.id} item={notification} />
           ))}
 
-          <div ref={loadMoreRef} className="notifications-load-more-trigger" aria-hidden />
+          <div ref={loadMoreRef} className="w-full h-px" aria-hidden />
 
           {isFetchingNext ? (
             <NotificationStatus variant="inline" role="status">

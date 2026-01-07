@@ -1,6 +1,5 @@
 import { useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import './SignupPage.css'
 import { authApi } from '../../services/authApi'
 import type { SocialProvider } from '../../services/authApi'
 
@@ -172,48 +171,56 @@ export function SignupPage() {
   }
 
   return (
-    <div className="signup-page">
-      <div className="signup-page__blur signup-page__blur--one" aria-hidden />
-      <div className="signup-page__blur signup-page__blur--two" aria-hidden />
-      <div className="signup-page__container">
-        <header className="signup-page__hero">
-          <Link to="/login" className="signup-page__back">
+    <div className="relative min-h-screen py-6 px-4 pb-12 bg-gradient-to-b from-[#7b3fe4] via-[#4267ff] to-[#021651] flex justify-center overflow-hidden min-[768px]:pt-12">
+      <div
+        className="absolute w-[420px] h-[420px] rounded-full blur-[140px] opacity-35 pointer-events-none top-[-140px] left-[-120px] bg-white/65"
+        aria-hidden
+      />
+      <div
+        className="absolute w-[420px] h-[420px] rounded-full blur-[140px] opacity-35 pointer-events-none bottom-[-140px] right-[-120px] bg-[rgba(194,122,255,0.7)]"
+        aria-hidden
+      />
+      <div className="relative w-full max-w-[420px] flex flex-col gap-6 text-white z-10">
+        <header className="flex flex-col gap-5 mt-2">
+          <Link to="/login" className="inline-flex items-center gap-1.5 w-fit text-white/95 no-underline text-[15px] hover:opacity-80">
             <ArrowLeftIcon />
             <span>돌아가기</span>
           </Link>
-          <div className="signup-page__hero-card">
-            <div className="signup-page__hero-icon" aria-hidden>
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div
+              className="w-20 h-20 rounded-3xl bg-white/20 border border-white/35 flex items-center justify-center text-4xl shadow-[0_10px_15px_rgba(15,23,42,0.1)]"
+              aria-hidden
+            >
               <span>📰</span>
             </div>
-            <div className="signup-page__hero-text">
-              <h1>회원가입</h1>
-              <p>정보의 홍수 속에서 진짜 필요한 것만</p>
+            <div>
+              <h1 className="m-0 text-2xl font-bold tracking-[-0.4px] text-white">회원가입</h1>
+              <p className="m-0 text-sm text-[rgba(239,246,255,0.9)]">정보의 홍수 속에서 진짜 필요한 것만</p>
             </div>
           </div>
         </header>
 
-        <section className="signup-card" aria-label="회원가입 폼">
-          <div className="signup-card__subtitle">간편 회원가입</div>
-          <div className="signup-card__socials">
+        <section
+          className="bg-white/96 rounded-t-[32px] rounded-b-3xl p-8 px-6 pb-7 shadow-[0_25px_50px_-12px_rgba(15,23,42,0.25)] text-[#101828] flex flex-col gap-5 min-[768px]:rounded-[40px]"
+          aria-label="회원가입 폼"
+        >
+          <div className="text-center text-sm text-[#475467]">간편 회원가입</div>
+          <div className="flex flex-col gap-3">
             {SOCIAL_BUTTONS.map(
               ({ id, label, background, border, textColor, iconBackground, iconColor, icon }) => (
                 <button
                   key={id}
                   type="button"
-                  className="social-button social-button--compact"
-                  style={
-                    {
-                      '--social-bg': background,
-                      '--social-border': border,
-                      '--social-text': textColor,
-                      '--social-icon-bg': iconBackground,
-                      '--social-icon-text': iconColor,
-                    } as CSSProperties
-                  }
+                  className="h-12 flex items-center justify-center gap-3 rounded-xl border-none text-sm font-normal tracking-[-0.31px] cursor-pointer transition-opacity duration-200 disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
+                  style={{ background, borderColor: border, color: textColor } as CSSProperties}
                   onClick={() => handleSocialLogin(id)}
                   disabled={isSubmitting}
                 >
-                  <span className="social-button__icon" aria-hidden>
+                  <span
+                    className="inline-flex items-center justify-center w-6 h-6 rounded-[10px] text-xs font-normal"
+                    style={{ background: iconBackground, color: iconColor } as CSSProperties}
+                    aria-hidden
+                  >
                     {icon}
                   </span>
                   <span>{label}</span>
@@ -222,14 +229,15 @@ export function SignupPage() {
             )}
           </div>
 
-          <div className="login-card__divider signup-card__divider">
-            <span>또는 이메일로 가입</span>
+          <div className="my-2 relative text-center h-5">
+            <div className="absolute top-1/2 left-0 right-0 h-[1.5px] bg-[#1e2939] -translate-y-1/2" />
+            <span className="relative inline-block px-4 bg-white/96 text-sm text-[#6a7282]">또는 이메일로 가입</span>
           </div>
 
-          <form className="signup-form" onSubmit={handleSubmit}>
-            <label className="form-field">
-              <span className="form-field__label">이름</span>
-              <div className="form-input">
+          <form className="flex flex-col gap-[18px]" onSubmit={handleSubmit}>
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-white tracking-[-0.15px]">이름</span>
+              <div className="relative h-14 rounded-2xl border-[1.5px] border-[#1e2939] bg-[rgba(229,229,229,0.3)] flex items-center gap-3 px-4 pl-12 text-white focus-within:border-[#3d3d3d]">
                 <UserIcon />
                 <input
                   type="text"
@@ -237,14 +245,15 @@ export function SignupPage() {
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   disabled={isSubmitting}
+                  className="flex-1 border-none bg-transparent text-base text-white outline-none tracking-[-0.31px] placeholder:text-[#6a7282]"
                   required
                 />
               </div>
             </label>
 
-            <label className="form-field">
-              <span className="form-field__label">이메일</span>
-              <div className="form-input">
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-white tracking-[-0.15px]">이메일</span>
+              <div className="relative h-14 rounded-2xl border-[1.5px] border-[#1e2939] bg-[rgba(229,229,229,0.3)] flex items-center gap-3 px-4 pl-12 text-white focus-within:border-[#3d3d3d]">
                 <MailIcon />
                 <input
                   type="email"
@@ -252,6 +261,7 @@ export function SignupPage() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   disabled={isSubmitting}
+                  className="flex-1 border-none bg-transparent text-base text-white outline-none tracking-[-0.31px] placeholder:text-[#6a7282]"
                   required
                 />
               </div>
@@ -259,16 +269,16 @@ export function SignupPage() {
 
             <button
               type="button"
-              className="secondary-button"
+              className="h-10 rounded-xl border border-slate-400/50 bg-[#f8f9fb] text-[#334155] font-semibold cursor-pointer transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-slate-100"
               onClick={handleSendVerification}
               disabled={isSendingCode || !isEmailValid}
             >
               {isSendingCode ? '발송 중...' : '인증번호 발송'}
             </button>
 
-            <label className="form-field">
-              <span className="form-field__label">비밀번호</span>
-              <div className="form-input">
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-white tracking-[-0.15px]">비밀번호</span>
+              <div className="relative h-14 rounded-2xl border-[1.5px] border-[#1e2939] bg-[rgba(229,229,229,0.3)] flex items-center gap-3 px-4 pl-12 text-white focus-within:border-[#3d3d3d]">
                 <LockIcon />
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -277,11 +287,12 @@ export function SignupPage() {
                   onChange={(event) => setPassword(event.target.value)}
                   disabled={isSubmitting}
                   minLength={8}
+                  className="flex-1 border-none bg-transparent text-base text-white outline-none tracking-[-0.31px] placeholder:text-[#6a7282]"
                   required
                 />
                 <button
                   type="button"
-                  className="ghost-icon-button"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent p-0 flex items-center justify-center cursor-pointer text-[#6a7282] hover:text-[#99a1af]"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
                 >
@@ -290,9 +301,9 @@ export function SignupPage() {
               </div>
             </label>
 
-            <label className="form-field">
-              <span className="form-field__label">비밀번호 확인</span>
-              <div className="form-input">
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-white tracking-[-0.15px]">비밀번호 확인</span>
+              <div className="relative h-14 rounded-2xl border-[1.5px] border-[#1e2939] bg-[rgba(229,229,229,0.3)] flex items-center gap-3 px-4 pl-12 text-white focus-within:border-[#3d3d3d]">
                 <LockIcon />
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -301,11 +312,12 @@ export function SignupPage() {
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   disabled={isSubmitting}
                   minLength={8}
+                  className="flex-1 border-none bg-transparent text-base text-white outline-none tracking-[-0.31px] placeholder:text-[#6a7282]"
                   required
                 />
                 <button
                   type="button"
-                  className="ghost-icon-button"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent p-0 flex items-center justify-center cursor-pointer text-[#6a7282] hover:text-[#99a1af]"
                   onClick={() => setShowConfirmPassword((prev) => !prev)}
                   aria-label={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
                 >
@@ -314,51 +326,69 @@ export function SignupPage() {
               </div>
             </label>
 
-            <div className="signup-agreements">
-              <label className="signup-agreements__all">
+            <div className="border border-slate-400/35 rounded-2xl p-4 flex flex-col gap-3 bg-[#fdfdff]">
+              <label className="flex items-center gap-2.5 font-semibold text-[#111827]">
                 <input
                   type="checkbox"
                   checked={agreements.all}
                   onChange={(event) => handleAllAgreements(event.target.checked)}
                   disabled={isSubmitting}
+                  className="w-4 h-4"
                 />
                 <span>전체 동의</span>
               </label>
-              <div className="signup-agreements__options">
+              <div className="flex flex-col gap-2.5">
                 {AGREEMENT_ITEMS.map(({ key, label, required }) => (
-                  <div key={key} className="signup-agreements__option">
-                    <label>
+                  <div key={key} className="flex items-center justify-between gap-2 text-sm text-[#475467]">
+                    <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={agreements[key]}
                         onChange={(event) => handleAgreementChange(key, event.target.checked)}
                         disabled={isSubmitting}
+                        className="w-4 h-4 accent-[#6f4bff]"
                       />
                       <span>{label}</span>
                     </label>
-                    <button type="button" className="text-link text-link--muted">
+                    <button
+                      type="button"
+                      className="text-xs text-[#94a3b8] bg-none border-none cursor-pointer p-0"
+                    >
                       보기
-                      {required && <span className="visually-hidden"> (필수)</span>}
+                      {required && <span className="absolute w-px h-px p-0 m-[-1px] overflow-hidden clip-rect-[0,0,0,0] border-0">
+                        {' '}
+                        (필수)
+                      </span>}
                     </button>
                   </div>
                 ))}
               </div>
             </div>
 
-            <button className="primary-button" type="submit" disabled={!isFormValid || isSubmitting}>
+            <button
+              className="h-14 rounded-2xl border-none bg-white text-black text-sm font-medium cursor-pointer tracking-[-0.15px] transition-opacity duration-200 disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
+              type="submit"
+              disabled={!isFormValid || isSubmitting}
+            >
               {isSubmitting ? '가입 중...' : '가입하기'}
             </button>
           </form>
 
           {feedback !== 'idle' && (
-            <p className={`signup-card__feedback ${feedback === 'error' ? 'is-error' : 'is-success'}`}>
+            <p
+              className={`mt-2 px-3.5 py-3 rounded-xl text-sm ${
+                feedback === 'error'
+                  ? 'bg-[rgba(248,113,113,0.12)] text-[#b91c1c]'
+                  : 'bg-[rgba(16,185,129,0.1)] text-[#047857]'
+              }`}
+            >
               {message}
             </p>
           )}
 
-          <footer className="signup-card__footer">
+          <footer className="flex justify-center gap-1.5 text-sm text-[#475467]">
             <span>이미 계정이 있으신가요?</span>
-            <Link to="/login" className="text-link">
+            <Link to="/login" className="text-sm text-[#475467] no-underline hover:underline">
               로그인
             </Link>
           </footer>
@@ -370,7 +400,7 @@ export function SignupPage() {
 
 function ArrowLeftIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="signup-back-icon">
+    <svg viewBox="0 0 24 24" aria-hidden className="w-5 h-5">
       <path
         d="M15 5 8 12l7 7"
         stroke="currentColor"
@@ -385,7 +415,11 @@ function ArrowLeftIcon() {
 
 function UserIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="form-icon">
+    <svg
+      viewBox="0 0 24 24"
+      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
+      aria-hidden
+    >
       <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6" fill="none" />
       <path
         d="M5.5 19.5a6.5 6.5 0 0 1 13 0"
@@ -400,7 +434,11 @@ function UserIcon() {
 
 function MailIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="form-icon">
+    <svg
+      viewBox="0 0 24 24"
+      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
+      aria-hidden
+    >
       <path
         d="M4 6.8A2.8 2.8 0 0 1 6.8 4h10.4A2.8 2.8 0 0 1 20 6.8v10.4A2.8 2.8 0 0 1 17.2 20H6.8A2.8 2.8 0 0 1 4 17.2z"
         stroke="currentColor"
@@ -423,7 +461,11 @@ function MailIcon() {
 
 function LockIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="form-icon">
+    <svg
+      viewBox="0 0 24 24"
+      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
+      aria-hidden
+    >
       <rect
         x="4.5"
         y="10"
@@ -447,7 +489,11 @@ function LockIcon() {
 
 function EyeIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="form-icon">
+    <svg
+      viewBox="0 0 24 24"
+      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
+      aria-hidden
+    >
       <path
         d="M2.5 12s3.2-6 9.5-6 9.5 6 9.5 6-3.2 6-9.5 6-9.5-6-9.5-6Z"
         stroke="currentColor"
@@ -463,7 +509,11 @@ function EyeIcon() {
 
 function EyeOffIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="form-icon">
+    <svg
+      viewBox="0 0 24 24"
+      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
+      aria-hidden
+    >
       <path
         d="M3 3.5 21 20"
         stroke="currentColor"
@@ -494,7 +544,7 @@ function EyeOffIcon() {
 
 function GoogleIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="google-icon">
+    <svg viewBox="0 0 24 24" aria-hidden className="w-6 h-6">
       <path
         d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.7h5.4a4.6 4.6 0 0 1-2 3.1v2.6h3.2c1.9-1.7 3-4.2 3-7.5Z"
         fill="#4285F4"

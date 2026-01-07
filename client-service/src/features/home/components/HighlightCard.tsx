@@ -52,35 +52,46 @@ export function HighlightCard({
 
   return (
     <article
-      className={`highlight-card${isInteractive ? ' is-interactive' : ''}`}
+      className={`bg-[#0f0f0f] rounded-[28px] p-5 border border-white/8 flex flex-col gap-4 shadow-none max-[480px]:p-4 ${
+        isInteractive ? 'cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80 focus-visible:outline-offset-1' : ''
+      }`}
       role={isInteractive ? 'link' : undefined}
       tabIndex={isInteractive ? 0 : undefined}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
     >
-      <div className="highlight-card__media">
-        <img src={image} alt="" loading="lazy" />
-        {isNew ? <span className="badge badge--alert">NEW</span> : null}
-        <span className="badge badge--type">
+      <div className="relative rounded-3xl overflow-hidden aspect-[338/212]">
+        <img src={image} alt="" className="w-full h-full object-cover block" loading="lazy" />
+        {isNew ? (
+          <span className="absolute top-4 left-4 inline-flex items-center gap-1 py-1.5 px-3.5 rounded-full text-[13px] font-semibold text-white bg-gradient-to-br from-[#fb2c36] to-[#e60076]">
+            NEW
+          </span>
+        ) : null}
+        <span className="absolute top-4 right-4 inline-flex items-center gap-1 py-1.5 px-3.5 rounded-full text-[13px] font-semibold text-white bg-white/15">
           <span aria-hidden>{typeIcon}</span> {typeLabel}
         </span>
       </div>
-      <div className="highlight-card__meta">
+      <div className="flex gap-2 text-white/55 text-[13px]">
         <span>{source}</span>
         <span aria-hidden>•</span>
         <span>{timeAgo}</span>
       </div>
-      <div className="highlight-card__body">
-        <h2>{title}</h2>
-        <p>{summary}</p>
+      <div className="flex flex-col">
+        <h2 className="m-0 mb-2 text-[22px]">{title}</h2>
+        <p className="m-0 text-white/70 leading-relaxed">{summary}</p>
       </div>
-      <div className="highlight-card__footer">
-        <span className="card-tag">{tag}</span>
+      <div className="flex justify-between items-center">
+        <span className="py-2 px-3.5 rounded-full bg-white/10 text-slate-50 font-semibold">{tag}</span>
         {showActions ? (
-          <div className="card-actions">
+          <div className="flex gap-2.5">
             {bookmarkIcon ? (
-              <button type="button" aria-label="저장" onClick={handleActionClick(onBookmarkClick)}>
-                <img className="card-action-icon card-action-icon--bookmark" src={bookmarkIcon} alt="" aria-hidden />
+              <button
+                type="button"
+                className="w-11 h-11 rounded-2xl border border-white/10 bg-white/5 inline-flex items-center justify-center hover:bg-white/10 transition-colors"
+                aria-label="저장"
+                onClick={handleActionClick(onBookmarkClick)}
+              >
+                <img className="w-[18px] h-[18px]" src={bookmarkIcon} alt="" aria-hidden />
               </button>
             ) : null}
           </div>

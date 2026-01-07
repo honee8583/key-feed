@@ -1,6 +1,5 @@
 import { useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import './LoginPage.css'
 import { authApi } from '../../services/authApi'
 import type { SocialProvider } from '../../services/authApi'
 import { useAuth } from './AuthContext'
@@ -109,38 +108,34 @@ export function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-page__container">
-        <div className="login-page__header">
-          <div className="login-page__icon">
+    <div className="min-h-screen bg-black flex justify-center pt-16 px-6">
+      <div className="w-full max-w-[393px] flex flex-col gap-16">
+        <div className="flex flex-col gap-0">
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-[30px] mb-6">
             <span>📰</span>
           </div>
-          <h1>로그인</h1>
-          <p>나만의 맞춤 콘텐츠 피드를 만나보세요</p>
+          <h1 className="m-0 mb-1 text-xl font-bold text-white tracking-[-0.45px]">로그인</h1>
+          <p className="m-0 text-sm text-[#99a1af] tracking-[-0.15px]">나만의 맞춤 콘텐츠 피드를 만나보세요</p>
         </div>
 
-        <div className="login-page__content">
-          <div className="login-page__socials">
+        <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-3">
             {SOCIAL_BUTTONS.map(
               ({ id, label, background, border, textColor, iconBackground, iconColor, icon }) => (
                 <button
                   key={id}
                   type="button"
-                  className="social-button"
-                  style={
-                    {
-                      '--social-bg': background,
-                      '--social-border': border,
-                      '--social-text': textColor,
-                      '--social-icon-bg': iconBackground,
-                      '--social-icon-text': iconColor,
-                    } as CSSProperties
-                  }
+                  className="flex items-center justify-between w-full h-14 px-5 rounded-2xl border-none text-base font-normal tracking-[-0.31px] cursor-pointer transition-opacity duration-200 disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
+                  style={{ background, borderColor: border, color: textColor } as CSSProperties}
                   onClick={() => handleSocialLogin(id)}
                   disabled={isLoading}
                 >
-                  <div className="social-button__left">
-                    <span className="social-button__icon" aria-hidden>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="inline-flex items-center justify-center w-6 h-6 rounded-[10px] text-xs font-normal"
+                      style={{ background: iconBackground, color: iconColor } as CSSProperties}
+                      aria-hidden
+                    >
                       {icon}
                     </span>
                     <span>{label}</span>
@@ -151,14 +146,17 @@ export function LoginPage() {
             )}
           </div>
 
-          <div className="login-page__divider">
-            <span>또는</span>
+          <div className="relative text-center h-5">
+            <div className="absolute top-1/2 left-0 right-0 h-[1.5px] bg-[#1e2939] -translate-y-1/2" />
+            <span className="relative inline-block px-4 bg-black text-sm text-[#6a7282] tracking-[-0.15px]">
+              또는
+            </span>
           </div>
 
-          <form className="login-form" onSubmit={handleSubmit}>
-            <label className="form-field">
-              <span className="form-field__label">이메일</span>
-              <div className="form-input">
+          <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-white tracking-[-0.15px]">이메일</span>
+              <div className="relative h-14 rounded-2xl border-[1.5px] border-[#1e2939] bg-[rgba(229,229,229,0.3)] flex items-center gap-3 px-4 pl-12 text-white focus-within:border-[#3d3d3d]">
                 <MailIcon />
                 <input
                   type="email"
@@ -168,14 +166,15 @@ export function LoginPage() {
                   onChange={(event) => setEmail(event.target.value)}
                   autoComplete="email"
                   disabled={isLoading}
+                  className="flex-1 border-none bg-transparent text-base text-white outline-none tracking-[-0.31px] placeholder:text-[#6a7282]"
                   required
                 />
               </div>
             </label>
 
-            <label className="form-field">
-              <span className="form-field__label">비밀번호</span>
-              <div className="form-input">
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-white tracking-[-0.15px]">비밀번호</span>
+              <div className="relative h-14 rounded-2xl border-[1.5px] border-[#1e2939] bg-[rgba(229,229,229,0.3)] flex items-center gap-3 px-4 pl-12 text-white focus-within:border-[#3d3d3d]">
                 <LockIcon />
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -185,11 +184,12 @@ export function LoginPage() {
                   autoComplete="current-password"
                   disabled={isLoading}
                   minLength={6}
+                  className="flex-1 border-none bg-transparent text-base text-white outline-none tracking-[-0.31px] placeholder:text-[#6a7282]"
                   required
                 />
                 <button
                   type="button"
-                  className="password-toggle"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent p-0 flex items-center justify-center cursor-pointer text-[#6a7282] hover:text-[#99a1af]"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
                 >
@@ -198,33 +198,49 @@ export function LoginPage() {
               </div>
             </label>
 
-            <div className="login-form__actions">
-              <label className="checkbox-label">
+            <div className="flex justify-between items-center text-sm">
+              <label className="flex items-center gap-2 font-medium text-[#99a1af] tracking-[-0.15px] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={staySignedIn}
                   onChange={(event) => setStaySignedIn(event.target.checked)}
                   disabled={isLoading}
+                  className="w-4 h-4 border-[1.5px] border-[#e5e5e5] rounded bg-[rgba(229,229,229,0.3)] cursor-pointer"
                 />
                 <span>로그인 유지</span>
               </label>
-              <button type="button" className="text-link">비밀번호 찾기</button>
+              <button
+                type="button"
+                className="border-none bg-none text-[#99a1af] text-sm font-normal cursor-pointer p-0 tracking-[-0.15px] no-underline hover:underline"
+              >
+                비밀번호 찾기
+              </button>
             </div>
 
-            <button className="primary-button" type="submit" disabled={!isFormValid || isLoading}>
+            <button
+              className="h-14 rounded-2xl border-none bg-white text-black text-sm font-medium cursor-pointer tracking-[-0.15px] transition-opacity duration-200 disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
+              type="submit"
+              disabled={!isFormValid || isLoading}
+            >
               {isLoading ? '로그인 중...' : '로그인'}
             </button>
           </form>
 
           {feedback !== 'idle' && (
-            <p className={`login-page__feedback ${feedback === 'error' ? 'is-error' : 'is-success'}`}>
+            <p
+              className={`-mt-3 mb-0 px-4 py-3 rounded-xl text-sm text-center ${
+                feedback === 'error'
+                  ? 'bg-[rgba(239,68,68,0.1)] text-[#ef4444]'
+                  : 'bg-[rgba(16,185,129,0.1)] text-[#10b981]'
+              }`}
+            >
               {message}
             </p>
           )}
 
-          <div className="login-page__footer">
+          <div className="pt-[33px] border-t-[1.5px] border-[#1e2939] flex justify-center gap-2 text-sm text-[#99a1af] tracking-[-0.15px]">
             <span>아직 계정이 없으신가요?</span>
-            <Link to="/signup" className="text-link text-link--white">
+            <Link to="/signup" className="text-white text-sm font-normal cursor-pointer p-0 tracking-[-0.15px] no-underline hover:underline">
               회원가입
             </Link>
           </div>
@@ -236,7 +252,7 @@ export function LoginPage() {
 
 function ArrowRightIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="arrow-icon">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="flex-shrink-0 text-inherit">
       <path
         d="M7.5 15L12.5 10L7.5 5"
         stroke="currentColor"
@@ -250,7 +266,14 @@ function ArrowRightIcon() {
 
 function MailIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="form-icon">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
+      aria-hidden
+    >
       <rect
         x="3"
         y="5"
@@ -273,7 +296,14 @@ function MailIcon() {
 
 function LockIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="form-icon">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
+      aria-hidden
+    >
       <rect
         x="4"
         y="9"
@@ -295,7 +325,14 @@ function LockIcon() {
 
 function EyeIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="form-icon">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
+      aria-hidden
+    >
       <path
         d="M10 6.25C6.25 6.25 3.75 10 3.75 10C3.75 10 6.25 13.75 10 13.75C13.75 13.75 16.25 10 16.25 10C16.25 10 13.75 6.25 10 6.25Z"
         stroke="currentColor"
@@ -316,7 +353,7 @@ function EyeIcon() {
 
 function GoogleIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="google-icon">
+    <svg viewBox="0 0 24 24" aria-hidden className="w-6 h-6">
       <path
         d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.7h5.4a4.6 4.6 0 0 1-2 3.1v2.6h3.2c1.9-1.7 3-4.2 3-7.5Z"
         fill="#4285F4"

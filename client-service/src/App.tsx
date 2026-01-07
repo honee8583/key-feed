@@ -1,4 +1,3 @@
-import './App.css'
 import { AppRouter } from './routes/AppRouter'
 import { AuthProvider } from './features/auth'
 
