@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import './MainPage.css'
 import { useAuth } from '../auth'
 import { HighlightCard, type HighlightCardProps } from './components/HighlightCard'
 import { feedApi, type FeedContent } from '../../services/feedApi'
@@ -149,81 +148,114 @@ export function MainPage() {
   )
 
   return (
-    <div className="main-page">
-      <div className="discover-page">
-        <header className="discover-hero">
-          <div className="discover-hero__copy">
-            <p className="discover-hero__eyebrow">콘텐츠 피드</p>
-            <h1>Discover</h1>
-            <p>맞춤 콘텐츠를 탐색하세요</p>
+    <div className="min-h-screen py-8 pb-[140px] bg-[radial-gradient(circle_at_15%_15%,rgba(255,255,255,0.08),transparent_55%),#050505] font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif] text-slate-50">
+      <div className="w-full max-w-[440px] mx-auto flex flex-col gap-6">
+        <header className="bg-gradient-to-br from-[#020202] to-[#161616] text-white rounded-[32px] p-8 px-7 flex justify-between items-start relative overflow-hidden border border-white/8 max-[480px]:p-7 max-[480px]:px-6">
+          <div className="absolute -left-10 -top-[60px] w-[180px] h-[180px] rounded-full bg-white/5 blur-[30px]" />
+          <div className="relative z-10">
+            <p className="m-0 mb-2 text-sm opacity-70">콘텐츠 피드</p>
+            <h1 className="m-0 text-[32px] tracking-[-0.02em]">Discover</h1>
+            <p className="mt-3 mb-0 text-slate-100/65">맞춤 콘텐츠를 탐색하세요</p>
           </div>
         </header>
 
-        <section className="keyword-pills" aria-label="활성 키워드">
+        <section
+          className="flex gap-3 overflow-x-auto py-1 pr-1 scroll-snap-x-proximity [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:bg-white/25 [&::-webkit-scrollbar-thumb]:rounded-full"
+          aria-label="활성 키워드"
+        >
           {keywordCategories.map((label, index) => (
-            <button key={label} type="button" className={index === 0 ? 'is-selected' : undefined}>
+            <button
+              key={label}
+              type="button"
+              className={`flex-none py-2.5 px-5 rounded-full border scroll-snap-start transition-colors ${
+                index === 0
+                  ? 'bg-slate-50 border-slate-50 text-[#050505]'
+                  : 'border-white/20 bg-transparent text-slate-50 font-semibold hover:bg-white/5'
+              }`}
+            >
               {label}
             </button>
           ))}
         </section>
 
-        <nav className="feed-tabs" aria-label="콘텐츠 분류">
+        <nav className="relative grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] border-b border-white/8" aria-label="콘텐츠 분류">
           {contentTabs.map((tab, index) => (
-            <button key={tab} type="button" className={index === 0 ? 'is-active' : undefined}>
+            <button
+              key={tab}
+              type="button"
+              className={`border-none bg-transparent pb-3 font-semibold relative text-center transition-colors ${
+                index === 0
+                  ? 'text-slate-50 after:content-[""] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[3px] after:rounded-full after:bg-slate-50'
+                  : 'text-white/45 hover:text-white/65'
+              }`}
+            >
               {tab}
             </button>
           ))}
         </nav>
 
-        <section className="highlight-feed" aria-label="하이라이트 콘텐츠">
+        <section className="flex flex-col gap-8" aria-label="하이라이트 콘텐츠">
           {articles.map(({ id, ...card }) => (
             <HighlightCard key={id} {...card} {...highlightCardActionIcons} />
           ))}
 
           {isInitialLoading ? (
-            <div className="feed-status" role="status">
+            <div className="mt-3 p-4 rounded-[20px] border border-white/8 bg-white/3 text-center text-slate-50/80 text-sm leading-relaxed" role="status">
               맞춤 콘텐츠를 불러오는 중이에요...
             </div>
           ) : null}
 
           {error ? (
-            <div className="feed-status is-error" role="alert">
-              <p>{error}</p>
-              <button type="button" onClick={handleRetry}>
+            <div className="mt-3 p-4 rounded-[20px] border border-[rgba(255,100,110,0.4)] bg-white/3 text-center text-[#ff8da1] text-sm leading-relaxed" role="alert">
+              <p className="m-0 mb-2">{error}</p>
+              <button
+                type="button"
+                className="mt-1 py-2 px-[18px] rounded-full border border-slate-50/60 bg-transparent text-slate-50 font-semibold cursor-pointer hover:bg-white/5"
+                onClick={handleRetry}
+              >
                 다시 시도
               </button>
             </div>
           ) : null}
 
-          {showEmptyState ? <div className="feed-status">표시할 콘텐츠가 없어요.</div> : null}
+          {showEmptyState ? (
+            <div className="mt-3 p-4 rounded-[20px] border border-white/8 bg-white/3 text-center text-slate-50/80 text-sm leading-relaxed">
+              표시할 콘텐츠가 없어요.
+            </div>
+          ) : null}
 
-          {hasArticles ? <div ref={loadMoreTriggerRef} className="feed-observer" aria-hidden /> : null}
+          {hasArticles ? <div ref={loadMoreTriggerRef} className="w-full h-px" aria-hidden /> : null}
 
           {isFetchingMore ? (
-            <div className="feed-status" role="status">
+            <div className="mt-3 p-4 rounded-[20px] border border-white/8 bg-white/3 text-center text-slate-50/80 text-sm leading-relaxed" role="status">
               추가 콘텐츠를 불러오는 중이에요...
             </div>
           ) : null}
 
-          {!hasNext && hasArticles ? <div className="feed-status">피드를 모두 확인했어요.</div> : null}
+          {!hasNext && hasArticles ? (
+            <div className="mt-3 p-4 rounded-[20px] border border-white/8 bg-white/3 text-center text-slate-50/80 text-sm leading-relaxed">
+              피드를 모두 확인했어요.
+            </div>
+          ) : null}
         </section>
 
-        <footer className="discover-footer">
+        <footer className="text-sm text-slate-50/60 leading-relaxed">
           <p>
-            {welcomeName}님을 위한 개인화 피드입니다. <span>콘텐츠 피드</span>에서 바로 업데이트를 확인하세요.
+            {welcomeName}님을 위한 개인화 피드입니다. <span className="text-slate-50 font-semibold">콘텐츠 피드</span>
+            에서 바로 업데이트를 확인하세요.
           </p>
         </footer>
       </div>
 
       <button
         type="button"
-        className="add-source-fab"
+        className="fixed right-[max(16px,calc((100vw-440px)/2))] bottom-[calc(24px+120px)] w-14 h-14 border-none rounded-full bg-gradient-to-br from-[#155dfc] to-[#4f39f6] shadow-[0_20px_25px_rgba(0,0,0,0.15),0_8px_10px_rgba(0,0,0,0.12)] inline-flex items-center justify-center cursor-pointer z-30 min-[720px]:bottom-[calc(40px+120px)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-50 focus-visible:outline-offset-[3px]"
         aria-label="콘텐츠 소스 추가"
         aria-haspopup="dialog"
         aria-expanded={isAddSourceOpen}
         onClick={handleOpenAddSource}
       >
-        <img src={addSourceIcon} alt="" aria-hidden />
+        <img src={addSourceIcon} alt="" className="w-6 h-6" aria-hidden />
       </button>
 
       <AddSourceSheet isOpen={isAddSourceOpen} onClose={handleCloseAddSource} onSubmit={handleAddSourceSubmit} />
