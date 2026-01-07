@@ -1,5 +1,5 @@
 import { EventSourcePolyfill } from 'event-source-polyfill'
-import { apiClient, parseJsonWithLargeIntSupport } from './apiClient'
+import { apiClient, parseJsonWithLargeIntSupport, API_BASE_URL } from './apiClient'
 import { getAccessToken } from './authStorage'
 
 export type NotificationResponseDto = {
@@ -46,9 +46,6 @@ export type NotificationListResult = {
   hasNext: boolean
 }
 
-const baseUrl =
-  (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim()) || 'http://localhost:8000/api'
-
 export const notificationApi = {
   async list(params: NotificationListParams = {}): Promise<NotificationListResult> {
     const query = new URLSearchParams()
@@ -89,7 +86,7 @@ export const notificationApi = {
       headers['Last-Event-ID'] = storedLastEventId
     }
 
-    const eventSource = new EventSourcePolyfill(`${baseUrl}/notifications/subscribe`, {
+    const eventSource = new EventSourcePolyfill(`${API_BASE_URL}/notifications/subscribe`, {
       withCredentials: true,
       headers,
     })
@@ -123,7 +120,7 @@ export const notificationApi = {
     console.info('[notification] subscribe opened', {
       hasToken: Boolean(token),
       hasLastEventId: Boolean(storedLastEventId),
-      url: `${baseUrl}/notifications/subscribe`,
+      url: `${API_BASE_URL}/notifications/subscribe`,
     })
 
     eventSource.addEventListener('notification', handleMessage)
