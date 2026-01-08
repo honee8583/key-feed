@@ -1,94 +1,108 @@
 package com.leedahun.feedservice.domain.feed.controller;
 
-import static com.leedahun.feedservice.common.message.SuccessMessage.READ_SUCCESS;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.isNull;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leedahun.feedservice.common.message.SuccessMessage;
+import com.leedahun.feedservice.common.response.CommonPageResponse;
+import com.leedahun.feedservice.config.SecurityConfig;
+import com.leedahun.feedservice.domain.feed.dto.ContentFeedResponseDto;
+import com.leedahun.feedservice.domain.feed.service.FeedService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Collections;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.leedahun.feedservice.auth.WithAnonymousUser;
-import com.leedahun.feedservice.common.response.CommonPageResponse;
-import com.leedahun.feedservice.domain.feed.dto.ContentFeedResponseDto;
-import com.leedahun.feedservice.domain.feed.service.FeedService;
-import java.util.Collections;
-import java.util.List;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-
-@WithAnonymousUser
-@WebMvcTest(FeedController.class)
+@WebMvcTest(controllers = FeedController.class,
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE, classes = {SecurityConfig.class}
+        ))
+@AutoConfigureMockMvc(addFilters = false)
 class FeedControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockitoBean
     private FeedService feedService;
 
     @Test
-    @DisplayName("나의 피드 조회 성공: 키워드와 파라미터를 기반으로 피드 목록을 반환한다")
+    @DisplayName("[GET /api/feed] 파라미터가 포함된 피드 목록 조회 성공 시 200 OK를 반환한다")
     void getMyFeeds_success() throws Exception {
         // given
-        Long userId = 1L;
         Long lastId = 100L;
         int size = 20;
+        List<Long> sourceIds = List.of(1L, 2L);
 
-        // 사용자의 활성 키워드 조회
-        List<String> mockKeywords = List.of("IT", "Development");
-        when(feedService.fetchActiveKeywordNames(any())).thenReturn(mockKeywords);
+        ContentFeedResponseDto feedItem = new ContentFeedResponseDto();
 
-        // 피드 조회 결과
-        CommonPageResponse<ContentFeedResponseDto> mockResponse = CommonPageResponse.<ContentFeedResponseDto>builder()
-                .content(Collections.emptyList())
-                .hasNext(true)
-                .nextCursorId(10L)
-                .build();
-        when(feedService.getPersonalizedFeed(any(), anyLong(), anyInt())).thenReturn(mockResponse);
+        CommonPageResponse<ContentFeedResponseDto> response = new CommonPageResponse<>(
+                List.of(feedItem),
+                90L,
+                true
+        );
+
+        when(feedService.fetchUserSourceIds(any())).thenReturn(sourceIds);
+        when(feedService.getPersonalizedFeeds(eq(sourceIds), eq(lastId), eq(size)))
+                .thenReturn(response);
 
         // when & then
         mockMvc.perform(get("/api/feed")
                         .param("lastId", String.valueOf(lastId))
-                        .param("size", String.valueOf(size)))
+                        .param("size", String.valueOf(size))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value(READ_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data").exists());
+                .andExpect(jsonPath("$.message").value(SuccessMessage.READ_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.hasNext").value(true));
 
-        verify(feedService).fetchActiveKeywordNames(userId);
-        verify(feedService).getPersonalizedFeed(mockKeywords, lastId, size);
+        verify(feedService).fetchUserSourceIds(any());
+        verify(feedService).getPersonalizedFeeds(eq(sourceIds), eq(lastId), eq(size));
     }
 
     @Test
-    @DisplayName("required=false인 파라미터는 null 또는 기본값으로 처리된다")
-    void getMyFeeds_without_params() throws Exception {
+    @DisplayName("[GET /api/feed] 파라미터가 없으면 기본값으로 피드 목록을 조회한다")
+    void getMyFeeds_defaultParams() throws Exception {
         // given
-        Long userId = 2L;
-        List<String> mockKeywords = List.of("Sports");
+        List<Long> sourceIds = List.of(1L, 2L);
 
-        when(feedService.fetchActiveKeywordNames(userId)).thenReturn(mockKeywords);
+        CommonPageResponse<ContentFeedResponseDto> emptyResponse = new CommonPageResponse<>(
+                Collections.emptyList(),
+                null,
+                false
+        );
 
-        CommonPageResponse<ContentFeedResponseDto> mockResponse = CommonPageResponse.<ContentFeedResponseDto>builder()
-                .content(Collections.emptyList())
-                .hasNext(true)
-                .nextCursorId(10L)
-                .build();
-        when(feedService.getPersonalizedFeed(any(), isNull(), anyInt())).thenReturn(mockResponse);
+        when(feedService.fetchUserSourceIds(any())).thenReturn(sourceIds);
+        when(feedService.getPersonalizedFeeds(eq(sourceIds), eq(null), eq(10)))
+                .thenReturn(emptyResponse);
 
         // when & then
-        mockMvc.perform(get("/api/feed")
-                        .param("size", "10")) // lastId는 보내지 않음 -> null
+        mockMvc.perform(get("/api/feed"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value(READ_SUCCESS.getMessage()))
-                .andExpect(jsonPath("$.data").exists());
+                .andExpect(jsonPath("$.message").value(SuccessMessage.READ_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.content").isEmpty())
+                .andExpect(jsonPath("$.data.hasNext").value(false));
+
+        verify(feedService).fetchUserSourceIds(any());
+        verify(feedService).getPersonalizedFeeds(eq(sourceIds), eq(null), eq(10));
     }
 }
