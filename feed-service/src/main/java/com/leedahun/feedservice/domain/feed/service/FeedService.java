@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface FeedService {
 
-    List<String> fetchActiveKeywordNames(Long userId);
+    List<Long> fetchUserSourceIds(Long userId);
 
-    CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeed(List<String> keywords, Long lastId, int size);
+    CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeeds(List<Long> sourceIds, Long lastId, int size);
 
     List<ContentFeedResponseDto> getContentsByIds(List<String> contentIds);
 

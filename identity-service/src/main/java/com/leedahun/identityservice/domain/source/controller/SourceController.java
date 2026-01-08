@@ -30,7 +30,7 @@ public class SourceController {
 
     @PostMapping
     public ResponseEntity<?> addSource(@AuthenticationPrincipal Long userId,
-                                                       @Valid @RequestBody SourceRequestDto request) {
+                                       @Valid @RequestBody SourceRequestDto request) {
         SourceResponseDto source = sourceService.addSource(userId, request);
         return ResponseEntity.ok()
                 .body(new HttpResponse(HttpStatus.OK, SuccessMessage.WRITE_SUCCESS.getMessage(), source));
@@ -41,7 +41,7 @@ public class SourceController {
                                           @PathVariable Long userSourceId) {
         sourceService.removeUserSource(userId, userSourceId);
         return ResponseEntity.ok()
-                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.DELETE_SUCCESS.getMessage(), null ));
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.DELETE_SUCCESS.getMessage(), null));
     }
 
 }

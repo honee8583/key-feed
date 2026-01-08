@@ -15,6 +15,7 @@ public enum ErrorMessage {
     FORBIDDEN("권한이 없습니다."),
 
     KEYWORD_REQUEST_FAIL("키워드 목록 조회에 실패하였습니다."),
+    USER_SOURCE_REQUEST_FAIL("소스 목록 조회에 실패하였습니다."),
 
     IDENTITY_SERVICE_REQUEST_FAIL("identity-service와의 통신에 실패하였습니다.");
 
