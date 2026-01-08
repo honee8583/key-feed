@@ -63,10 +63,8 @@ class FeedServiceTest {
         void success() {
             // given
             Long userId = 1L;
-            SourceResponseDto source1 = SourceResponseDto.builder().build();
-            setSourceId(source1, 10L);
-            SourceResponseDto source2 = SourceResponseDto.builder().build();
-            setSourceId(source2, 20L);
+            SourceResponseDto source1 = SourceResponseDto.builder().sourceId(10L).build();
+            SourceResponseDto source2 = SourceResponseDto.builder().sourceId(20L).build();
 
             when(userInternalApiClient.getUserSources(userId)).thenReturn(List.of(source1, source2));
 

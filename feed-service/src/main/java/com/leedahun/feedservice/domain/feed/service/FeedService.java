@@ -8,7 +8,7 @@ public interface FeedService {
 
     List<Long> fetchUserSourceIds(Long userId);
 
-     CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeeds(List<Long> sourceIds, Long lastId, int size);
+    CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeeds(List<Long> sourceIds, Long lastId, int size);
 
     List<ContentFeedResponseDto> getContentsByIds(List<String> contentIds);
 

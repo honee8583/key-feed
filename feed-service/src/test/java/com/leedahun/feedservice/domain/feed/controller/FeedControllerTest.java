@@ -1,6 +1,7 @@
 package com.leedahun.feedservice.domain.feed.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leedahun.feedservice.auth.WithAnonymousUser;
 import com.leedahun.feedservice.common.message.SuccessMessage;
 import com.leedahun.feedservice.common.response.CommonPageResponse;
 import com.leedahun.feedservice.config.SecurityConfig;
@@ -27,6 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WithAnonymousUser
 @WebMvcTest(controllers = FeedController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE, classes = {SecurityConfig.class}
