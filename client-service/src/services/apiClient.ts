@@ -12,6 +12,22 @@ export type ApiRequestOptions = Omit<RequestInit, "body"> & {
   body?: RequestBody;
 };
 
+export class ApiError extends Error {
+  status: number;
+  data?: unknown;
+
+  constructor(
+    status: number,
+    message: string,
+    data?: unknown
+  ) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.data = data;
+  }
+}
+
 class ApiClient {
   private readonly baseUrl: string;
   private refreshPromise: Promise<boolean> | null = null;
@@ -44,7 +60,9 @@ class ApiClient {
           return this.request<T>(path, options, false);
         }
       }
-      throw new Error(await this.buildErrorMessage(response));
+      
+      const errorMessage = await this.buildErrorMessage(response);
+      throw new ApiError(response.status, errorMessage);
     }
 
     return parseResponseBody<T>(response);

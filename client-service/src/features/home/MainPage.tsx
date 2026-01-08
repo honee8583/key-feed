@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth'
 import { HighlightCard, type HighlightCardProps } from './components/HighlightCard'
 import { feedApi, type FeedContent } from '../../services/feedApi'
+import { ApiError } from '../../services/apiClient'
 import type { CreatedSource } from '../../services/sourceApi'
 import { AddSourceSheet } from './components/AddSourceSheet'
 import bookmarkIcon from '../../assets/home/bookmark_btn.png'
@@ -63,11 +64,15 @@ export function MainPage() {
       setNextCursorId(response.nextCursorId ?? null)
       setHasNext(Boolean(response.hasNext))
     } catch (fetchError) {
-      const message =
-        fetchError instanceof Error
-          ? fetchError.message
-          : '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'
-      setError(message)
+      if (fetchError instanceof ApiError && fetchError.status === 503) {
+        setError('서버 점검 중이거나 접속이 지연되고 있어요. 잠시 후 다시 시도해주세요.')
+      } else {
+        const message =
+          fetchError instanceof Error
+            ? fetchError.message
+            : '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'
+        setError(message)
+      }
     } finally {
       if (isPaginationRequest) {
         setIsFetchingMore(false)
