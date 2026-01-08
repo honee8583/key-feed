@@ -1,0 +1,43 @@
+import { apiClient } from './apiClient'
+
+export type CreateSourceRequest = {
+  name: string
+  url: string
+}
+
+export type CreatedSource = {
+  sourceId: number
+  userSourceId: number
+  userDefinedName: string
+  url: string
+}
+
+type CreateSourceResponse = {
+  status: number
+  message: string
+  data: CreatedSource
+}
+
+type SourceListResponse = {
+  status: number
+  message: string
+  data: CreatedSource[]
+}
+
+export const sourceApi = {
+  async create(payload: CreateSourceRequest) {
+    const response = await apiClient.request<CreateSourceResponse>('/sources', {
+      method: 'POST',
+      body: payload,
+    })
+
+    return response.data
+  },
+  async listMy() {
+    const response = await apiClient.request<SourceListResponse>('/sources/my', {
+      method: 'GET',
+    })
+
+    return response.data
+  },
+}

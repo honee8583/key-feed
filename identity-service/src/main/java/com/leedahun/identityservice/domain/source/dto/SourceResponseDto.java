@@ -1,0 +1,23 @@
+package com.leedahun.identityservice.domain.source.dto;
+
+import com.leedahun.identityservice.domain.source.entity.UserSource;
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class SourceResponseDto {
+    private Long sourceId;
+    private Long userSourceId;
+    private String userDefinedName;
+    private String url;
+
+    public static SourceResponseDto from(UserSource userSource) {
+        return SourceResponseDto.builder()
+                .sourceId(userSource.getSource().getId())
+                .userSourceId(userSource.getId())
+                .userDefinedName(userSource.getUserDefinedName())
+                .url(userSource.getSource().getUrl())
+                .build();
+    }
+}

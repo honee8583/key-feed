@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/key_feed_feed?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 1111
+
+  elasticsearch:
+    uris: http://localhost:9200
+
+eureka:
+  client:
+    enabled: false
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: false
+
+logging:
+  level:
+    root: INFO
+    com.leedahun.identityservice: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: OFF
+    org.springframework.boot.web.servlet.support: ERROR

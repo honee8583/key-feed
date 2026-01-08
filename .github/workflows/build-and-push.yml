@@ -1,0 +1,367 @@
+name: Build and Push Changed Services
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      identity-service: ${{ steps.filter.outputs.identity-service }}
+      feed-service: ${{ steps.filter.outputs.feed-service }}
+      crawl-service: ${{ steps.filter.outputs.crawl-service }}
+      match-service: ${{ steps.filter.outputs.match-service }}
+      notification-service: ${{ steps.filter.outputs.notification-service }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+    steps:
+      - name: 📋 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🔍 Detect changed services
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            identity-service:
+              - 'identity-service/**'
+            feed-service:
+              - 'feed-service/**'
+            crawl-service:
+              - 'crawl-service/**'
+            match-service:
+              - 'match-service/**'
+            notification-service:
+              - 'notification-service/**'
+            gateway:
+              - 'gateway/**'
+      
+      - name: 📊 Show detection results
+        run: |
+          echo "=== 🔍 Change Detection Results ==="
+          echo "identity-service: ${{ steps.filter.outputs.identity-service }}"
+          echo "feed-service: ${{ steps.filter.outputs.feed-service }}"
+          echo "crawl-service: ${{ steps.filter.outputs.crawl-service }}"
+          echo "match-service: ${{ steps.filter.outputs.match-service }}"
+          echo "notification-service: ${{ steps.filter.outputs.notification-service }}"
+          echo "gateway: ${{ steps.filter.outputs.gateway }}"
+          echo "=================================="
+
+  build-identity-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.identity-service == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📋 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🚀 Starting build for identity-service
+        run: |
+          echo "=================================="
+          echo "🚀 Building identity-service"
+          echo "📅 Triggered at: $(date)"
+          echo "🔖 Commit SHA: ${{ github.sha }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "=================================="
+      
+      - name: ☕ Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: 🔨 Build with Gradle
+        working-directory: ./identity-service
+        run: |
+          chmod +x gradlew
+          jwt_key=${{ secrets.JWT_KEY }} jasypt_key=${{ secrets.JASYPT_KEY }} ./gradlew clean build
+      
+      - name: 🔑 Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./identity-service
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/identity-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/identity-service:${{ github.sha }}
+      
+      - name: ✅ Build completed for identity-service
+        run: |
+          echo "=================================="
+          echo "✅ identity-service build completed"
+          echo "🐳 Docker images pushed:"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/identity-service:latest"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/identity-service:${{ github.sha }}"
+          echo "=================================="
+
+  build-feed-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.feed-service == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📋 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🚀 Starting build for feed-service
+        run: |
+          echo "=================================="
+          echo "🚀 Building feed-service"
+          echo "📅 Triggered at: $(date)"
+          echo "🔖 Commit SHA: ${{ github.sha }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "=================================="
+      
+      - name: ☕ Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: 🔨 Build with Gradle
+        working-directory: ./feed-service
+        run: |
+          chmod +x gradlew
+          jwt_key=${{ secrets.JWT_KEY }} jasypt_key=${{ secrets.JASYPT_KEY }} ./gradlew clean build
+      
+      - name: 🔑 Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./feed-service
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/feed-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/feed-service:${{ github.sha }}
+      
+      - name: ✅ Build completed for feed-service
+        run: |
+          echo "=================================="
+          echo "✅ feed-service build completed"
+          echo "🐳 Docker images pushed:"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/feed-service:latest"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/feed-service:${{ github.sha }}"
+          echo "=================================="
+
+  build-crawl-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.crawl-service == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📋 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🚀 Starting build for crawl-service
+        run: |
+          echo "=================================="
+          echo "🚀 Building crawl-service"
+          echo "📅 Triggered at: $(date)"
+          echo "🔖 Commit SHA: ${{ github.sha }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "=================================="
+      
+      - name: ☕ Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: 🔨 Build with Gradle
+        working-directory: ./crawl-service
+        run: |
+          chmod +x gradlew
+          jwt_key=${{ secrets.JWT_KEY }} jasypt_key=${{ secrets.JASYPT_KEY }} ./gradlew clean build
+      
+      - name: 🔑 Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./crawl-service
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/crawl-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/crawl-service:${{ github.sha }}
+      
+      - name: ✅ Build completed for crawl-service
+        run: |
+          echo "=================================="
+          echo "✅ crawl-service build completed"
+          echo "🐳 Docker images pushed:"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/crawl-service:latest"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/crawl-service:${{ github.sha }}"
+          echo "=================================="
+
+  build-match-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.match-service == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📋 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🚀 Starting build for match-service
+        run: |
+          echo "=================================="
+          echo "🚀 Building match-service"
+          echo "📅 Triggered at: $(date)"
+          echo "🔖 Commit SHA: ${{ github.sha }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "=================================="
+      
+      - name: ☕ Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: 🔨 Build with Gradle
+        working-directory: ./match-service
+        run: |
+          chmod +x gradlew
+          jwt_key=${{ secrets.JWT_KEY }} jasypt_key=${{ secrets.JASYPT_KEY }} ./gradlew clean build
+      
+      - name: 🔑 Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./match-service
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/match-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/match-service:${{ github.sha }}
+      
+      - name: ✅ Build completed for match-service
+        run: |
+          echo "=================================="
+          echo "✅ match-service build completed"
+          echo "🐳 Docker images pushed:"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/match-service:latest"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/match-service:${{ github.sha }}"
+          echo "=================================="
+
+  build-notification-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.notification-service == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📋 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🚀 Starting build for notification-service
+        run: |
+          echo "=================================="
+          echo "🚀 Building notification-service"
+          echo "📅 Triggered at: $(date)"
+          echo "🔖 Commit SHA: ${{ github.sha }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "=================================="
+      
+      - name: ☕ Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: 🔨 Build with Gradle
+        working-directory: ./notification-service
+        run: |
+          chmod +x gradlew
+          jwt_key=${{ secrets.JWT_KEY }} jasypt_key=${{ secrets.JASYPT_KEY }} ./gradlew clean build
+      
+      - name: 🔑 Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./notification-service
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/notification-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/notification-service:${{ github.sha }}
+      
+      - name: ✅ Build completed for notification-service
+        run: |
+          echo "=================================="
+          echo "✅ notification-service build completed"
+          echo "🐳 Docker images pushed:"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/notification-service:latest"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/notification-service:${{ github.sha }}"
+          echo "=================================="
+
+  build-gateway:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.gateway == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📋 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🚀 Starting build for gateway
+        run: |
+          echo "=================================="
+          echo "🚀 Building gateway"
+          echo "📅 Triggered at: $(date)"
+          echo "🔖 Commit SHA: ${{ github.sha }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "=================================="
+      
+      - name: ☕ Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: 🔨 Build with Gradle
+        working-directory: ./gateway
+        run: |
+          chmod +x gradlew
+          jwt_key=${{ secrets.JWT_KEY }} jasypt_key=${{ secrets.JASYPT_KEY }} ./gradlew clean build
+      
+      - name: 🔑 Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./gateway
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/gateway:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/gateway:${{ github.sha }}
+      
+      - name: ✅ Build completed for gateway
+        run: |
+          echo "=================================="
+          echo "✅ gateway build completed"
+          echo "🐳 Docker images pushed:"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/gateway:latest"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/gateway:${{ github.sha }}"
+          echo "=================================="

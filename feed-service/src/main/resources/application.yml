@@ -1,0 +1,26 @@
+server:
+  port: 8082
+
+spring:
+  profiles:
+    active: prod
+
+  application:
+    name: feed-service
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+jasypt:
+  encryptor:
+    password: ${jasypt_key}
+    bean: jasyptEncryptor
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: BASIC

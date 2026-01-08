@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: honee8583/notification-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8085
+
+          # [헬스체크]
+          #readinessProbe:
+          # httpGet:
+          #   path: /actuator/health
+          #   port: 8085
+          # initialDelaySeconds: 40
+          # periodSeconds: 30
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_PORT
+
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://$(DB_HOST):$(DB_PORT)/key_feed_identity?rewriteBatchedStatements=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+
+            - name: KAFKA_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KAFKA_HOST
+            - name: KAFKA_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KAFKA_PORT
+
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "$(KAFKA_HOST):$(KAFKA_PORT)"
+
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_KEY
+            - name: JASYPT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JASYPT_KEY
+
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service # 내부 도메인: http://notification-service
+spec:
+  selector:
+    app: notification-service
+  ports:
+    - protocol: TCP
+      port: 80         # Gateway가 호출할 포트
+      targetPort: 8085 # 컨테이너 실제 포트

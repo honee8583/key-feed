@@ -1,0 +1,29 @@
+server:
+  port: 8085
+
+spring:
+  profiles:
+    active: prod
+
+  application:
+    name: notification-service
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+jdbc:
+  batch:
+    size: 1000
+
+jasypt:
+  encryptor:
+    password: ${jasypt_key}
+    bean: jasyptEncryptor
+
+app:
+  kafka:
+    topic:
+      notification: match.notification.requested
+    group-id:
+      notification: notification.alert.sender

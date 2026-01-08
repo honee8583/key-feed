@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: match-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: match-service
+  template:
+    metadata:
+      labels:
+        app: match-service
+    spec:
+      containers:
+        - name: match-service
+          image: honee8583/match-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8084 # Match Service 기본 포트
+
+          # [헬스체크]
+          #readinessProbe:
+          # httpGet:
+          #   path: /actuator/health
+          #   port: 8084
+          # initialDelaySeconds: 40
+          # periodSeconds: 30
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_PORT
+
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://$(DB_HOST):$(DB_PORT)/key_feed_feed?serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+
+            - name: KAFKA_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KAFKA_HOST
+            - name: KAFKA_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KAFKA_PORT
+
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "$(KAFKA_HOST):$(KAFKA_PORT)"
+
+            - name: ES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: ES_HOST
+            - name: ES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: ES_PORT
+
+            - name: SPRING_ELASTICSEARCH_URIS
+              value: "http://$(ES_HOST):$(ES_PORT)"
+
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: JASYPT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JASYPT_KEY
+
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: match-service
+spec:
+  selector:
+    app: match-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8084

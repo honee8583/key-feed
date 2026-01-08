@@ -1,0 +1,56 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: identity-auth-service
+              uri: http://identity-service
+              predicates:
+                - Path=/api/auth/**
+            - id: identity-bookmark-service
+              uri: http://identity-service
+              predicates:
+                - Path=/api/bookmarks/**
+              filters:
+                - JwtAuthenticationFilter
+            - id: identity-service
+              uri: http://identity-service
+              predicates:
+                - Path=/api/keywords/**
+              filters:
+                - JwtAuthenticationFilter
+            - id: feed-service
+              uri: http://feed-service
+              predicates:
+                - Path=/api/feed/**
+              filters:
+                - JwtAuthenticationFilter
+            - id: identity-service-source
+              uri: http://identity-service
+              predicates:
+                - Path=/api/sources/**
+              filters:
+                - JwtAuthenticationFilter
+            - id: notification-service
+              uri: http://notification-service
+              predicates:
+                - Path=/api/notifications/**
+              filters:
+                - JwtAuthenticationFilter
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins: 'http://localhost:5173'
+                allow-credentials: true
+                allowedHeaders: '*'
+                allowedMethods:
+                  - PUT
+                  - GET
+                  - POST
+                  - DELETE
+                  - OPTIONS
+
+eureka:
+  client:
+    enabled: false

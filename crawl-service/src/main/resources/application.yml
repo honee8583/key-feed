@@ -1,0 +1,20 @@
+server:
+  port: 8083
+
+spring:
+  profiles:
+    active: prod
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+jasypt:
+  encryptor:
+    password: ${jasypt_key}
+    bean: jasyptEncryptor
+
+app:
+  kafka:
+    topic:
+      content: crawl.content.collected

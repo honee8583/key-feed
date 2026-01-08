@@ -1,0 +1,62 @@
+package com.leedahun.identityservice.domain.auth.service.impl;
+
+import com.leedahun.identityservice.common.error.exception.EntityNotFoundException;
+import com.leedahun.identityservice.domain.auth.dto.LoginRequestDto;
+import com.leedahun.identityservice.domain.auth.dto.LoginResponseDto;
+import com.leedahun.identityservice.domain.auth.dto.LoginResult;
+import com.leedahun.identityservice.domain.auth.dto.LoginUser;
+import com.leedahun.identityservice.domain.auth.dto.TokenResult;
+import com.leedahun.identityservice.domain.auth.entity.Role;
+import com.leedahun.identityservice.domain.auth.entity.User;
+import com.leedahun.identityservice.domain.auth.exception.InvalidPasswordException;
+import com.leedahun.identityservice.domain.auth.repository.UserRepository;
+import com.leedahun.identityservice.domain.auth.service.LoginService;
+import com.leedahun.identityservice.domain.auth.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+@RequiredArgsConstructor
+public class LoginServiceImpl implements LoginService {
+
+    private final JwtUtil jwtUtil;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public LoginResult login(LoginRequestDto loginRequestDto) {
+        User user = userRepository.findByEmail(loginRequestDto.getEmail())
+                .orElseThrow(() -> new EntityNotFoundException("User", loginRequestDto.getEmail()));
+
+        if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPassword())) {
+            throw new InvalidPasswordException();
+        }
+
+        TokenResult tokens = issueTokens(user.getId(), user.getRole());
+        LoginResponseDto loginResponse = LoginResponseDto.from(user, tokens.getAccessToken());
+        return LoginResult.from(loginResponse, tokens.getRefreshToken());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TokenResult reissueTokens(String refreshToken) {
+        LoginUser loginUser = jwtUtil.verify(refreshToken);
+
+        User user = userRepository.findById(loginUser.getId())
+                .orElseThrow(() -> new EntityNotFoundException("User", String.valueOf(loginUser.getId())));
+
+        return issueTokens(user.getId(), user.getRole());
+    }
+
+    private TokenResult issueTokens(Long userId, Role role) {
+        return TokenResult.builder()
+                .accessToken(jwtUtil.createAccessToken(userId, role))
+                .refreshToken(jwtUtil.createRefreshToken(userId, role))
+                .build();
+    }
+
+}
