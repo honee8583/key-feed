@@ -13,10 +13,8 @@ public interface ContentDocumentRepository extends ElasticsearchRepository<Conte
       "bool": {
         "must": [
           {
-            "multi_match": {
-              "query": "?0",
-              "fields": ["title", "summary"],
-              "operator": "or"
+            "terms": {
+              "source_id": ?0
             }
           }
         ],
@@ -32,23 +30,21 @@ public interface ContentDocumentRepository extends ElasticsearchRepository<Conte
       }
     }
     """)
-    List<ContentDocument> searchByKeywordsAndCursor(String keywords, String lastPublishedAt, Pageable pageable);
+    List<ContentDocument> searchBySourceIdsAndCursor(List<Long> sourceIds, String lastPublishedAt, Pageable pageable);
 
     @Query("""
     {
       "bool": {
         "must": [
           {
-            "multi_match": {
-              "query": "?0",
-              "fields": ["title", "summary"],
-              "operator": "or"
+            "terms": {
+              "source_id": ?0
             }
           }
         ]
       }
     }
     """)
-    List<ContentDocument> searchByKeywordsFirstPage(String keywords, Pageable pageable);
+    List<ContentDocument> searchBySourceIdsFirstPage(List<Long> sourceIds, Pageable pageable);
 
 }
