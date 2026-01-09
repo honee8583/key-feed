@@ -1,4 +1,4 @@
-name: Build and Push Changed Services
+name: CI/CD Pipeline
 
 on:
   push:
@@ -93,13 +93,33 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/identity-service:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/identity-service:${{ github.sha }}
       
-      - name: ✅ Build completed for identity-service
+      - name: 📝 Update Kubernetes manifest
+        run: |
+          echo "Cloning k8s manifests repository..."
+          git clone https://${{ secrets.GIT_TOKEN }}@github.com/${{ secrets.K8S_REPO }} k8s-repo
+          cd k8s-repo
+          
+          echo "Updating identity-service image tag..."
+          sed -i "s|image: .*/identity-service:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/identity-service:${{ github.sha }}|g" identity-service/deployment.yaml
+          
+          echo "Committing changes..."
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add identity-service/deployment.yaml
+          git commit -m "🚀 Update identity-service to ${{ github.sha }}"
+          git push
+          
+          echo "✅ Manifest updated successfully!"
+      
+      - name: ✅ Build and deploy completed
         run: |
           echo "=================================="
           echo "✅ identity-service build completed"
-          echo "🐳 Docker images pushed:"
+          echo "🐳 Docker images:"
           echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/identity-service:latest"
           echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/identity-service:${{ github.sha }}"
+          echo "📝 K8s manifest updated"
+          echo "🔄 ArgoCD will sync automatically"
           echo "=================================="
 
   build-feed-service:
@@ -110,14 +130,8 @@ jobs:
       - name: 📋 Checkout code
         uses: actions/checkout@v3
       
-      - name: 🚀 Starting build for feed-service
-        run: |
-          echo "=================================="
-          echo "🚀 Building feed-service"
-          echo "📅 Triggered at: $(date)"
-          echo "🔖 Commit SHA: ${{ github.sha }}"
-          echo "👤 Triggered by: ${{ github.actor }}"
-          echo "=================================="
+      - name: 🚀 Starting build
+        run: echo "🚀 Building feed-service"
       
       - name: ☕ Set up JDK
         uses: actions/setup-java@v3
@@ -146,14 +160,19 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/feed-service:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/feed-service:${{ github.sha }}
       
-      - name: ✅ Build completed for feed-service
+      - name: 📝 Update Kubernetes manifest
         run: |
-          echo "=================================="
-          echo "✅ feed-service build completed"
-          echo "🐳 Docker images pushed:"
-          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/feed-service:latest"
-          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/feed-service:${{ github.sha }}"
-          echo "=================================="
+          git clone https://${{ secrets.GIT_TOKEN }}@github.com/${{ secrets.K8S_REPO }} k8s-repo
+          cd k8s-repo
+          sed -i "s|image: .*/feed-service:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/feed-service:${{ github.sha }}|g" feed-service/deployment.yaml
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add feed-service/deployment.yaml
+          git commit -m "🚀 Update feed-service to ${{ github.sha }}"
+          git push
+      
+      - name: ✅ Completed
+        run: echo "✅ feed-service deployed"
 
   build-crawl-service:
     needs: detect-changes
@@ -163,14 +182,8 @@ jobs:
       - name: 📋 Checkout code
         uses: actions/checkout@v3
       
-      - name: 🚀 Starting build for crawl-service
-        run: |
-          echo "=================================="
-          echo "🚀 Building crawl-service"
-          echo "📅 Triggered at: $(date)"
-          echo "🔖 Commit SHA: ${{ github.sha }}"
-          echo "👤 Triggered by: ${{ github.actor }}"
-          echo "=================================="
+      - name: 🚀 Starting build
+        run: echo "🚀 Building crawl-service"
       
       - name: ☕ Set up JDK
         uses: actions/setup-java@v3
@@ -199,14 +212,19 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/crawl-service:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/crawl-service:${{ github.sha }}
       
-      - name: ✅ Build completed for crawl-service
+      - name: 📝 Update Kubernetes manifest
         run: |
-          echo "=================================="
-          echo "✅ crawl-service build completed"
-          echo "🐳 Docker images pushed:"
-          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/crawl-service:latest"
-          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/crawl-service:${{ github.sha }}"
-          echo "=================================="
+          git clone https://${{ secrets.GIT_TOKEN }}@github.com/${{ secrets.K8S_REPO }} k8s-repo
+          cd k8s-repo
+          sed -i "s|image: .*/crawl-service:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/crawl-service:${{ github.sha }}|g" crawl-service/deployment.yaml
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add crawl-service/deployment.yaml
+          git commit -m "🚀 Update crawl-service to ${{ github.sha }}"
+          git push
+      
+      - name: ✅ Completed
+        run: echo "✅ crawl-service deployed"
 
   build-match-service:
     needs: detect-changes
@@ -216,14 +234,8 @@ jobs:
       - name: 📋 Checkout code
         uses: actions/checkout@v3
       
-      - name: 🚀 Starting build for match-service
-        run: |
-          echo "=================================="
-          echo "🚀 Building match-service"
-          echo "📅 Triggered at: $(date)"
-          echo "🔖 Commit SHA: ${{ github.sha }}"
-          echo "👤 Triggered by: ${{ github.actor }}"
-          echo "=================================="
+      - name: 🚀 Starting build
+        run: echo "🚀 Building match-service"
       
       - name: ☕ Set up JDK
         uses: actions/setup-java@v3
@@ -252,14 +264,19 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/match-service:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/match-service:${{ github.sha }}
       
-      - name: ✅ Build completed for match-service
+      - name: 📝 Update Kubernetes manifest
         run: |
-          echo "=================================="
-          echo "✅ match-service build completed"
-          echo "🐳 Docker images pushed:"
-          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/match-service:latest"
-          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/match-service:${{ github.sha }}"
-          echo "=================================="
+          git clone https://${{ secrets.GIT_TOKEN }}@github.com/${{ secrets.K8S_REPO }} k8s-repo
+          cd k8s-repo
+          sed -i "s|image: .*/match-service:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/match-service:${{ github.sha }}|g" match-service/deployment.yaml
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add match-service/deployment.yaml
+          git commit -m "🚀 Update match-service to ${{ github.sha }}"
+          git push
+      
+      - name: ✅ Completed
+        run: echo "✅ match-service deployed"
 
   build-notification-service:
     needs: detect-changes
@@ -269,14 +286,8 @@ jobs:
       - name: 📋 Checkout code
         uses: actions/checkout@v3
       
-      - name: 🚀 Starting build for notification-service
-        run: |
-          echo "=================================="
-          echo "🚀 Building notification-service"
-          echo "📅 Triggered at: $(date)"
-          echo "🔖 Commit SHA: ${{ github.sha }}"
-          echo "👤 Triggered by: ${{ github.actor }}"
-          echo "=================================="
+      - name: 🚀 Starting build
+        run: echo "🚀 Building notification-service"
       
       - name: ☕ Set up JDK
         uses: actions/setup-java@v3
@@ -305,14 +316,19 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/notification-service:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/notification-service:${{ github.sha }}
       
-      - name: ✅ Build completed for notification-service
+      - name: 📝 Update Kubernetes manifest
         run: |
-          echo "=================================="
-          echo "✅ notification-service build completed"
-          echo "🐳 Docker images pushed:"
-          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/notification-service:latest"
-          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/notification-service:${{ github.sha }}"
-          echo "=================================="
+          git clone https://${{ secrets.GIT_TOKEN }}@github.com/${{ secrets.K8S_REPO }} k8s-repo
+          cd k8s-repo
+          sed -i "s|image: .*/notification-service:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/notification-service:${{ github.sha }}|g" notification-service/deployment.yaml
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add notification-service/deployment.yaml
+          git commit -m "🚀 Update notification-service to ${{ github.sha }}"
+          git push
+      
+      - name: ✅ Completed
+        run: echo "✅ notification-service deployed"
 
   build-gateway:
     needs: detect-changes
@@ -322,14 +338,8 @@ jobs:
       - name: 📋 Checkout code
         uses: actions/checkout@v3
       
-      - name: 🚀 Starting build for gateway
-        run: |
-          echo "=================================="
-          echo "🚀 Building gateway"
-          echo "📅 Triggered at: $(date)"
-          echo "🔖 Commit SHA: ${{ github.sha }}"
-          echo "👤 Triggered by: ${{ github.actor }}"
-          echo "=================================="
+      - name: 🚀 Starting build
+        run: echo "🚀 Building gateway"
       
       - name: ☕ Set up JDK
         uses: actions/setup-java@v3
@@ -358,11 +368,16 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/gateway:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/gateway:${{ github.sha }}
       
-      - name: ✅ Build completed for gateway
+      - name: 📝 Update Kubernetes manifest
         run: |
-          echo "=================================="
-          echo "✅ gateway build completed"
-          echo "🐳 Docker images pushed:"
-          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/gateway:latest"
-          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/gateway:${{ github.sha }}"
-          echo "=================================="
+          git clone https://${{ secrets.GIT_TOKEN }}@github.com/${{ secrets.K8S_REPO }} k8s-repo
+          cd k8s-repo
+          sed -i "s|image: .*/gateway:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/gateway:${{ github.sha }}|g" gateway/deployment.yaml
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add gateway/deployment.yaml
+          git commit -m "🚀 Update gateway to ${{ github.sha }}"
+          git push
+      
+      - name: ✅ Completed
+        run: echo "✅ gateway deployed"
