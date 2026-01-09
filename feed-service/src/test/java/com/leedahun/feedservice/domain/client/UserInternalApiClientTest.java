@@ -10,6 +10,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.feedservice.domain.feed.dto.KeywordResponseDto;
 import java.util.List;
+
+import com.leedahun.feedservice.domain.feed.repository.ContentDocumentRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +21,12 @@ import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
                 "spring.cloud.discovery.enabled=false",
-//                "spring.cloud.openfeign.client.config.identity-service.url=http://localhost:${wiremock.server.port}"
                 "feign.client.identity-service.url=http://localhost:${wiremock.server.port}"
         }
 )
@@ -33,6 +35,9 @@ class UserInternalApiClientTest {
 
     @Autowired
     private UserInternalApiClient userInternalApiClient;
+
+    @MockitoBean
+    private ContentDocumentRepository contentDocumentRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
