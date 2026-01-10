@@ -9,7 +9,7 @@ export function NotificationPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [nextCursorId, setNextCursorId] = useState<string | null>(null)
+  const [, setNextCursorId] = useState<string | null>(null)
   const [hasNext, setHasNext] = useState(false)
   const [isFetchingNext, setIsFetchingNext] = useState(false)
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false)
