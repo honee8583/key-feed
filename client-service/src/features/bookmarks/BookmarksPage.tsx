@@ -11,7 +11,7 @@ export function BookmarksPage() {
   const [folders, setFolders] = useState<BookmarkFolderDto[]>([])
   const [activeFolderId, setActiveFolderId] = useState<number | null>(null)
   const [isLoadingFolders, setIsLoadingFolders] = useState(false)
-  const [folderError, setFolderError] = useState<string | null>(null)
+  const [, setFolderError] = useState<string | null>(null)
 
   // Bookmarks state
   const [bookmarks, setBookmarks] = useState<BookmarkItemDto[]>([])
