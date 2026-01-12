@@ -70,6 +70,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
     // Jsoup
+    implementation 'com.rometools:rome:2.1.0'
     implementation 'org.jsoup:jsoup:1.21.2'
 
     // openfeign
@@ -78,6 +79,8 @@ dependencies {
 
     // actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    testImplementation 'org.wiremock:wiremock-standalone:3.3.1'
 }
 
 dependencyManagement {

@@ -29,8 +29,24 @@ public enum ErrorMessage {
     KEYWORD_LIMIT_EXCEEDED("키워드 등록 한도를 넘었습니다."),
 
     INVALID_RSS_URL("해당 URL에 접근할 수 없거나 유효한 웹사이트가 아닙니다."),
+    SOURCE_VALIDATION_FAILED("소스 검증에 실패했습니다."),
+    ROBOTS_TXT_DISALLOWED("해당 사이트는 robots.txt 정책에 의해 크롤링이 금지되어 있습니다."),
 
-    BOOKMARK_FOLDER_LIMIT_EXCEEDED("북마크 폴더 생성 한도를 넘었습니다.");
+    BOOKMARK_FOLDER_LIMIT_EXCEEDED("북마크 폴더 생성 한도를 넘었습니다."),
+
+    // URL 검증 관련 에러 메시지
+    URL_UNKNOWN_HOST("존재하지 않는 주소입니다."),
+    URL_CONNECTION_TIMEOUT("연결 시간이 초과되었습니다. 사이트가 응답하지 않습니다."),
+    URL_MALFORMED_FORMAT("URL 형식이 올바르지 않습니다."),
+    URL_UNSUPPORTED_PROTOCOL("지원하지 않는 프로토콜입니다. HTTP 또는 HTTPS만 가능합니다."),
+    URL_ACCESS_FORBIDDEN("접근이 금지된 사이트입니다. (403 Forbidden)"),
+    URL_NOT_FOUND("페이지를 찾을 수 없습니다. (404 Not Found)"),
+    URL_SERVER_ERROR("서버 오류가 발생했습니다."),
+    URL_VALIDATION_FAILED("URL 접근 중 오류가 발생했습니다."),
+    URL_INVALID_CONTENT_TYPE("RSS 피드 형식이 아닐 수 있습니다."),
+
+    // RSS 파싱 관련 에러 메시지
+    RSS_PARSING_FAILED("RSS 피드를 파싱할 수 없습니다. URL을 확인해주세요.");
 
     private final String message;
 }
