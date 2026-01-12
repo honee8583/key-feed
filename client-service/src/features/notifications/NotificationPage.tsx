@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import notificationIcon from '../../assets/navigation/notification_btn.png'
 import { notificationApi, type NotificationDto } from '../../services/notificationApi'
 import { NotificationCard, NotificationStatus } from './components'
 import type { NotificationItem } from './types'
@@ -44,11 +45,16 @@ export function NotificationPage() {
           }
         }
       } catch (historyError) {
+        // 401 에러는 apiClient에서 자동으로 처리하므로 에러 메시지만 설정
         const message =
           historyError instanceof Error
             ? historyError.message
             : '알림을 불러오는 중 문제가 발생했습니다.'
         setError(message)
+        // 401 에러인 경우 로그인 페이지로 리다이렉트 (apiClient에서 처리되지만, 추가 보장)
+        if (historyError instanceof Error && historyError.message.includes('인증')) {
+          console.info('[notification] 인증이 만료되어 로그인 페이지로 이동합니다.')
+        }
       } finally {
         setIsLoading(false)
         setHasLoadedHistory(true)
@@ -77,7 +83,12 @@ export function NotificationPage() {
       nextCursorRef.current = response.nextCursorId
       hasNextRef.current = response.hasNext
     } catch (nextError) {
+      // 401 에러는 apiClient에서 자동으로 처리하므로 에러만 로깅
       console.error('이전 알림을 불러오지 못했습니다.', nextError)
+      // 401 에러인 경우 로그인 페이지로 리다이렉트 (apiClient에서 처리되지만, 추가 보장)
+      if (nextError instanceof Error && nextError.message.includes('인증')) {
+        console.info('[notification] 인증이 만료되어 로그인 페이지로 이동합니다.')
+      }
     } finally {
       setIsFetchingNext(false)
       isFetchingNextRef.current = false
@@ -135,10 +146,11 @@ export function NotificationPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.08),transparent_45%),#050505] py-7 pb-40 flex justify-center text-slate-50 font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif]">
-      <div className="w-full max-w-[420px] flex flex-col gap-[18px]">
+      <div className="w-full max-w-[420px] px-4 flex flex-col gap-[18px]">
         <header className="bg-gradient-to-br from-[rgba(15,15,20,0.95)] to-[rgba(10,10,16,0.85)] border border-white/8 shadow-[0_18px_30px_rgba(2,6,23,0.4)] rounded-[28px] p-6 flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
             <div className="inline-flex items-center gap-2.5">
+              <img src={notificationIcon} alt="" className="w-5 h-5 flex-shrink-0 mt-1" aria-hidden="true" />
               <h1 className="m-0 text-[26px] tracking-[-0.02em] inline-flex items-center gap-2 text-slate-50">
                 알림
               </h1>

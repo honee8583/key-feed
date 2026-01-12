@@ -2,6 +2,7 @@ import { Suspense, useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { LoginPage, SignupPage, useAuth } from '../features/auth'
 import { MainPage } from '../features/home'
+import { ExplorePage } from '../features/explore'
 import { BookmarksPage } from '../features/bookmarks'
 import { FolderManagementPage } from '../features/bookmarks/FolderManagementPage'
 import { ProfilePage, SourceManagementPage } from '../features/profile'
@@ -29,6 +30,16 @@ export function AppRouter() {
               <ProtectedRoute>
                 <AppLayout>
                   <MainPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/explore"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <ExplorePage />
                 </AppLayout>
               </ProtectedRoute>
             }
