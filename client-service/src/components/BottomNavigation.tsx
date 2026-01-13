@@ -20,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     label: '탐색',
+    path: '/explore',
     icon: searchIcon,
   },
   {

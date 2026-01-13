@@ -154,7 +154,7 @@ export function MainPage() {
 
   return (
     <div className="min-h-screen py-8 pb-[140px] bg-[radial-gradient(circle_at_15%_15%,rgba(255,255,255,0.08),transparent_55%),#050505] font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif] text-slate-50">
-      <div className="w-full max-w-[440px] mx-auto flex flex-col gap-6">
+      <div className="w-full max-w-[440px] mx-auto px-4 flex flex-col gap-6">
         <header className="bg-gradient-to-br from-[#020202] to-[#161616] text-white rounded-[32px] p-8 px-7 flex justify-between items-start relative overflow-hidden border border-white/8 max-[480px]:p-7 max-[480px]:px-6">
           <div className="absolute -left-10 -top-[60px] w-[180px] h-[180px] rounded-full bg-white/5 blur-[30px]" />
           <div className="relative z-10">

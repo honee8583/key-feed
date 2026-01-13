@@ -59,6 +59,8 @@ class ApiClient {
         if (refreshed) {
           return this.request<T>(path, options, false);
         }
+        // 리프레시 토큰도 실패했으면 인증이 만료된 것이므로 로그인 페이지로 리다이렉트
+        this.handleAuthenticationFailure();
       }
       
       const errorMessage = await this.buildErrorMessage(response);
@@ -157,6 +159,21 @@ class ApiClient {
       console.error("Failed to refresh access token", error);
       clearStoredAuth();
       return false;
+    }
+  }
+
+  private handleAuthenticationFailure() {
+    // 인증 실패 시 로그인 페이지로 리다이렉트
+    // 단, 이미 로그인 페이지에 있거나 리다이렉트 중이면 무시
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
+        // 약간의 지연을 두어 상태 업데이트가 완료되도록 함
+        setTimeout(() => {
+          // ProtectedRoute가 리다이렉트를 처리할 수 있도록 replace 사용
+          window.location.replace('/login');
+        }, 100);
+      }
     }
   }
 
