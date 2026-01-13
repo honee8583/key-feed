@@ -111,7 +111,8 @@ export function FolderManagementPage() {
   return (
     <>
       <div className="min-h-screen bg-black text-slate-50 font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif] pb-[100px]">
-        <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center gap-3">
+        <div className="w-full max-w-[440px] mx-auto min-h-screen flex flex-col bg-black border-x border-[#1e2939]/30">
+          <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center gap-3">
           <button
             type="button"
             className="w-10 h-10 flex items-center justify-center -ml-2 text-slate-300 hover:text-white transition-colors"
@@ -225,6 +226,7 @@ export function FolderManagementPage() {
               ) : null}
             </div>
           )}
+        </div>
         </div>
       </div>
 

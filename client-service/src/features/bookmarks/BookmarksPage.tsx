@@ -139,139 +139,141 @@ export function BookmarksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black p-0 flex flex-col gap-0 text-slate-50 font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif]">
-      <header className="bg-black border-b border-[#1e2939] px-4 pt-3 sticky top-0 z-10">
-        <div className="flex justify-between items-center h-9 mb-3">
-          <h1 className="m-0 text-xl font-bold text-white tracking-[-0.45px]">저장된 콘텐츠</h1>
-        </div>
+    <div className="min-h-screen bg-black text-slate-50 font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif]">
+      <div className="w-full max-w-[440px] mx-auto min-h-screen flex flex-col bg-black border-x border-[#1e2939]/30">
+        <header className="bg-black/80 backdrop-blur-md border-b border-[#1e2939] px-5 pt-3 sticky top-0 z-10">
+          <div className="flex justify-between items-center h-9 mb-3">
+            <h1 className="m-0 text-xl font-bold text-white tracking-[-0.45px]">저장된 콘텐츠</h1>
+          </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-none">
-          <button
-            type="button"
-            className={`${activeFolderId === null ? 'bg-white text-black border-white' : 'bg-[#1e2939] text-[#d1d5dc] border-[#364153]'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85`}
-            onClick={() => setActiveFolderId(null)}
-          >
-            <FolderIcon />
-            <span>전체</span>
-            <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium">5</span>
-          </button>
-          <button
-            type="button"
-            className={`${activeFolderId === 0 ? 'bg-white text-black border-white' : 'bg-[#1e2939] text-[#d1d5dc] border-[#364153]'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85`}
-            onClick={() => setActiveFolderId(0)}
-          >
-            <FolderIcon />
-            <span>미분류</span>
-            <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium hidden">0</span>
-          </button>
-          {!isLoadingFolders && folders.length ? (
-            folders.map((folder) => {
-              const isActive = folder.folderId === activeFolderId
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-none -mx-5 px-5">
+            <button
+              type="button"
+              className={`${activeFolderId === null ? 'bg-white text-black border-white' : 'bg-[#1e2939] text-[#d1d5dc] border-[#364153]'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85`}
+              onClick={() => setActiveFolderId(null)}
+            >
+              <FolderIcon />
+              <span>전체</span>
+              <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium">5</span>
+            </button>
+            <button
+              type="button"
+              className={`${activeFolderId === 0 ? 'bg-white text-black border-white' : 'bg-[#1e2939] text-[#d1d5dc] border-[#364153]'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85`}
+              onClick={() => setActiveFolderId(0)}
+            >
+              <FolderIcon />
+              <span>미분류</span>
+              <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium hidden">0</span>
+            </button>
+            {!isLoadingFolders && folders.length ? (
+              folders.map((folder) => {
+                const isActive = folder.folderId === activeFolderId
+                return (
+                  <button
+                    key={folder.folderId}
+                    type="button"
+                    className={`${isActive ? 'opacity-100' : 'opacity-95 hover:opacity-85'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity text-[14px]`}
+                    style={{
+                      // 색상 커스터마이징이 있으면 border/background 색으로 반영
+                      borderColor: (folder.color || '#ad46ff') + '33',
+                      background: (folder.color || '#ad46ff') + '1A',
+                      color: (folder.color || '#ad46ff'),
+                    } as React.CSSProperties}
+                    onClick={() => setActiveFolderId(folder.folderId)}
+                  >
+                    <FolderIcon />
+                    <span>{folder.name}</span>
+                    <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-white/10 text-white text-[12px] font-medium">0</span>
+                  </button>
+                )
+              })
+            ) : null}
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border border-[#364153] bg-[#1e2939] text-[#d1d5dc] whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85"
+              onClick={() => navigate('/bookmarks/folders')}
+            >
+              <PlusIcon />
+              <span>관리</span>
+            </button>
+          </div>
+        </header>
+
+        <div className="flex flex-col gap-3 bg-[rgba(15,15,20,0.8)] border border-white/10 rounded-[24px] p-[18px] mx-5 mt-4 mb-2 text-slate-50">
+          <div>
+            <input
+              className="w-full rounded-[14px] border border-white/10 bg-[rgba(2,6,23,0.6)] px-3.5 py-3 text-[14px] placeholder:text-slate-300/70"
+              type="search"
+              placeholder="저장한 콘텐츠 검색"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2" aria-label="빠른 정렬">
+            {quickFilters.map((filter) => {
+              const isActive = filter === activeQuickFilter
               return (
                 <button
-                  key={folder.folderId}
+                  key={filter}
                   type="button"
-                  className={`${isActive ? 'opacity-100' : 'opacity-95 hover:opacity-85'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity text-[14px]`}
-                  style={{
-                    // 색상 커스터마이징이 있으면 border/background 색으로 반영
-                    borderColor: (folder.color || '#ad46ff') + '33',
-                    background: (folder.color || '#ad46ff') + '1A',
-                    color: (folder.color || '#ad46ff'),
-                  } as React.CSSProperties}
-                  onClick={() => setActiveFolderId(folder.folderId)}
+                  className={`${isActive ? 'bg-[rgba(59,130,246,0.2)] text-[#bfdbfe] border-[rgba(59,130,246,0.5)]' : 'bg-transparent text-slate-300/95 border-white/10'} rounded-full border px-[14px] py-[6px] text-[13px] cursor-pointer`}
+                  onClick={() => setActiveQuickFilter(filter)}
                 >
-                  <FolderIcon />
-                  <span>{folder.name}</span>
-                  <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-white/10 text-white text-[12px] font-medium">0</span>
+                  {filter}
                 </button>
               )
-            })
+            })}
+          </div>
+        </div>
+
+        <section className="flex flex-col gap-[18px] px-5 pb-[140px]" aria-label="저장된 콘텐츠 목록">
+          {bookmarkError ? (
+            <div className="p-[22px] rounded-[20px] border border-[rgba(239,68,68,0.5)] bg-[rgba(239,68,68,0.05)] text-[#fca5a5] text-center text-[14px]">
+              {bookmarkError}
+            </div>
           ) : null}
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border border-[#364153] bg-[#1e2939] text-[#d1d5dc] whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85"
-            onClick={() => navigate('/bookmarks/folders')}
-          >
-            <PlusIcon />
-            <span>관리</span>
-          </button>
-        </div>
-      </header>
 
-      <div className="flex flex-col gap-3 bg-[rgba(15,15,20,0.8)] border border-white/10 rounded-[24px] p-[18px] m-4 text-slate-50">
-        <div>
-          <input
-            className="w-full rounded-[14px] border border-white/10 bg-[rgba(2,6,23,0.6)] px-3.5 py-3 text-[14px] placeholder:text-slate-300/70"
-            type="search"
-            placeholder="저장한 콘텐츠 검색"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-          />
-        </div>
-        <div className="flex flex-wrap gap-2" aria-label="빠른 정렬">
-          {quickFilters.map((filter) => {
-            const isActive = filter === activeQuickFilter
-            return (
-              <button
-                key={filter}
-                type="button"
-                className={`${isActive ? 'bg-[rgba(59,130,246,0.2)] text-[#bfdbfe] border-[rgba(59,130,246,0.5)]' : 'bg-transparent text-slate-300/95 border-white/10'} rounded-full border px-[14px] py-[6px] text-[13px] cursor-pointer`}
-                onClick={() => setActiveQuickFilter(filter)}
-              >
-                {filter}
-              </button>
-            )
-          })}
-        </div>
+          {isLoadingBookmarks && !bookmarks.length ? (
+            <div className="p-[22px] rounded-[20px] border border-white/20 bg-[rgba(255,255,255,0.03)] text-slate-50/80 text-center text-[14px]">
+              북마크를 불러오는 중...
+            </div>
+          ) : null}
+
+          {filteredBookmarks.map((bookmark) => (
+            <BookmarkCard 
+              key={bookmark.bookmarkId} 
+              item={bookmark} 
+              onMoveClick={() => handleOpenFolderSheet(bookmark.bookmarkId)}
+            />
+          ))}
+
+          {!isLoadingBookmarks && !filteredBookmarks.length && !bookmarkError ? (
+            <div className="p-[22px] rounded-[20px] border border-white/20 bg-[rgba(255,255,255,0.03)] text-slate-50/80 text-center text-[14px]">
+              저장된 북마크가 없어요.
+            </div>
+          ) : null}
+
+          {hasMore && !isLoadingBookmarks ? (
+            <button className="w-full p-4 rounded-[16px] border border-white/20 bg-[rgba(15,15,20,0.8)] text-slate-50 text-[14px] font-medium cursor-pointer transition hover:bg-white/10 hover:border-white/30" onClick={handleLoadMore}>
+              더 보기
+            </button>
+          ) : null}
+
+          {isLoadingBookmarks && bookmarks.length > 0 ? (
+            <div className="p-[22px] rounded-[20px] border border-white/20 bg-[rgba(255,255,255,0.03)] text-slate-50/80 text-center text-[14px]">
+              추가 북마크를 불러오는 중...
+            </div>
+          ) : null}
+        </section>
+
+        <FolderSelectSheet
+          isOpen={isFolderSheetOpen}
+          onClose={() => setIsFolderSheetOpen(false)}
+          onSelectFolder={handleFolderSelect}
+          folders={folders}
+          currentFolderId={bookmarks.find(b => b.bookmarkId === movingBookmarkId)?.folderId}
+        />
       </div>
-
-      <section className="flex flex-col gap-[18px] px-4 pb-[140px]" aria-label="저장된 콘텐츠 목록">
-        {bookmarkError ? (
-          <div className="p-[22px] rounded-[20px] border border-[rgba(239,68,68,0.5)] bg-[rgba(239,68,68,0.05)] text-[#fca5a5] text-center text-[14px]">
-            {bookmarkError}
-          </div>
-        ) : null}
-
-        {isLoadingBookmarks && !bookmarks.length ? (
-          <div className="p-[22px] rounded-[20px] border border-white/20 bg-[rgba(255,255,255,0.03)] text-slate-50/80 text-center text-[14px]">
-            북마크를 불러오는 중...
-          </div>
-        ) : null}
-
-        {filteredBookmarks.map((bookmark) => (
-          <BookmarkCard 
-            key={bookmark.bookmarkId} 
-            item={bookmark} 
-            onMoveClick={() => handleOpenFolderSheet(bookmark.bookmarkId)}
-          />
-        ))}
-
-        {!isLoadingBookmarks && !filteredBookmarks.length && !bookmarkError ? (
-          <div className="p-[22px] rounded-[20px] border border-white/20 bg-[rgba(255,255,255,0.03)] text-slate-50/80 text-center text-[14px]">
-            저장된 북마크가 없어요.
-          </div>
-        ) : null}
-
-        {hasMore && !isLoadingBookmarks ? (
-          <button className="w-full p-4 rounded-[16px] border border-white/20 bg-[rgba(15,15,20,0.8)] text-slate-50 text-[14px] font-medium cursor-pointer transition hover:bg-white/10 hover:border-white/30" onClick={handleLoadMore}>
-            더 보기
-          </button>
-        ) : null}
-
-        {isLoadingBookmarks && bookmarks.length > 0 ? (
-          <div className="p-[22px] rounded-[20px] border border-white/20 bg-[rgba(255,255,255,0.03)] text-slate-50/80 text-center text-[14px]">
-            추가 북마크를 불러오는 중...
-          </div>
-        ) : null}
-      </section>
-
-      <FolderSelectSheet
-        isOpen={isFolderSheetOpen}
-        onClose={() => setIsFolderSheetOpen(false)}
-        onSelectFolder={handleFolderSelect}
-        folders={folders}
-        currentFolderId={bookmarks.find(b => b.bookmarkId === movingBookmarkId)?.folderId}
-      />
     </div>
   )
 }
