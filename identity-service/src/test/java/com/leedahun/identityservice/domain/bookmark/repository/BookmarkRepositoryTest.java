@@ -238,6 +238,68 @@ class BookmarkRepositoryTest {
         }
     }
 
+    @Nested
+    @DisplayName("ContentId 목록으로 북마크 조회")
+    class FindBookmarksByContentIds {
+
+        @Test
+        @DisplayName("요청한 ContentId 목록에 포함된 내 북마크만 반환한다")
+        void findAllByUserIdAndContentIdIn() {
+            // given
+            createBookmark("100", null);
+            createBookmark("200", null);
+            createBookmark("300", null); // 검색 대상 아님
+
+            // 100, 200은 존재하고 999는 존재하지 않음
+            List<String> requestIds = List.of("100", "200", "999");
+
+            // when
+            List<Bookmark> result = bookmarkRepository.findAllByUserIdAndContentIdIn(user.getId(), requestIds);
+
+            // then
+            assertThat(result).hasSize(2);
+            assertThat(result).extracting("contentId")
+                    .containsExactlyInAnyOrder("100", "200");
+        }
+
+        @Test
+        @DisplayName("다른 유저가 같은 ContentId를 북마크 했더라도 내 것만 조회된다")
+        void findAllByUserIdAndContentIdIn_ignoreOtherUser() {
+            // given
+            createBookmark("100", null); // 내 북마크
+
+            // 다른 유저 생성 및 동일한 컨텐츠 북마크
+            User otherUser = userRepository.save(User.builder().email("other@test.com").build());
+            bookmarkRepository.save(Bookmark.builder()
+                    .user(otherUser)
+                    .contentId("100")
+                    .build());
+
+            List<String> requestIds = List.of("100");
+
+            // when
+            List<Bookmark> result = bookmarkRepository.findAllByUserIdAndContentIdIn(user.getId(), requestIds);
+
+            // then
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getUser().getId()).isEqualTo(user.getId());
+        }
+
+        @Test
+        @DisplayName("검색할 ContentId 리스트가 비어있으면 빈 결과를 반환한다")
+        void findAllByUserIdAndContentIdIn_emptyList() {
+            // given
+            createBookmark("100", null);
+            List<String> emptyList = List.of();
+
+            // when
+            List<Bookmark> result = bookmarkRepository.findAllByUserIdAndContentIdIn(user.getId(), emptyList);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+    }
+
     private Bookmark createBookmark(String contentId, BookmarkFolder folder) {
         Bookmark bookmark = Bookmark.builder()
                 .user(user)
