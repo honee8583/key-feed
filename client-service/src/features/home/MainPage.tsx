@@ -9,8 +9,7 @@ import { AddSourceSheet } from './components/AddSourceSheet'
 import bookmarkIcon from '../../assets/home/bookmark_btn.png'
 import addSourceIcon from '../../assets/home/source_add_btn.png'
 
-const keywordCategories = ['전체', 'Next.js', 'AI', '클린코드', 'TypeScript', 'Supabase', 'React']
-const contentTabs = ['전체', '블로그', '뉴스', '영상', '커뮤니티']
+
 
 const figureAssets = {
   bookmark: bookmarkIcon,
@@ -207,7 +206,7 @@ export function MainPage() {
 
   return (
     <div className="min-h-screen py-8 pb-[140px] bg-[radial-gradient(circle_at_15%_15%,rgba(255,255,255,0.08),transparent_55%),#050505] font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif] text-slate-50">
-      <div className="w-full max-w-[440px] mx-auto flex flex-col gap-6">
+      <div className="w-full max-w-[440px] mx-auto flex flex-col gap-6 px-5">
         <header className="bg-gradient-to-br from-[#020202] to-[#161616] text-white rounded-[32px] p-8 px-7 flex justify-between items-start relative overflow-hidden border border-white/8 max-[480px]:p-7 max-[480px]:px-6">
           <div className="absolute -left-10 -top-[60px] w-[180px] h-[180px] rounded-full bg-white/5 blur-[30px]" />
           <div className="relative z-10">
@@ -217,40 +216,7 @@ export function MainPage() {
           </div>
         </header>
 
-        <section
-          className="flex gap-3 overflow-x-auto py-1 pr-1 scroll-snap-x-proximity [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:bg-white/25 [&::-webkit-scrollbar-thumb]:rounded-full"
-          aria-label="활성 키워드"
-        >
-          {keywordCategories.map((label, index) => (
-            <button
-              key={label}
-              type="button"
-              className={`flex-none py-2.5 px-5 rounded-full border scroll-snap-start transition-colors ${
-                index === 0
-                  ? 'bg-slate-50 border-slate-50 text-[#050505]'
-                  : 'border-white/20 bg-transparent text-slate-50 font-semibold hover:bg-white/5'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </section>
 
-        <nav className="relative grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] border-b border-white/8" aria-label="콘텐츠 분류">
-          {contentTabs.map((tab, index) => (
-            <button
-              key={tab}
-              type="button"
-              className={`border-none bg-transparent pb-3 font-semibold relative text-center transition-colors ${
-                index === 0
-                  ? 'text-slate-50 after:content-[""] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[3px] after:rounded-full after:bg-slate-50'
-                  : 'text-white/45 hover:text-white/65'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </nav>
 
         <section className="flex flex-col gap-8" aria-label="하이라이트 콘텐츠">
           {articles.map(({ id, isBookmarked, ...card }) => (
