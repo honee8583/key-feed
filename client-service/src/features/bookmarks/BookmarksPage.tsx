@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { bookmarkApi, type BookmarkFolderDto, type BookmarkItemDto } from '../../services/bookmarkApi'
+import { FolderSelectSheet } from './FolderSelectSheet'
 
 const quickFilters = ['최신순', '읽지 않음', '노트 있음', '원문 링크']
 
@@ -20,6 +21,9 @@ export function BookmarksPage() {
   const [hasMore, setHasMore] = useState(false)
   const nextCursorIdRef = useRef<number | null>(null)
 
+  const [isFolderSheetOpen, setIsFolderSheetOpen] = useState(false)
+  const [movingBookmarkId, setMovingBookmarkId] = useState<number | null>(null)
+
   useEffect(() => {
     const fetchFolders = async () => {
       setIsLoadingFolders(true)
@@ -38,6 +42,53 @@ export function BookmarksPage() {
 
     void fetchFolders()
   }, [])
+
+  const handleOpenFolderSheet = (bookmarkId: number) => {
+    setMovingBookmarkId(bookmarkId)
+    setIsFolderSheetOpen(true)
+  }
+
+  const handleFolderSelect = async (folderId: number) => {
+    if (movingBookmarkId === null) return
+
+    try {
+      await bookmarkApi.moveBookmark(movingBookmarkId, folderId)
+      
+      // Update UI optimistically or refetch
+      // If we are in "All", update folder name/id
+      // If we are in a specific folder, remove it?
+      // For simplicity, let's update local state to reflect change (or remove if moved out)
+      
+      setBookmarks((prev) => 
+        prev.map(b => {
+          if (b.bookmarkId !== movingBookmarkId) return b
+          
+          // Find folder name
+          const targetFolder = folders.find(f => f.folderId === folderId)
+          const folderName = folderId === 0 ? '미분류' : (targetFolder?.name || '')
+          
+          return { ...b, folderId, folderName }
+        })
+      )
+
+      // If viewing a specific folder and moved out, we might want to filter it out
+      if (activeFolderId !== null && activeFolderId !== folderId) {
+        setBookmarks(prev => prev.filter(b => b.bookmarkId !== movingBookmarkId))
+      }
+      
+      // Also update folders list to reflect count changes if we were tracking counts (we are not yet)
+      
+    } catch (error) {
+      console.error('Failed to move bookmark', error)
+      const message = error instanceof Error ? error.message : '폴더 이동에 실패했습니다.'
+      setBookmarkError(message)
+    } finally {
+      setIsFolderSheetOpen(false)
+      setMovingBookmarkId(null)
+    }
+  }
+
+
 
   const fetchBookmarks = useCallback(async (folderId: number | null, reset = false) => {
     setIsLoadingBookmarks(true)
@@ -188,7 +239,11 @@ export function BookmarksPage() {
         ) : null}
 
         {filteredBookmarks.map((bookmark) => (
-          <BookmarkCard key={bookmark.bookmarkId} item={bookmark} />
+          <BookmarkCard 
+            key={bookmark.bookmarkId} 
+            item={bookmark} 
+            onMoveClick={() => handleOpenFolderSheet(bookmark.bookmarkId)}
+          />
         ))}
 
         {!isLoadingBookmarks && !filteredBookmarks.length && !bookmarkError ? (
@@ -209,20 +264,28 @@ export function BookmarksPage() {
           </div>
         ) : null}
       </section>
+
+      <FolderSelectSheet
+        isOpen={isFolderSheetOpen}
+        onClose={() => setIsFolderSheetOpen(false)}
+        onSelectFolder={handleFolderSelect}
+        folders={folders}
+        currentFolderId={bookmarks.find(b => b.bookmarkId === movingBookmarkId)?.folderId}
+      />
     </div>
   )
 }
 
-function BookmarkCard({ item }: { item: BookmarkItemDto }) {
+function BookmarkCard({ item, onMoveClick }: { item: BookmarkItemDto; onMoveClick: () => void }) {
   const { content, folderName, createdAt } = item
 
   if (!content) {
     return null
   }
 
-  const { title, summary, sourceName, originalUrl, publishedAt } = content
+  const { title, summary, sourceName, originalUrl, thumbnailUrl, publishedAt } = content
 
-  const formattedCreatedDate = new Intl.DateTimeFormat('ko-KR', {
+  const formattedDate = new Intl.DateTimeFormat('ko-KR', {
     month: 'short',
     day: 'numeric',
   }).format(new Date(createdAt))
@@ -234,25 +297,60 @@ function BookmarkCard({ item }: { item: BookmarkItemDto }) {
   }).format(new Date(publishedAt))
 
   return (
-    <article className="rounded-[24px] border border-white/10 bg-gradient-to-br from-[rgba(12,12,18,0.92)] to-[rgba(9,9,14,0.85)] p-5 shadow-[0_18px_36px_rgba(2,6,23,0.55)] flex flex-col gap-3">
-      <div className="flex justify-between text-[12px] text-slate-300/90">
-        <span className="font-semibold text-[#a5b4fc]">{folderName || '전체'}</span>
-        <span>{formattedCreatedDate}</span>
-      </div>
-      <h2 className="m-0 text-[18px] font-semibold text-slate-50 leading-tight">{title}</h2>
-      <p className="m-0 text-slate-50/75 leading-relaxed text-[14px]">{summary}</p>
-
-      <div className="flex justify-between items-center gap-3 flex-wrap">
-        <div>
-          <p className="m-0 text-[13px] font-semibold text-slate-50/85">{sourceName}</p>
-          <p className="m-0 mt-0.5 text-[12px] text-slate-400/90">{formattedPublishedDate}</p>
+    <article className="bg-[#111] border border-white/5 rounded-[20px] overflow-hidden">
+      <div className="p-5 flex flex-col gap-3">
+        <div className="flex justify-between items-center text-[12px]">
+          <button 
+            type="button"
+            className="font-semibold text-[#a5b4fc] hover:text-[#c7d2fe] transition-colors flex items-center gap-1"
+            onClick={onMoveClick}
+          >
+            <span>{folderName || '미분류'}</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M9.5 4.5L6 8L2.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <span className="text-slate-500">{formattedDate} saved</span>
         </div>
-        <div className="inline-flex items-center gap-3">
-          {originalUrl ? (
-            <a className="rounded-[12px] border border-white/20 px-3.5 py-2 bg-white/5 text-slate-50 text-[13px] no-underline hover:bg-white/10" href={originalUrl} target="_blank" rel="noreferrer">
-              원문 보기
-            </a>
-          ) : null}
+
+        <div className="flex gap-4">
+          <div className="flex-1 min-w-0 flex flex-col gap-2">
+            <h2 className="text-[16px] font-bold text-slate-50 leading-snug line-clamp-2">
+              {title}
+            </h2>
+            <p className="text-[13px] text-slate-400 leading-relaxed line-clamp-2">{summary}</p>
+          </div>
+          {thumbnailUrl && (
+            <div className="w-20 h-20 rounded-xl bg-slate-800 overflow-hidden shrink-0">
+               <img src={thumbnailUrl} alt="" className="w-full h-full object-cover" />
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between pt-2 mt-1 border-t border-white/5">
+          <div className="flex flex-col">
+             <span className="text-[12px] font-semibold text-slate-300">{sourceName}</span>
+             <span className="text-[11px] text-slate-500">{formattedPublishedDate}</span>
+          </div>
+          <div className="flex gap-2">
+            <button
+               type="button"
+               className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-[12px] text-slate-300 hover:bg-white/10 transition-colors"
+               onClick={onMoveClick}
+            >
+              폴더 이동
+            </button>
+            {originalUrl && (
+              <a
+                href={originalUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-[12px] text-slate-300 no-underline hover:bg-white/10 transition-colors"
+              >
+                원문 보기
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </article>

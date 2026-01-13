@@ -85,6 +85,13 @@ export const bookmarkApi = {
     })
   },
 
+  async moveBookmark(bookmarkId: number, folderId: number): Promise<void> {
+    await apiClient.request(`/bookmarks/${bookmarkId}/folder`, {
+      method: 'PATCH',
+      body: { folderId },
+    })
+  },
+
   async deleteFolder(folderId: number): Promise<void> {
     await apiClient.request(`/bookmarks/folders/${folderId}`, {
       method: 'DELETE',
