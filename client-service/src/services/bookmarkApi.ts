@@ -68,6 +68,23 @@ export const bookmarkApi = {
     return response.data
   },
 
+  async createBookmark(contentId: string): Promise<number> {
+    const response = await apiClient.request<{ status: number; message: string; data: number }>(
+      '/bookmarks',
+      {
+        method: 'POST',
+        body: { contentId },
+      },
+    )
+    return response.data
+  },
+
+  async deleteBookmark(bookmarkId: number): Promise<void> {
+    await apiClient.request(`/bookmarks/${bookmarkId}`, {
+      method: 'DELETE',
+    })
+  },
+
   async deleteFolder(folderId: number): Promise<void> {
     await apiClient.request(`/bookmarks/folders/${folderId}`, {
       method: 'DELETE',
