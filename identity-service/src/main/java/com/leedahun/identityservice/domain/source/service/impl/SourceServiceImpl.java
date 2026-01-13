@@ -2,6 +2,7 @@ package com.leedahun.identityservice.domain.source.service.impl;
 
 import com.leedahun.identityservice.common.error.exception.EntityAlreadyExistsException;
 import com.leedahun.identityservice.common.error.exception.EntityNotFoundException;
+import com.leedahun.identityservice.common.message.ErrorMessage;
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
 import com.leedahun.identityservice.domain.source.dto.SourceRequestDto;
@@ -9,9 +10,13 @@ import com.leedahun.identityservice.domain.source.dto.SourceResponseDto;
 import com.leedahun.identityservice.domain.source.entity.Source;
 import com.leedahun.identityservice.domain.source.entity.UserSource;
 import com.leedahun.identityservice.domain.source.exception.InvalidRssUrlException;
+import com.leedahun.identityservice.domain.source.exception.SourceValidationException;
 import com.leedahun.identityservice.domain.source.repository.SourceRepository;
 import com.leedahun.identityservice.domain.source.repository.UserSourceRepository;
 import com.leedahun.identityservice.domain.source.service.SourceService;
+import com.leedahun.identityservice.domain.source.validator.RobotsTxtValidator;
+import com.leedahun.identityservice.domain.source.validator.RssFeedValidator;
+import com.leedahun.identityservice.domain.source.validator.UrlValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -24,6 +29,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.leedahun.identityservice.common.message.ErrorMessage.RSS_PARSING_FAILED;
+
 @Slf4j
 @Service
 @Transactional
@@ -33,6 +40,20 @@ public class SourceServiceImpl implements SourceService {
     private final SourceRepository sourceRepository;
     private final UserSourceRepository userSourceRepository;
     private final UserRepository userRepository;
+    private final UrlValidator urlValidator;
+    private final RobotsTxtValidator robotsTxtValidator;
+    private final RssFeedValidator rssFeedValidator;
+
+    // Jsoup 설정 상수
+    private static final int JSOUP_TIMEOUT = 10000; // 10초
+    private static final String USER_AGENT = "Mozilla/5.0 (compatible; KeyFeedBot/1.0)";
+
+    // RSS/Atom 피드 탐지용 CSS 선택자
+    private static final String RSS_LINK_SELECTOR = "link[type=application/rss+xml]";
+    private static final String ATOM_LINK_SELECTOR = "link[type=application/atom+xml]";
+
+    // HTML 속성
+    private static final String HREF_ATTRIBUTE = "abs:href";
 
     @Override
     @Transactional(readOnly = true)
@@ -48,10 +69,34 @@ public class SourceServiceImpl implements SourceService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));
 
-        // RSS 피드 주소 탐지
-        String rssUrl = discoverRssUrl(request.getUrl());
-        log.info("Discovered RSS URL: {} -> {}", request.getUrl(), rssUrl);
+        log.info("소스 등록 요청 - 사용자: {}, URL: {}", userId, request.getUrl());
 
+        // 1. 기본 URL 검증
+        UrlValidator.ValidationResult validationResult = urlValidator.validate(request.getUrl());
+        if (!validationResult.isValid()) {
+            log.error("URL 검증 실패: {} - {}", request.getUrl(), validationResult.getMessage());
+            throw new SourceValidationException(validationResult.getMessage());
+        }
+
+        // 2. RSS 피드 주소 탐지
+        String rssUrl = discoverRssUrl(request.getUrl());
+        log.info("RSS URL 탐지 완료: {} -> {}", request.getUrl(), rssUrl);
+
+        // 3. robots.txt 확인
+        if (!robotsTxtValidator.isAllowedToCrawl(rssUrl)) {
+            log.error("robots.txt에 의해 크롤링 금지됨: {}", rssUrl);
+            throw new SourceValidationException(ErrorMessage.ROBOTS_TXT_DISALLOWED.getMessage());
+        }
+
+        // 4. RSS 파싱 가능 여부 테스트
+        if (!rssFeedValidator.canParseFeed(rssUrl)) {
+            log.error("RSS 피드 파싱 실패: {}", rssUrl);
+            throw new SourceValidationException(RSS_PARSING_FAILED.getMessage());
+        }
+
+        log.info("모든 검증 통과: {}", rssUrl);
+
+        // 5. Source 저장
         // 기존에 같은 source가 존재하지 않는다면 생성
         Source source = sourceRepository.findByUrl(rssUrl)
                 .orElseGet(() -> {
@@ -73,6 +118,8 @@ public class SourceServiceImpl implements SourceService {
                 .build();
         userSourceRepository.save(userSource);
 
+        log.info("소스 등록 완료 - 사용자: {}, 소스ID: {}, RSS URL: {}", userId, source.getId(), rssUrl);
+
         return SourceResponseDto.from(userSource);
     }
 
@@ -85,31 +132,35 @@ public class SourceServiceImpl implements SourceService {
 
     private String discoverRssUrl(String inputUrl) {
         try {
-            // HTML 문저 전체
             Document doc = Jsoup.connect(inputUrl)
-                    .timeout(5000)
+                    .timeout(JSOUP_TIMEOUT)
+                    .userAgent(USER_AGENT)
                     .get();
 
-            // RSS 2.0 피드를 나타내는 표준 MIME 타입
-            // 대부분의 블로그, 뉴스사이트는 RSS주소를 알리기 위해 head태그안에 다음의 태그를 넣어둔다.
-            // <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="https://techblog.woowahan.com/feed/" />
-            Element rssLink = doc.select("link[type=application/rss+xml]").first();
+            // RSS 2.0 피드 탐지
+            Element rssLink = doc.select(RSS_LINK_SELECTOR).first();
             if (rssLink != null) {
-                return rssLink.attr("abs:href");
+                String discoveredUrl = rssLink.attr(HREF_ATTRIBUTE);
+                log.info("RSS 링크 발견: {}", discoveredUrl);
+                return discoveredUrl;
             }
 
-            Element atomLink = doc.select("link[type=application/atom+xml]").first();
+            // Atom 피드 탐지
+            Element atomLink = doc.select(ATOM_LINK_SELECTOR).first();
             if (atomLink != null) {
-                return atomLink.attr("abs:href");
+                String discoveredUrl = atomLink.attr(HREF_ATTRIBUTE);
+                log.info("Atom 링크 발견: {}", discoveredUrl);
+                return discoveredUrl;
             }
 
+            log.info("RSS/Atom 링크를 찾지 못함. 원본 URL 사용: {}", inputUrl);
             return inputUrl;
 
         } catch (IOException e) {
             log.warn("URL 접속 실패: {}. 원인: {}", inputUrl, e.getMessage());
             throw new InvalidRssUrlException();
         } catch (Exception e) {
-            log.warn("URL 자동 탐색 파싱 실패: {}. 원본 입력을 대신 사용합니다. 오류: {}", inputUrl, e.toString());
+            log.warn("RSS URL 자동 탐색 실패: {}. 원본 입력을 사용합니다. 오류: {}", inputUrl, e.toString());
             return inputUrl;
         }
     }

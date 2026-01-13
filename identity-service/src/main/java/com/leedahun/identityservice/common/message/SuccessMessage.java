@@ -15,7 +15,9 @@ public enum SuccessMessage {
     CREATE_TOKENS("토큰발급에 성공했습니다."),
 
     EMAIL_SEND_SUCCESS("이메일 전송에 성공하였습니다."),
-    EMAIL_VERIFIED("이메일 인증이 완료되었습니다.");
+    EMAIL_VERIFIED("이메일 인증이 완료되었습니다."),
+
+    URL_VALIDATION_SUCCESS("URL 검증 성공");
 
     private final String message;
 }
