@@ -104,6 +104,15 @@ export function BookmarksPage() {
             <span>전체</span>
             <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium">5</span>
           </button>
+          <button
+            type="button"
+            className={`${activeFolderId === 0 ? 'bg-white text-black border-white' : 'bg-[#1e2939] text-[#d1d5dc] border-[#364153]'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85`}
+            onClick={() => setActiveFolderId(0)}
+          >
+            <FolderIcon />
+            <span>미분류</span>
+            <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium hidden">0</span>
+          </button>
           {!isLoadingFolders && folders.length ? (
             folders.map((folder) => {
               const isActive = folder.folderId === activeFolderId
