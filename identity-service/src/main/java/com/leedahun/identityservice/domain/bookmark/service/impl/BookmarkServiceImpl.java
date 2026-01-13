@@ -19,6 +19,8 @@ import com.leedahun.identityservice.domain.bookmark.repository.BookmarkRepositor
 import com.leedahun.identityservice.domain.bookmark.service.BookmarkService;
 import com.leedahun.identityservice.infra.client.FeedInternalApiClient;
 import com.leedahun.identityservice.infra.client.dto.ContentFeedResponseDto;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -153,6 +155,17 @@ public class BookmarkServiceImpl implements BookmarkService {
                 .toList();
     }
 
+    @Override
+    public Map<String, Long> getBookmarkMap(Long userId, List<String> contentIds) {
+        if (contentIds == null || contentIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return bookmarkRepository.findAllByUserIdAndContentIdIn(userId, contentIds)
+                .stream()
+                .collect(Collectors.toMap(Bookmark::getContentId, Bookmark::getId));
+    }
+
     // 북마크 폴더 이름이 중복되는지 검증
     private void validateFolderNameNotDuplicated(Long userId, String folderName) {
         if (folderRepository.existsByUserIdAndName(userId, folderName)) {
@@ -184,7 +197,7 @@ public class BookmarkServiceImpl implements BookmarkService {
 
     // 이동할 폴더 조회 및 검증
     private BookmarkFolder resolveFolderForMove(Long userId, Long folderId) {
-        if (folderId == null) {
+        if (folderId == null || folderId == 0L) {
             return null;
         }
 
