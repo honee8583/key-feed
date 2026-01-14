@@ -6,6 +6,7 @@ import com.leedahun.identityservice.domain.bookmark.dto.BookmarkFolderResponseDt
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkRequestDto;
 import com.leedahun.identityservice.domain.bookmark.dto.BookmarkResponseDto;
 import java.util.List;
+import java.util.Map;
 
 public interface BookmarkService {
 
@@ -22,5 +23,7 @@ public interface BookmarkService {
     void moveBookmark(Long userId, Long bookmarkId, Long folderId);
 
     List<BookmarkFolderResponseDto> getFolders(Long userId);
+
+    Map<String, Long> getBookmarkMap(Long userId, List<String> contentIds);
 
 }

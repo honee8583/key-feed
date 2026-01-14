@@ -12,6 +12,7 @@ export type HighlightCardProps = {
   typeIcon: string
   typeLabel: string
   bookmarkIcon?: string
+  isBookmarked?: boolean
   onBookmarkClick?: () => void
 }
 
@@ -27,6 +28,7 @@ export function HighlightCard({
   typeIcon,
   typeLabel,
   bookmarkIcon,
+  isBookmarked,
   onBookmarkClick,
 }: HighlightCardProps) {
   const showActions = Boolean(bookmarkIcon)
@@ -87,11 +89,20 @@ export function HighlightCard({
             {bookmarkIcon ? (
               <button
                 type="button"
-                className="w-11 h-11 rounded-2xl border border-white/10 bg-white/5 inline-flex items-center justify-center hover:bg-white/10 transition-colors"
-                aria-label="저장"
+                className={`w-11 h-11 rounded-2xl border transition-colors inline-flex items-center justify-center ${
+                  isBookmarked
+                    ? 'border-[#facc15]/30 bg-[#facc15]/10 text-[#facc15] hover:bg-[#facc15]/20'
+                    : 'border-white/10 bg-white/5 hover:bg-white/10'
+                }`}
+                aria-label={isBookmarked ? '저장 취소' : '저장'}
                 onClick={handleActionClick(onBookmarkClick)}
               >
-                <img className="w-[18px] h-[18px]" src={bookmarkIcon} alt="" aria-hidden />
+                <img
+                  className={`w-[18px] h-[18px] ${isBookmarked ? 'brightness-[1000%] sepia-[100%] hue-rotate-[-30deg] saturate-[500%]' : ''}`}
+                  src={bookmarkIcon}
+                  alt=""
+                  aria-hidden
+                />
               </button>
             ) : null}
           </div>

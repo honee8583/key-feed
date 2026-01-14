@@ -19,8 +19,7 @@ public class ContentFeedResponseDto {
     private String thumbnailUrl;
     private LocalDateTime publishedAt;
 
-    // TODO
-    private boolean isBookmarked;
+    private Long bookmarkId;
 
     public static ContentFeedResponseDto from(ContentDocument content) {
         return ContentFeedResponseDto.builder()

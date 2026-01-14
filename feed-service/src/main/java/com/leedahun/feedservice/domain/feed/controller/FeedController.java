@@ -29,7 +29,7 @@ public class FeedController {
                                         @RequestParam(value = "lastId", required = false) Long lastId,
                                         @RequestParam(value = "size", defaultValue = "10") int size) {
         List<Long> sourceIds = feedService.fetchUserSourceIds(userId);
-        CommonPageResponse<ContentFeedResponseDto> feeds = feedService.getPersonalizedFeeds(sourceIds, lastId, size);
+        CommonPageResponse<ContentFeedResponseDto> feeds = feedService.getPersonalizedFeeds(userId, sourceIds, lastId, size);
         return ResponseEntity.ok()
                 .body(new HttpResponse(HttpStatus.OK, READ_SUCCESS.getMessage(), feeds));
     }
