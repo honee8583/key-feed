@@ -16,15 +16,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.leedahun.feedservice.common.message.ErrorMessage.IDENTITY_SERVICE_REQUEST_FAIL;
@@ -63,8 +60,7 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeeds(List<Long> sourceIds, Long lastPublishedAt, int size) {
+    public CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeeds(Long userId, List<Long> sourceIds, Long lastPublishedAt, int size) {
         if (CollectionUtils.isEmpty(sourceIds)) {
             return CommonPageResponse.<ContentFeedResponseDto>builder()
                     .content(Collections.emptyList())
@@ -82,6 +78,32 @@ public class FeedServiceImpl implements FeedService {
         List<ContentFeedResponseDto> feeds = resultList.stream()
                 .map(ContentFeedResponseDto::from)
                 .collect(Collectors.toList());
+
+        if (userId != null && !feeds.isEmpty()) {
+            try {
+                List<String> contentIds = feeds.stream()
+                        .map(ContentFeedResponseDto::getContentId)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+
+                // contentIds가 비어있으면 API 호출 스킵
+                if (!contentIds.isEmpty()) {
+                    Map<String, Long> bookmarkMap = userInternalApiClient.getBookmarkedContentIds(userId, contentIds);
+
+                    // bookmarkMap이 null일 경우 대비 및 feed.getContentId()가 null인 경우 방어
+                    if (bookmarkMap != null) {
+                        feeds.forEach(feed -> {
+                            if (feed.getContentId() != null) {
+                                feed.setBookmarkId(bookmarkMap.get(feed.getContentId()));
+                            }
+                        });
+                    }
+                }
+
+            } catch (Exception e) {
+                log.error("북마크 정보 조회 실패. userId: {}", userId, e);
+            }
+        }
 
         Long nextCursorId = getNextPublishedAt(hasNext, resultList);
         return CommonPageResponse.<ContentFeedResponseDto>builder()

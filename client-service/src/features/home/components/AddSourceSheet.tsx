@@ -1,36 +1,9 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { sourceApi, type CreatedSource } from '../../../services/sourceApi'
 
-const SOURCE_TYPE_OPTIONS = [
-  {
-    id: 'blog',
-    label: '블로그',
-    icon: 'http://localhost:3845/assets/9dff08aab9abaa6a04c4d1dd71ca4149994a9f17.svg',
-  },
-  {
-    id: 'news',
-    label: '뉴스',
-    icon: 'http://localhost:3845/assets/4c4dbc3c438d8bb5d1ee1251d638b23560b083c7.svg',
-  },
-  {
-    id: 'video',
-    label: '유튜브',
-    icon: 'http://localhost:3845/assets/ea0201bc68deb42715a27ba06681095c5f489e39.svg',
-  },
-  {
-    id: 'community',
-    label: '커뮤니티',
-    icon: 'http://localhost:3845/assets/004e5c039213e718cb0046d6da0e7a169a20d5f1.svg',
-  },
-] as const
 
-const POPULAR_SOURCES = [
-  { name: 'Hacker News', url: 'https://news.ycombinator.com/rss', typeId: 'news' as const },
-  { name: 'Dev.to', url: 'https://dev.to/feed', typeId: 'blog' as const },
-  { name: 'Medium', url: 'https://medium.com/feed', typeId: 'blog' as const },
-]
 
-type SourceType = (typeof SOURCE_TYPE_OPTIONS)[number]['id']
+type SourceType = 'blog' | 'news' | 'video' | 'community'
 
 type AddSourceSheetProps = {
   isOpen: boolean
@@ -76,14 +49,6 @@ export function AddSourceSheet({ isOpen, onClose, onSubmit }: AddSourceSheetProp
     }
   }, [isOpen, dismissSheet])
 
-  const handlePopularSelect = (name: string, url: string, typeId: SourceType) => {
-    setSubmitError(null)
-    setSourceName(name)
-    setSourceUrl(url)
-    setSourceType(typeId)
-    nameInputRef.current?.focus()
-  }
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     const trimmedName = sourceName.trim()
@@ -117,122 +82,94 @@ export function AddSourceSheet({ isOpen, onClose, onSubmit }: AddSourceSheetProp
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center animate-[sheet-slide-up_240ms_ease-out]"
+      className="fixed inset-0 z-[60] flex items-end justify-center"
       role="dialog"
       aria-modal
       aria-label="콘텐츠 소스 추가"
     >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] z-[1]" onClick={dismissSheet} />
-      <section className="relative z-[2] w-full max-w-[478px] max-h-[calc(100%-80px)] rounded-t-[24px] bg-white shadow-[0_-24px_48px_rgba(15,23,42,0.18)] p-6 overflow-y-auto max-[480px]:rounded-t-2xl max-[480px]:p-5">
-        <header className="flex justify-between items-start gap-3 pb-3 border-b border-slate-200/80">
-          <div>
-            <p className="m-0 text-[13px] text-[#6a7282]">KeyFeed 설정</p>
-            <h2 className="mt-1 mb-0 text-xl text-[#101828]">소스 추가하기</h2>
-          </div>
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-[2px] z-[1] transition-opacity duration-200"
+        onClick={dismissSheet} 
+      />
+      
+      <div 
+        className="relative z-[2] w-full max-w-[478px] bg-[#1e2939] rounded-t-[24px] overflow-hidden flex flex-col max-h-[85vh] animate-[sheet-slide-up_240ms_ease-out]"
+      >
+        <div className="flex justify-between items-center p-5 pb-2 shrink-0">
+          <h2 className="text-[18px] font-bold text-slate-50 m-0">소스 추가하기</h2>
           <button
             type="button"
-            className="border-none bg-slate-900/4 w-9 h-9 rounded-full text-xl cursor-pointer text-slate-900 hover:bg-slate-900/8 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#155dfc] focus-visible:outline-offset-2"
-            aria-label="소스 추가 닫기"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:text-white transition-colors"
             onClick={dismissSheet}
+            aria-label="닫기"
           >
-            <span aria-hidden>×</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
-        </header>
+        </div>
 
-        <form className="flex flex-col gap-6 pt-6" onSubmit={handleSubmit}>
-          <fieldset className="border-none p-0 m-0 flex flex-col gap-3">
-            <legend className="text-sm font-semibold text-[#101828]">소스 타입</legend>
-            <div className="grid grid-cols-2 gap-3">
-              {SOURCE_TYPE_OPTIONS.map((option) => {
-                const isSelected = option.id === sourceType
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className={`flex items-center gap-3 rounded-xl border-2 p-2.5 px-3.5 bg-white font-semibold cursor-pointer transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#155dfc] focus-visible:outline-offset-2 ${
-                      isSelected
-                        ? 'border-[#155dfc] bg-[#eef4ff] text-[#1c398e]'
-                        : 'border-[#e5e7eb] text-[#364153] hover:border-[#d1d5db]'
-                    }`}
-                    onClick={() => setSourceType(option.id)}
-                  >
-                    <img src={option.icon} alt="" className="w-5 h-5" aria-hidden />
-                    <span>{option.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </fieldset>
+        <div className="p-5 pb-0 shrink-0">
+           <p className="text-[14px] text-slate-400">새로운 콘텐츠 소스를 추가하여 피드를 구성하세요.</p>
+        </div>
 
-          <label className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-[#101828]">소스 이름</span>
-            <input
-              ref={nameInputRef}
-              type="text"
-              placeholder="예: Tech Blog Korea"
-              value={sourceName}
-              onChange={(event) => setSourceName(event.target.value)}
-              className="rounded-[10px] border border-slate-900/8 px-3 py-2.5 text-sm bg-[rgba(229,229,229,0.3)] focus:outline-none focus:ring-2 focus:ring-[#155dfc]"
-            />
-          </label>
+        <div className="flex-1 overflow-y-auto p-5 py-6 flex flex-col gap-6">
+          {/* Form Fields */}
+          <div className="flex flex-col gap-4">
+             <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-semibold text-slate-300 ml-1">소스 이름</label>
+                <input
+                  ref={nameInputRef}
+                  type="text"
+                  placeholder="예: Tech Blog Korea"
+                  value={sourceName}
+                  onChange={(event) => setSourceName(event.target.value)}
+                  className="w-full h-12 rounded-xl border border-white/10 bg-[rgba(2,6,23,0.6)] px-4 text-[15px] text-white placeholder:text-slate-500/70 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                />
+             </div>
 
-          <label className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-[#101828]">소스 URL</span>
-            <div className="flex items-center gap-2 rounded-[10px] border border-slate-900/8 px-3 bg-[rgba(229,229,229,0.3)]">
-              <span className="text-base" aria-hidden>🔗</span>
-              <input
-                type="url"
-                placeholder="https://example.com/feed"
-                value={sourceUrl}
-                onChange={(event) => setSourceUrl(event.target.value)}
-                className="flex-1 border-none px-0 py-2.5 bg-transparent focus:outline-none focus:ring-0"
-              />
-            </div>
-            <p className="m-0 text-xs text-[#6a7282]">RSS 피드, 채널 URL, 또는 블로그 주소를 입력하세요</p>
-          </label>
-
-          <div>
-            <p className="text-sm font-semibold text-[#101828] mb-2 mt-0">인기 소스</p>
-            <ul className="list-none m-2 mt-0 p-0 flex flex-col gap-2">
-              {POPULAR_SOURCES.map((source) => (
-                <li key={source.name} className="flex justify-between items-center border border-[#e4e7ec] rounded-[10px] px-3 py-2.5">
-                  <span className="font-medium text-[#101828]">{source.name}</span>
-                  <button
-                    type="button"
-                    className="border-none bg-none text-[#6a7282] font-semibold cursor-pointer hover:text-[#475467] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#155dfc] focus-visible:outline-offset-2"
-                    onClick={() => handlePopularSelect(source.name, source.url, source.typeId)}
-                  >
-                    추가
-                  </button>
-                </li>
-              ))}
-            </ul>
+             <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-semibold text-slate-300 ml-1">소스 URL</label>
+                <div className="flex items-center gap-3 w-full h-12 rounded-xl border border-white/10 bg-[rgba(2,6,23,0.6)] px-4 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/50 transition-all">
+                   <span className="text-lg opacity-50" aria-hidden>🔗</span>
+                   <input
+                     type="url"
+                     placeholder="https://example.com/feed"
+                     value={sourceUrl}
+                     onChange={(event) => setSourceUrl(event.target.value)}
+                     className="flex-1 bg-transparent border-none p-0 text-[15px] text-white placeholder:text-slate-500/70 focus:outline-none"
+                   />
+                </div>
+                <p className="text-[12px] text-slate-500 ml-1">RSS 피드, 채널 URL, 또는 블로그 주소를 입력하세요</p>
+             </div>
           </div>
+        </div>
 
-          {submitError ? (
-            <p className="m-0 text-[13px] text-[#fb2c36]" role="alert">
-              {submitError}
-            </p>
-          ) : null}
+        {submitError ? (
+          <p className="px-5 py-2 text-[13px] text-red-400 text-center animate-pulse" role="alert">
+            {submitError}
+          </p>
+        ) : null}
 
-          <div className="flex flex-col gap-3 mt-3">
+        {/* Footer Actions */}
+        <div className="p-4 border-t border-white/5 bg-[#1e2939] flex flex-col gap-3 pb-8">
             <button
-              type="submit"
-              className="rounded-[10px] border-none px-3 py-3 text-[15px] font-semibold cursor-pointer bg-gradient-to-r from-[#155dfc] to-[#4f39f6] text-slate-50 transition-opacity duration-160 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#155dfc] focus-visible:outline-offset-2"
-              disabled={isSubmitDisabled || isSubmitting}
-            >
-              {isSubmitting ? '추가 중...' : '소스 추가하기'}
-            </button>
-            <button
-              type="button"
-              className="rounded-[10px] border-none px-3 py-3 text-[15px] font-semibold cursor-pointer bg-transparent border border-slate-900/10 text-[#101828] hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#155dfc] focus-visible:outline-offset-2"
-              onClick={dismissSheet}
-            >
-              취소
-            </button>
-          </div>
-        </form>
-      </section>
+               type="button"
+               className="w-full h-[52px] rounded-[14px] bg-[#3b82f6] text-white text-[16px] font-bold hover:bg-[#2563eb] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+               onClick={handleSubmit}
+               disabled={isSubmitDisabled || isSubmitting}
+             >
+               {isSubmitting ? '추가 중...' : '소스 추가하기'}
+             </button>
+             <button
+               type="button"
+               className="w-full h-[52px] rounded-[14px] border border-white/10 bg-white/5 text-[#d1d5dc] text-[16px] font-medium hover:bg-white/10 active:scale-[0.98] transition-all"
+               onClick={dismissSheet}
+             >
+               취소
+             </button>
+        </div>
+      </div>
     </div>
   )
 }

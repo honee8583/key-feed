@@ -1,14 +1,14 @@
 import { apiClient } from './apiClient'
 
 export type FeedContent = {
-  contentId: number
+  contentId: string
   title: string
   summary: string
   sourceName: string
   originalUrl: string
   thumbnailUrl: string | null
   publishedAt: string
-  bookmarked: boolean
+  bookmarkId: number | null
 }
 
 export type FeedListParams = {

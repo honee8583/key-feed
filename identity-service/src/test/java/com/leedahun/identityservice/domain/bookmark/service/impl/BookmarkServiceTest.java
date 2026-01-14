@@ -24,6 +24,7 @@ import com.leedahun.identityservice.domain.bookmark.repository.BookmarkRepositor
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.leedahun.identityservice.infra.client.FeedInternalApiClient;
@@ -506,6 +507,79 @@ class BookmarkServiceImplTest {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getName()).isEqualTo("F1");
         assertThat(result.get(1).getName()).isEqualTo("F2");
+    }
+
+    @Nested
+    @DisplayName("북마크 Map 조회")
+    class GetBookmarkMap {
+
+        @Test
+        @DisplayName("성공: 요청한 컨텐츠 ID에 해당하는 북마크 Map(ContentId -> BookmarkId) 반환")
+        void getBookmarkMap_success() {
+            // given
+            Long userId = 1L;
+            List<String> contentIds = List.of("100", "200");
+
+            Bookmark b1 = Bookmark.builder().id(10L).contentId("100").build();
+            Bookmark b2 = Bookmark.builder().id(20L).contentId("200").build();
+
+            when(bookmarkRepository.findAllByUserIdAndContentIdIn(userId, contentIds))
+                    .thenReturn(List.of(b1, b2));
+
+            // when
+            Map<String, Long> result = bookmarkService.getBookmarkMap(userId, contentIds);
+
+            // then
+            assertThat(result).hasSize(2);
+            assertThat(result.get("100")).isEqualTo(10L);
+            assertThat(result.get("200")).isEqualTo(20L);
+        }
+
+        @Test
+        @DisplayName("성공: 조회된 북마크가 없으면 빈 Map 반환")
+        void getBookmarkMap_success_noResult() {
+            // given
+            Long userId = 1L;
+            List<String> contentIds = List.of("999");
+
+            when(bookmarkRepository.findAllByUserIdAndContentIdIn(userId, contentIds))
+                    .thenReturn(Collections.emptyList());
+
+            // when
+            Map<String, Long> result = bookmarkService.getBookmarkMap(userId, contentIds);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("성공: 입력 리스트가 비어있으면 DB 조회 없이 빈 Map 반환")
+        void getBookmarkMap_emptyInput() {
+            // given
+            Long userId = 1L;
+            List<String> contentIds = Collections.emptyList();
+
+            // when
+            Map<String, Long> result = bookmarkService.getBookmarkMap(userId, contentIds);
+
+            // then
+            assertThat(result).isEmpty();
+            verify(bookmarkRepository, never()).findAllByUserIdAndContentIdIn(anyLong(), anyList());
+        }
+
+        @Test
+        @DisplayName("성공: 입력 리스트가 null이면 DB 조회 없이 빈 Map 반환")
+        void getBookmarkMap_nullInput() {
+            // given
+            Long userId = 1L;
+
+            // when
+            Map<String, Long> result = bookmarkService.getBookmarkMap(userId, null);
+
+            // then
+            assertThat(result).isEmpty();
+            verify(bookmarkRepository, never()).findAllByUserIdAndContentIdIn(anyLong(), anyList());
+        }
     }
 
 }

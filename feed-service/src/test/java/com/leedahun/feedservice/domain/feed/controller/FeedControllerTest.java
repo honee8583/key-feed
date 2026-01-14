@@ -1,8 +1,6 @@
 package com.leedahun.feedservice.domain.feed.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.leedahun.feedservice.auth.WithAnonymousUser;
-import com.leedahun.feedservice.common.message.SuccessMessage;
 import com.leedahun.feedservice.common.response.CommonPageResponse;
 import com.leedahun.feedservice.config.SecurityConfig;
 import com.leedahun.feedservice.domain.feed.dto.ContentFeedResponseDto;
@@ -21,14 +19,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
+import static com.leedahun.feedservice.common.message.SuccessMessage.READ_SUCCESS;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WithAnonymousUser
 @WebMvcTest(controllers = FeedController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE, classes = {SecurityConfig.class}
@@ -48,7 +47,6 @@ class FeedControllerTest {
     @Test
     @DisplayName("[GET /api/feed] 파라미터가 포함된 피드 목록 조회 성공 시 200 OK를 반환한다")
     void getMyFeeds_success() throws Exception {
-        // given
         Long lastId = 100L;
         int size = 20;
         List<Long> sourceIds = List.of(1L, 2L);
@@ -62,28 +60,28 @@ class FeedControllerTest {
         );
 
         when(feedService.fetchUserSourceIds(any())).thenReturn(sourceIds);
-        when(feedService.getPersonalizedFeeds(eq(sourceIds), eq(lastId), eq(size)))
+
+        // 변경된 부분: userId(첫 번째 인자)를 any()로 처리하여 서비스 호출 검증
+        when(feedService.getPersonalizedFeeds(any(), eq(sourceIds), eq(lastId), eq(size)))
                 .thenReturn(response);
 
-        // when & then
         mockMvc.perform(get("/api/feed")
                         .param("lastId", String.valueOf(lastId))
                         .param("size", String.valueOf(size))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value(SuccessMessage.READ_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.message").value(READ_SUCCESS.getMessage()))
                 .andExpect(jsonPath("$.data.content").isArray())
                 .andExpect(jsonPath("$.data.hasNext").value(true));
 
         verify(feedService).fetchUserSourceIds(any());
-        verify(feedService).getPersonalizedFeeds(eq(sourceIds), eq(lastId), eq(size));
+        verify(feedService).getPersonalizedFeeds(any(), eq(sourceIds), eq(lastId), eq(size));
     }
 
     @Test
     @DisplayName("[GET /api/feed] 파라미터가 없으면 기본값으로 피드 목록을 조회한다")
     void getMyFeeds_defaultParams() throws Exception {
-        // given
         List<Long> sourceIds = List.of(1L, 2L);
 
         CommonPageResponse<ContentFeedResponseDto> emptyResponse = new CommonPageResponse<>(
@@ -93,18 +91,19 @@ class FeedControllerTest {
         );
 
         when(feedService.fetchUserSourceIds(any())).thenReturn(sourceIds);
-        when(feedService.getPersonalizedFeeds(eq(sourceIds), eq(null), eq(10)))
+
+        // 변경된 부분: 기본값 size=10 확인, userId는 any()
+        when(feedService.getPersonalizedFeeds(any(), eq(sourceIds), eq(null), eq(10)))
                 .thenReturn(emptyResponse);
 
-        // when & then
         mockMvc.perform(get("/api/feed"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value(SuccessMessage.READ_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.message").value(READ_SUCCESS.getMessage()))
                 .andExpect(jsonPath("$.data.content").isEmpty())
                 .andExpect(jsonPath("$.data.hasNext").value(false));
 
         verify(feedService).fetchUserSourceIds(any());
-        verify(feedService).getPersonalizedFeeds(eq(sourceIds), eq(null), eq(10));
+        verify(feedService).getPersonalizedFeeds(any(), eq(sourceIds), eq(null), eq(10));
     }
 }
