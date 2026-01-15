@@ -14,6 +14,6 @@ public interface KeywordService {
 
     void deleteKeyword(Long userId, Long keywordId);
 
-    List<Long> findUserIdsByKeywords(Set<String> keywords);
+    List<Long> findUserIdsByKeywordsAndSource(Set<String> keywords, Long sourceId);
 
 }
