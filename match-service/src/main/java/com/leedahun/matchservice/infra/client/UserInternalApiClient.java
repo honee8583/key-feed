@@ -4,9 +4,7 @@ import com.leedahun.matchservice.infra.client.dto.KeywordResponseDto;
 import java.util.List;
 import java.util.Set;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "identity-service")
 public interface UserInternalApiClient {
@@ -15,6 +13,7 @@ public interface UserInternalApiClient {
     List<KeywordResponseDto> getActiveKeywords(@PathVariable("userId") Long userId);
 
     @PostMapping("/internal/keywords/match-users")
-    List<Long> findUserIdsByKeywords(Set<String> keywords);
+    List<Long> findUserIdsByKeywordsAndSource(@RequestBody Set<String> keywords,
+                                              @RequestParam("sourceId") Long sourceId);
 
 }
