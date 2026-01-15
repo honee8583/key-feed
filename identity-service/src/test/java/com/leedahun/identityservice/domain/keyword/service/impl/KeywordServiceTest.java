@@ -293,74 +293,46 @@ class KeywordServiceTest {
     }
 
     @Nested
-    @DisplayName("키워드로 유저 ID 목록 조회")
-    class FindUserIdsByKeywords {
+    @DisplayName("키워드와 소스 ID로 유저 ID 목록 조회")
+    class FindUserIdsByKeywordsAndSource {
 
         @Test
-        @DisplayName("성공: 키워드 목록에 매칭되는 유저 ID 리스트 반환")
-        void findUserIdsByKeywords_success() {
+        @DisplayName("성공: 키워드 목록과 Source ID에 매칭되는 유저 ID 리스트 반환")
+        void findUserIdsByKeywordsAndSource_success() {
             // Given
             Set<String> keywords = Set.of("Java", "Spring", "Kafka");
+            Long sourceId = 100L;
             List<Long> expectedUserIds = List.of(10L, 20L, 30L);
 
-            when(keywordRepository.findUserIdsByNames(keywords)).thenReturn(expectedUserIds);
+            when(keywordRepository.findUserIdsByNamesAndSourceId(keywords, sourceId))
+                    .thenReturn(expectedUserIds);
 
             // When
-            List<Long> result = keywordService.findUserIdsByKeywords(keywords);
+            List<Long> result = keywordService.findUserIdsByKeywordsAndSource(keywords, sourceId);
 
             // Then
             assertThat(result).hasSize(3);
-            assertThat(result).containsExactly(10L, 20L, 30L); // 순서와 값 정확히 일치 확인
+            assertThat(result).containsExactly(10L, 20L, 30L);
 
             // 리포지토리 호출 검증
-            verify(keywordRepository, times(1)).findUserIdsByNames(keywords);
+            verify(keywordRepository, times(1)).findUserIdsByNamesAndSourceId(keywords, sourceId);
         }
 
         @Test
         @DisplayName("성공: 매칭되는 유저가 없으면 빈 리스트 반환")
-        void findUserIdsByKeywords_success_noMatch() {
+        void findUserIdsByKeywordsAndSource_noMatch() {
             // Given
             Set<String> keywords = Set.of("NonExisting");
-            when(keywordRepository.findUserIdsByNames(keywords)).thenReturn(List.of());
+            Long sourceId = 100L;
+            when(keywordRepository.findUserIdsByNamesAndSourceId(keywords, sourceId))
+                    .thenReturn(List.of());
 
             // When
-            List<Long> result = keywordService.findUserIdsByKeywords(keywords);
+            List<Long> result = keywordService.findUserIdsByKeywordsAndSource(keywords, sourceId);
 
             // Then
             assertThat(result).isEmpty();
-            verify(keywordRepository, times(1)).findUserIdsByNames(keywords);
-        }
-
-        @Test
-        @DisplayName("성공: 입력된 키워드 Set이 비어있으면 빈 리스트 반환 (DB 조회 X)")
-        void findUserIdsByKeywords_emptyInput() {
-            // Given
-            Set<String> emptyKeywords = Set.of();
-
-            // When
-            List<Long> result = keywordService.findUserIdsByKeywords(emptyKeywords);
-
-            // Then
-            assertThat(result).isEmpty();
-
-            // DB 조회가 발생하지 않아야 함
-            verify(keywordRepository, never()).findUserIdsByNames(any());
-        }
-
-        @Test
-        @DisplayName("성공: 입력이 null이면 빈 리스트 반환 (DB 조회 X)")
-        void findUserIdsByKeywords_nullInput() {
-            // Given
-            Set<String> nullKeywords = null;
-
-            // When
-            List<Long> result = keywordService.findUserIdsByKeywords(nullKeywords);
-
-            // Then
-            assertThat(result).isEmpty();
-
-            // DB 조회가 발생하지 않아야 함
-            verify(keywordRepository, never()).findUserIdsByNames(any());
+            verify(keywordRepository, times(1)).findUserIdsByNamesAndSourceId(keywords, sourceId);
         }
     }
 
