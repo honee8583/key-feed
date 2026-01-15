@@ -45,8 +45,8 @@ public class NotificationTriggerServiceImpl implements NotificationTriggerServic
             return;
         }
 
-        // 해당 키워드를 구독 중인 유저 조회
-        List<Long> userIds = userInternalApiClient.findUserIdsByKeywords(keywords);
+        List<Long> userIds = userInternalApiClient.findUserIdsByKeywordsAndSource(keywords, content.getSourceId());
+
         if (userIds.isEmpty()) {
             return;
         }

@@ -1,5 +1,6 @@
 package com.leedahun.identityservice.domain.keyword.controller;
 
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -66,7 +67,6 @@ class KeywordInternalControllerTest {
 
         List<KeywordResponseDto> responseList = List.of(keyword1, keyword2);
 
-        // Mocking: 서비스가 호출되면 미리 준비한 리스트를 반환하도록 설정
         when(keywordService.getKeywords(userId)).thenReturn(responseList);
 
         // when & then
@@ -77,7 +77,6 @@ class KeywordInternalControllerTest {
                 .andExpect(jsonPath("$[0].name").value("Java"))
                 .andExpect(jsonPath("$[1].name").value("Spring Boot"));
 
-        // Verify: 서비스 메서드가 실제로 호출되었는지 검증
         verify(keywordService).getKeywords(userId);
     }
 
@@ -103,11 +102,13 @@ class KeywordInternalControllerTest {
         // given
         Set<String> keywords = Set.of("Java", "Spring", "Kafka");
         List<Long> matchedUserIds = List.of(10L, 20L, 30L);
+        Long sourceId = 1L;
 
-        when(keywordService.findUserIdsByKeywords(anySet())).thenReturn(matchedUserIds);
+        when(keywordService.findUserIdsByKeywordsAndSource(anySet(), anyLong())).thenReturn(matchedUserIds);
 
         // when & then
         mockMvc.perform(post("/internal/keywords/match-users")
+                        .param("sourceId", String.valueOf(sourceId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(keywords)))
                 .andExpect(status().isOk())
@@ -116,7 +117,7 @@ class KeywordInternalControllerTest {
                 .andExpect(jsonPath("$[1]").value(20L))
                 .andExpect(jsonPath("$[2]").value(30L));
 
-        verify(keywordService).findUserIdsByKeywords(anySet());
+        verify(keywordService).findUserIdsByKeywordsAndSource(anySet(), anyLong());
     }
 
     @Test
@@ -124,16 +125,20 @@ class KeywordInternalControllerTest {
     void findUserIdsByKeywords_NoMatch() throws Exception {
         // given
         Set<String> keywords = Set.of("NonExistentKeyword");
+        Long sourceId = 1L;
 
-        when(keywordService.findUserIdsByKeywords(anySet())).thenReturn(Collections.emptyList());
+        when(keywordService.findUserIdsByKeywordsAndSource(anySet(), anyLong())).thenReturn(Collections.emptyList());
 
         // when & then
         mockMvc.perform(post("/internal/keywords/match-users")
+                        .param("sourceId", String.valueOf(sourceId)) // 필수 파라미터 sourceId 추가
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(keywords)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(0))
                 .andExpect(content().json("[]"));
+
+        verify(keywordService).findUserIdsByKeywordsAndSource(anySet(), anyLong());
     }
 }
