@@ -3,6 +3,9 @@ package com.leedahun.identityservice.domain.keyword.repository;
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.keyword.entity.Keyword;
 import java.util.Set;
+
+import com.leedahun.identityservice.domain.source.entity.Source;
+import com.leedahun.identityservice.domain.source.entity.UserSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -179,49 +182,45 @@ class KeywordRepositoryTest {
     }
 
     @Test
-    @DisplayName("findUserIdsByNames: 여러 키워드에 해당하는 유저 ID 목록을 조회한다 (다중 유저)")
-    void findUserIdsByNames_multipleUsers() {
-        // Given
-        // user1: Java, Spring
-        // user2: Docker
-        Set<String> searchKeywords = Set.of("Java", "Docker");
+    @DisplayName("findUserIdsByNamesAndSourceId: 키워드와 Source ID로 유저 ID 조회 (중복 제거 확인)")
+    void findUserIdsByNamesAndSourceId_test() {
+        // given
+        Source source1 = Source.builder()
+                .url("source1")
+                .build();
+        Source source2 = Source.builder()
+                .url("source2")
+                .build();
+        entityManager.persist(source1);
+        entityManager.persist(source2);
 
-        // When
-        List<Long> result = keywordRepository.findUserIdsByNames(searchKeywords);
+        UserSource userSource1 = UserSource.builder()
+                .user(user1)
+                .userDefinedName("source1 name")
+                .source(source1)
+                .build();
 
-        // Then
-        // Java를 가진 user1과 Docker를 가진 user2가 모두 조회되어야 함
-        assertThat(result).hasSize(2)
-                .containsExactlyInAnyOrder(user1.getId(), user2.getId());
-    }
+        UserSource userSource2 = UserSource.builder()
+                .user(user2)
+                .userDefinedName("source2 name")
+                .source(source2)
+                .build();
 
-    @Test
-    @DisplayName("findUserIdsByNames: 한 유저가 여러 키워드에 매칭되어도 ID는 중복 없이 반환된다 (DISTINCT)")
-    void findUserIdsByNames_distinct() {
-        // Given
-        // user1은 Java와 Spring을 모두 가지고 있음
-        Set<String> searchKeywords = Set.of("Java", "Spring");
+        entityManager.persist(userSource1);
+        entityManager.persist(userSource2);
 
-        // When
-        List<Long> result = keywordRepository.findUserIdsByNames(searchKeywords);
+        entityManager.flush();
+        entityManager.clear();
 
-        // Then
-        // user1의 ID가 2번 나오는 것이 아니라 1번만 나와야 함 (DISTINCT 검증)
-        assertThat(result).hasSize(1)
-                .containsExactly(user1.getId());
-    }
+        // when
+        Set<String> searchKeywords = Set.of("Java", "Spring", "Docker");
+        Long targetSourceId = source1.getId();
 
-    @Test
-    @DisplayName("findUserIdsByNames: 매칭되는 키워드가 없으면 빈 리스트를 반환한다")
-    void findUserIdsByNames_noMatch() {
-        // Given
-        Set<String> searchKeywords = Set.of("Python", "Kotlin"); // DB에 없는 키워드
-
-        // When
-        List<Long> result = keywordRepository.findUserIdsByNames(searchKeywords);
+        List<Long> resultUserIds = keywordRepository.findUserIdsByNamesAndSourceId(searchKeywords, targetSourceId);
 
         // Then
-        assertThat(result).isEmpty();
+        assertThat(resultUserIds).hasSize(1);
+        assertThat(resultUserIds).containsExactly(user1.getId());
     }
 
 }
