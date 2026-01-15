@@ -80,6 +80,10 @@ public class KeywordServiceImpl implements KeywordService {
     @Override
     @Transactional(readOnly = true)
     public List<Long> findUserIdsByKeywordsAndSource(Set<String> keywords, Long sourceId) {
+        if (keywords == null || keywords.isEmpty()) {
+            return List.of();
+        }
+
         return keywordRepository.findUserIdsByNamesAndSourceId(keywords, sourceId);
     }
 
