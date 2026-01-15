@@ -97,7 +97,7 @@ class NotificationTriggerServiceImplTest {
 
         List<Long> matchedUserIds = List.of(1L);
 
-        when(userInternalApiClient.findUserIdsByKeywordsAndSource(anySet(), anyLong()))
+        when(userInternalApiClient.findUserIdsByKeywordsAndSource(anySet(), eq(sourceId)))
                 .thenReturn(matchedUserIds);
 
         when(snowflake.nextId()).thenReturn(100L);
@@ -126,7 +126,7 @@ class NotificationTriggerServiceImplTest {
 
         List<Long> matchedUserIds = List.of(1L);
 
-        when(userInternalApiClient.findUserIdsByKeywordsAndSource(anySet(), anyLong()))
+        when(userInternalApiClient.findUserIdsByKeywordsAndSource(anySet(), eq(sourceId)))
                 .thenReturn(matchedUserIds);
 
         when(snowflake.nextId()).thenReturn(100L);
@@ -192,7 +192,7 @@ class NotificationTriggerServiceImplTest {
                 .sourceId(sourceId)
                 .build();
 
-        when(userInternalApiClient.findUserIdsByKeywordsAndSource(anySet(), anyLong()))
+        when(userInternalApiClient.findUserIdsByKeywordsAndSource(anySet(), eq(sourceId)))
                 .thenReturn(Collections.emptyList());
 
         // when
@@ -219,7 +219,7 @@ class NotificationTriggerServiceImplTest {
 
         List<Long> matchedUserIds = List.of(1L);
 
-        when(userInternalApiClient.findUserIdsByKeywordsAndSource(anySet(), anyLong())).thenReturn(matchedUserIds);
+        when(userInternalApiClient.findUserIdsByKeywordsAndSource(anySet(), eq(sourceId))).thenReturn(matchedUserIds);
 
         // JSON 변환 시 강제로 예외 발생 설정
         when(objectMapper.writeValueAsString(any()))
