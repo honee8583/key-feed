@@ -334,6 +334,38 @@ class KeywordServiceTest {
             assertThat(result).isEmpty();
             verify(keywordRepository, times(1)).findUserIdsByNamesAndSourceId(keywords, sourceId);
         }
+
+        @Test
+        @DisplayName("성공: 키워드 Set이 null이면 DB 조회 없이 빈 리스트 반환")
+        void findUserIdsByKeywordsAndSource_nullKeywords() {
+            // Given
+            Set<String> keywords = null;
+            Long sourceId = 100L;
+
+            // When
+            List<Long> result = keywordService.findUserIdsByKeywordsAndSource(keywords, sourceId);
+
+            // Then
+            assertThat(result).isEmpty();
+
+            verify(keywordRepository, never()).findUserIdsByNamesAndSourceId(any(), any());
+        }
+
+        @Test
+        @DisplayName("성공: 키워드 Set이 비어있으면 DB 조회 없이 빈 리스트 반환")
+        void findUserIdsByKeywordsAndSource_emptyKeywords() {
+            // Given
+            Set<String> keywords = Set.of();
+            Long sourceId = 100L;
+
+            // When
+            List<Long> result = keywordService.findUserIdsByKeywordsAndSource(keywords, sourceId);
+
+            // Then
+            assertThat(result).isEmpty();
+
+            verify(keywordRepository, never()).findUserIdsByNamesAndSourceId(any(), any());
+        }
     }
 
 }
