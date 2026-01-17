@@ -152,6 +152,147 @@ class BookmarkServiceImplTest {
     }
 
     @Nested
+    @DisplayName("폴더 수정 (updateFolder)")
+    class UpdateFolder {
+
+        @Test
+        @DisplayName("성공: 폴더 정보 수정")
+        void updateFolder_success() {
+            // given
+            Long userId = 1L;
+            Long folderId = 10L;
+            User user = User.builder().id(userId).build();
+            BookmarkFolder folder = BookmarkFolder.builder()
+                    .id(folderId)
+                    .user(user)
+                    .name("OldName")
+                    .icon("old-icon")
+                    .color("old-color")
+                    .build();
+
+            BookmarkFolderRequestDto request = BookmarkFolderRequestDto.builder()
+                    .name("NewName")
+                    .icon("new-icon")
+                    .color("new-color")
+                    .build();
+
+            when(folderRepository.findById(folderId)).thenReturn(Optional.of(folder));
+            when(folderRepository.existsByUserIdAndName(userId, "NewName")).thenReturn(false);
+
+            // when
+            bookmarkService.updateFolder(userId, folderId, request);
+
+            // then
+            assertThat(folder.getName()).isEqualTo("NewName");
+            assertThat(folder.getIcon()).isEqualTo("new-icon");
+            assertThat(folder.getColor()).isEqualTo("new-color");
+        }
+
+        @Test
+        @DisplayName("성공: 폴더 이름은 그대로 유지하고 아이콘/색상만 변경")
+        void updateFolder_success_sameNameDifferentAttributes() {
+            // given
+            Long userId = 1L;
+            Long folderId = 10L;
+            User user = User.builder().id(userId).build();
+            BookmarkFolder folder = BookmarkFolder.builder()
+                    .id(folderId)
+                    .user(user)
+                    .name("SameName")
+                    .icon("old-icon")
+                    .color("old-color")
+                    .build();
+
+            BookmarkFolderRequestDto request = BookmarkFolderRequestDto.builder()
+                    .name("SameName")  // 동일한 이름
+                    .icon("new-icon")
+                    .color("new-color")
+                    .build();
+
+            when(folderRepository.findById(folderId)).thenReturn(Optional.of(folder));
+            // 폴더명이 같으므로 중복 체크 로직이 실행되지 않음
+
+            // when
+            bookmarkService.updateFolder(userId, folderId, request);
+
+            // then
+            assertThat(folder.getName()).isEqualTo("SameName");
+            assertThat(folder.getIcon()).isEqualTo("new-icon");
+            assertThat(folder.getColor()).isEqualTo("new-color");
+            verify(folderRepository, never()).existsByUserIdAndName(anyLong(), anyString());
+        }
+
+        @Test
+        @DisplayName("실패: 존재하지 않는 폴더")
+        void updateFolder_fail_folderNotFound() {
+            // given
+            Long userId = 1L;
+            Long invalidFolderId = 999L;
+            BookmarkFolderRequestDto request = BookmarkFolderRequestDto.builder()
+                    .name("NewName")
+                    .build();
+
+            when(folderRepository.findById(invalidFolderId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> bookmarkService.updateFolder(userId, invalidFolderId, request))
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessageContaining("BookmarkFolder");
+        }
+
+        @Test
+        @DisplayName("실패: 다른 사용자의 폴더 수정 시도")
+        void updateFolder_fail_accessDenied() {
+            // given
+            Long userId = 1L;
+            Long otherUserId = 2L;
+            Long folderId = 10L;
+
+            User otherUser = User.builder().id(otherUserId).build();
+            BookmarkFolder folder = BookmarkFolder.builder()
+                    .id(folderId)
+                    .user(otherUser)
+                    .name("OldName")
+                    .build();
+
+            BookmarkFolderRequestDto request = BookmarkFolderRequestDto.builder()
+                    .name("NewName")
+                    .build();
+
+            when(folderRepository.findById(folderId)).thenReturn(Optional.of(folder));
+
+            // when & then
+            assertThatThrownBy(() -> bookmarkService.updateFolder(userId, folderId, request))
+                    .isInstanceOf(FolderAccessDeniedException.class);
+        }
+
+        @Test
+        @DisplayName("실패: 변경하려는 폴더 이름이 이미 존재")
+        void updateFolder_fail_duplicateName() {
+            // given
+            Long userId = 1L;
+            Long folderId = 10L;
+            User user = User.builder().id(userId).build();
+            BookmarkFolder folder = BookmarkFolder.builder()
+                    .id(folderId)
+                    .user(user)
+                    .name("OldName")
+                    .build();
+
+            BookmarkFolderRequestDto request = BookmarkFolderRequestDto.builder()
+                    .name("DuplicateName")
+                    .build();
+
+            when(folderRepository.findById(folderId)).thenReturn(Optional.of(folder));
+            when(folderRepository.existsByUserIdAndName(userId, "DuplicateName")).thenReturn(true);
+
+            // when & then
+            assertThatThrownBy(() -> bookmarkService.updateFolder(userId, folderId, request))
+                    .isInstanceOf(EntityAlreadyExistsException.class);
+        }
+    }
+
+    @Nested
     @DisplayName("북마크 추가 (addBookmark)")
     class AddBookmark {
         @Test

@@ -44,6 +44,18 @@ public class BookmarkController {
     }
 
     /**
+     * 북마크 폴더 수정
+     */
+    @PatchMapping("/folders/{folderId}")
+    public ResponseEntity<?> updateFolder(@AuthenticationPrincipal Long userId,
+                                          @PathVariable("folderId") Long folderId,
+                                          @Valid @RequestBody BookmarkFolderRequestDto request) {
+        bookmarkService.updateFolder(userId, folderId, request);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.UPDATE_SUCCESS.getMessage(), null));
+    }
+
+    /**
      * 북마크를 폴더에서 제거
      */
     @DeleteMapping("/{bookmarkId}/folder")

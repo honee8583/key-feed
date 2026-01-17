@@ -12,22 +12,41 @@ import {
 type FolderManagementModalProps = {
   isOpen: boolean
   onClose: () => void
-  onCreateFolder: (name: string, icon: IconType, color: ColorType) => Promise<void>
+  onSubmit: (name: string, icon: IconType, color: ColorType) => Promise<void>
   zIndex?: number
+  initialData?: {
+    name: string
+    icon: string
+    color: string
+  }
 }
 
-export function FolderManagementModal({ isOpen, onClose, onCreateFolder, zIndex = 50 }: FolderManagementModalProps) {
+export function FolderManagementModal({ isOpen, onClose, onSubmit, zIndex = 50, initialData }: FolderManagementModalProps) {
   const [folderName, setFolderName] = useState('')
   const [selectedIcon, setSelectedIcon] = useState<IconType>('folder')
   const [selectedColor, setSelectedColor] = useState<ColorType>('#2b7fff')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  // Reset or initialize form when modal opens or initialData changes
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFolderName(initialData.name)
+        // Ensure icon is a valid IconType, otherwise default to 'folder'
+        setSelectedIcon((ICONS.includes(initialData.icon as IconType) ? initialData.icon : 'folder') as IconType)
+        setSelectedColor((COLORS.includes(initialData.color as ColorType) ? initialData.color : '#2b7fff') as ColorType)
+      } else {
+        setFolderName('')
+        setSelectedIcon('folder')
+        setSelectedColor('#2b7fff')
+      }
+      setSubmitError(null)
+    }
+  }, [isOpen, initialData])
+
   const handleClose = useCallback(() => {
-    setFolderName('')
-    setSelectedIcon('folder')
-    setSelectedColor('#2b7fff')
-    setSubmitError(null)
+    // State reset is handled by useEffect when reopening
     onClose()
   }, [onClose])
 
@@ -60,19 +79,20 @@ export function FolderManagementModal({ isOpen, onClose, onCreateFolder, zIndex 
     setIsSubmitting(true)
     setSubmitError(null)
     try {
-      await onCreateFolder(folderName.trim(), selectedIcon, selectedColor)
+      await onSubmit(folderName.trim(), selectedIcon, selectedColor)
       handleClose()
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : '폴더 생성에 실패했습니다. 다시 시도해주세요.'
+        error instanceof Error ? error.message : '작업에 실패했습니다. 다시 시도해주세요.'
       setSubmitError(message)
-      console.error('Failed to create folder:', error)
+      console.error('Failed to save folder:', error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const isFormValid = folderName.trim().length > 0
+  const isEditMode = !!initialData
 
   return (
     <div 
@@ -90,10 +110,10 @@ export function FolderManagementModal({ isOpen, onClose, onCreateFolder, zIndex 
       <div 
         className="relative z-10 w-full max-w-[480px] bg-[#1e2939] rounded-t-[24px] overflow-hidden flex flex-col max-h-[90vh] shadow-2xl animate-[sheet-slide-up_240ms_ease-out]" 
         onClick={(e) => e.stopPropagation()} 
-        aria-label="새 폴더 만들기"
+        aria-label={isEditMode ? "폴더 수정하기" : "새 폴더 만들기"}
       >
         <div className="flex justify-between items-center p-5 pb-2 shrink-0">
-          <h2 className="text-[18px] font-bold text-slate-50 m-0">새 폴더 만들기</h2>
+          <h2 className="text-[18px] font-bold text-slate-50 m-0">{isEditMode ? '폴더 수정하기' : '새 폴더 만들기'}</h2>
           <button
             type="button"
             className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:text-white transition-colors"
@@ -107,7 +127,9 @@ export function FolderManagementModal({ isOpen, onClose, onCreateFolder, zIndex 
         </div>
 
         <div className="p-5 pb-0 shrink-0">
-           <p className="text-[14px] text-slate-400">콘텐츠를 정리할 새 폴더를 만드세요.</p>
+           <p className="text-[14px] text-slate-400">
+             {isEditMode ? '폴더 정보를 수정하세요.' : '콘텐츠를 정리할 새 폴더를 만드세요.'}
+           </p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-6">
@@ -203,7 +225,7 @@ export function FolderManagementModal({ isOpen, onClose, onCreateFolder, zIndex 
             onClick={handleSubmit}
             disabled={!isFormValid || isSubmitting}
           >
-            {isSubmitting ? '만드는 중...' : '만들기'}
+            {isSubmitting ? '저장 중...' : (isEditMode ? '수정하기' : '만들기')}
           </button>
           <button
             type="button"
