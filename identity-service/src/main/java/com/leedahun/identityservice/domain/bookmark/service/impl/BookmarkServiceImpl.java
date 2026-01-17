@@ -67,6 +67,22 @@ public class BookmarkServiceImpl implements BookmarkService {
         return folder.getId();
     }
 
+    @Override
+    @Transactional
+    public void updateFolder(Long userId, Long folderId, BookmarkFolderRequestDto request) {
+        BookmarkFolder folder = resolveFolder(folderId);
+
+        if (!folder.getUser().getId().equals(userId)) {
+            throw new FolderAccessDeniedException();
+        }
+
+        if (!folder.getName().equals(request.getName())) {
+            validateFolderNameNotDuplicated(userId, request.getName());
+        }
+
+        folder.update(request.getName(), request.getIcon(), request.getColor());
+    }
+
     /**
      * 북마크 추가
      */

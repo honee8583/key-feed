@@ -68,6 +68,14 @@ export const bookmarkApi = {
     return response.data
   },
 
+  async updateFolder(folderId: number, request: CreateFolderRequest): Promise<BookmarkFolderDto> {
+    const response = await apiClient.request<CreateFolderResponse>(`/bookmarks/folders/${folderId}`, {
+      method: 'PATCH',
+      body: request,
+    })
+    return response.data
+  },
+
   async createBookmark(contentId: string): Promise<number> {
     const response = await apiClient.request<{ status: number; message: string; data: number }>(
       '/bookmarks',

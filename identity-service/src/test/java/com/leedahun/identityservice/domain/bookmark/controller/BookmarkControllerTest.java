@@ -77,6 +77,43 @@ class BookmarkControllerTest {
     }
 
     @Test
+    @DisplayName("[PATCH /api/bookmarks/folders/{folderId}] 북마크 폴더 수정 성공 시 200 OK를 반환한다")
+    void modifyFolder_success() throws Exception {
+        // given
+        Long folderId = 1L;
+        BookmarkFolderRequestDto request = BookmarkFolderRequestDto.builder()
+                .name("Updated Folder")
+                .icon("updated-icon")
+                .color("updated-color")
+                .build();
+
+        // when & then
+        mockMvc.perform(patch("/api/bookmarks/folders/{folderId}", folderId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value(SuccessMessage.UPDATE_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(bookmarkService).updateFolder(any(), eq(folderId), any(BookmarkFolderRequestDto.class));
+    }
+
+    @Test
+    @DisplayName("[PATCH /api/bookmarks/folders/{folderId}] 유효하지 않은 요청 시 400 Bad Request를 반환한다")
+    void modifyFolder_invalidRequest() throws Exception {
+        // given
+        Long folderId = 1L;
+        String invalidRequest = "{\"name\": \"\"}"; // 빈 이름 (validation 실패)
+
+        // when & then
+        mockMvc.perform(patch("/api/bookmarks/folders/{folderId}", folderId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidRequest))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("[DELETE /api/bookmarks/{id}/folder] 북마크를 폴더에서 제거 성공 시 200 OK를 반환한다")
     void removeBookmarkFromFolder_success() throws Exception {
         // given
