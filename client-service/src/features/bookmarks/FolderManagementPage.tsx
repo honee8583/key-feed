@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { bookmarkApi, type BookmarkFolderDto, type BookmarkItemDto } from '../../services/bookmarkApi'
 import { FolderManagementModal } from './FolderManagementModal'
+import { BookmarkFolderIcon } from './BookmarkFolderIcon'
 
 export function FolderManagementPage() {
   const navigate = useNavigate()
@@ -271,13 +272,7 @@ function FolderItem({ folder, onDelete, onSelect }: FolderItemProps) {
           className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
           style={iconStyle}
         >
-          <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-            <path
-              d="M3.5 8.16667C3.5 6.08001 5.19333 4.38667 7.28 4.38667H9.92493C10.5139 4.38667 11.0797 4.62116 11.4934 5.03487L13.727 7.26844C14.1407 7.68215 14.7065 7.91663 15.2954 7.91663H22.1667C24.2533 7.91663 25.9467 9.60997 25.9467 11.6966V19.8333C25.9467 21.92 24.2533 23.6133 22.1667 23.6133H7.28C5.19333 23.6133 3.5 21.92 3.5 19.8333V8.16667Z"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-          </svg>
+          <BookmarkFolderIcon icon={folder.icon} width={24} height={24} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">

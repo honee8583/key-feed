@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { bookmarkApi, type BookmarkFolderDto, type BookmarkItemDto } from '../../services/bookmarkApi'
 import { FolderSelectSheet } from './FolderSelectSheet'
+import { BookmarkFolderIcon } from './BookmarkFolderIcon'
 
 const quickFilters = ['최신순', '읽지 않음', '노트 있음', '원문 링크']
 
@@ -154,7 +155,6 @@ export function BookmarksPage() {
             >
               <FolderIcon />
               <span>전체</span>
-              <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium">5</span>
             </button>
             <button
               type="button"
@@ -163,7 +163,6 @@ export function BookmarksPage() {
             >
               <FolderIcon />
               <span>미분류</span>
-              <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium hidden">0</span>
             </button>
             {!isLoadingFolders && folders.length ? (
               folders.map((folder) => {
@@ -181,9 +180,8 @@ export function BookmarksPage() {
                     } as React.CSSProperties}
                     onClick={() => setActiveFolderId(folder.folderId)}
                   >
-                    <FolderIcon />
+                    <BookmarkFolderIcon icon={folder.icon} width={16} height={16} />
                     <span>{folder.name}</span>
-                    <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-white/10 text-white text-[12px] font-medium">0</span>
                   </button>
                 )
               })
