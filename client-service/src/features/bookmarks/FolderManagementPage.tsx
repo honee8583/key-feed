@@ -134,9 +134,11 @@ export function FolderManagementPage() {
             <h1 className="text-[17px] font-bold leading-tight truncate">
               {selectedFolder ? selectedFolder.name : '폴더 관리'}
             </h1>
-            <p className="text-[13px] text-slate-500 mt-0.5">
-              {selectedFolder ? `${bookmarks.length}개의 북마크` : `${folders.length}개 폴더`}
-            </p>
+            {!selectedFolder && (
+              <p className="text-[13px] text-slate-500 mt-0.5">
+                {`${folders.length}개 폴더`}
+              </p>
+            )}
           </div>
           {!selectedFolder && (
             <button
@@ -263,7 +265,7 @@ function FolderItem({ folder, onDelete, onSelect }: FolderItemProps) {
   const iconStyle = getIconStyle(folder.color)
 
   return (
-    <div className="relative group bg-[#111] border border-white/5 rounded-2xl overflow-hidden transition-colors hover:border-white/10">
+    <div className="relative group bg-[#111] border border-white/5 rounded-2xl transition-colors hover:border-white/10">
       <div
         className="flex items-center gap-4 p-4 cursor-pointer"
         onClick={() => onSelect(folder)}
@@ -277,11 +279,7 @@ function FolderItem({ folder, onDelete, onSelect }: FolderItemProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <h3 className="text-[17px] font-semibold text-slate-50 truncate">{folder.name}</h3>
-            {isDefaultFolder && (
-              <span className="px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-white/10 text-white/70">
-                기본
-              </span>
-            )}
+
           </div>
           <p className="text-[13px] text-slate-500">
              {/* API에서 개수를 받을 수 있다면 표시, 현재는 임시 */}
