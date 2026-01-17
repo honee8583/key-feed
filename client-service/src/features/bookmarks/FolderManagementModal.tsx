@@ -13,9 +13,10 @@ type FolderManagementModalProps = {
   isOpen: boolean
   onClose: () => void
   onCreateFolder: (name: string, icon: IconType, color: ColorType) => Promise<void>
+  zIndex?: number
 }
 
-export function FolderManagementModal({ isOpen, onClose, onCreateFolder }: FolderManagementModalProps) {
+export function FolderManagementModal({ isOpen, onClose, onCreateFolder, zIndex = 50 }: FolderManagementModalProps) {
   const [folderName, setFolderName] = useState('')
   const [selectedIcon, setSelectedIcon] = useState<IconType>('folder')
   const [selectedColor, setSelectedColor] = useState<ColorType>('#2b7fff')
@@ -75,7 +76,8 @@ export function FolderManagementModal({ isOpen, onClose, onCreateFolder }: Folde
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-end justify-center" 
+      className="fixed inset-0 flex items-end justify-center" 
+      style={{ zIndex }}
       onClick={handleClose}
       role="dialog"
       aria-modal

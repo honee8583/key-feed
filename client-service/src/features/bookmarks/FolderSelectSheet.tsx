@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { type BookmarkFolderDto } from '../../services/bookmarkApi'
-import { BookmarkFolderIcon } from './BookmarkFolderIcon'
+import { bookmarkApi, type BookmarkFolderDto } from '../../services/bookmarkApi'
+import { BookmarkFolderIcon, type ColorType, type IconType } from './BookmarkFolderIcon'
+import { FolderManagementModal } from './FolderManagementModal'
 
 type FolderSelectSheetProps = {
   isOpen: boolean
@@ -8,6 +9,7 @@ type FolderSelectSheetProps = {
   onSelectFolder: (folderId: number) => void
   folders: BookmarkFolderDto[]
   currentFolderId?: number | null
+  onFolderCreated?: () => void
 }
 
 const DEFAULT_FOLDERS: BookmarkFolderDto[] = [
@@ -19,10 +21,17 @@ export function FolderSelectSheet({
   onClose, 
   onSelectFolder, 
   folders, 
-  currentFolderId 
+  currentFolderId,
+  onFolderCreated
 }: FolderSelectSheetProps) {
   const [isClosing, setIsClosing] = useState(false)
   const [selectedId, setSelectedId] = useState<number>(currentFolderId ?? 0)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+
+  const handleCreateNewFolder = async (name: string, icon: IconType, color: ColorType) => {
+    await bookmarkApi.createFolder({ name, icon, color })
+    onFolderCreated?.()
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -93,7 +102,7 @@ export function FolderSelectSheet({
           <button
             type="button"
             className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group shrink-0"
-            onClick={() => {/* TODO: Implement create folder logic */}}
+            onClick={() => setShowCreateModal(true)}
           >
              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0 text-slate-400">
                <PlusIcon />
@@ -104,6 +113,13 @@ export function FolderSelectSheet({
                </p>
              </div>
           </button>
+
+          <FolderManagementModal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            onCreateFolder={handleCreateNewFolder}
+            zIndex={70}
+          />
 
           {/* Folder List */}
           {allFolders.map((folder) => {

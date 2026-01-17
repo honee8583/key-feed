@@ -25,24 +25,24 @@ export function BookmarksPage() {
   const [isFolderSheetOpen, setIsFolderSheetOpen] = useState(false)
   const [movingBookmarkId, setMovingBookmarkId] = useState<number | null>(null)
 
-  useEffect(() => {
-    const fetchFolders = async () => {
-      setIsLoadingFolders(true)
-      setFolderError(null)
-      try {
-        const response = await bookmarkApi.listFolders()
-        setFolders(response)
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : '폴더 목록을 불러오지 못했습니다.'
-        setFolderError(message)
-      } finally {
-        setIsLoadingFolders(false)
-      }
+  const fetchFolders = useCallback(async () => {
+    setIsLoadingFolders(true)
+    setFolderError(null)
+    try {
+      const response = await bookmarkApi.listFolders()
+      setFolders(response)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : '폴더 목록을 불러오지 못했습니다.'
+      setFolderError(message)
+    } finally {
+      setIsLoadingFolders(false)
     }
-
-    void fetchFolders()
   }, [])
+
+  useEffect(() => {
+    void fetchFolders()
+  }, [fetchFolders])
 
   const handleOpenFolderSheet = (bookmarkId: number) => {
     setMovingBookmarkId(bookmarkId)
@@ -270,6 +270,7 @@ export function BookmarksPage() {
           onSelectFolder={handleFolderSelect}
           folders={folders}
           currentFolderId={bookmarks.find(b => b.bookmarkId === movingBookmarkId)?.folderId}
+          onFolderCreated={fetchFolders}
         />
       </div>
     </div>
