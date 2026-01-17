@@ -2,6 +2,7 @@ import { useMemo, useState, type CSSProperties, type FormEvent, type ReactNode }
 import { Link } from 'react-router-dom'
 import { authApi } from '../../services/authApi'
 import type { SocialProvider } from '../../services/authApi'
+import logo from '../../assets/logo.png'
 
 type AgreementKey = 'terms' | 'privacy' | 'marketing'
 
@@ -188,10 +189,10 @@ export function SignupPage() {
           </Link>
           <div className="flex flex-col items-center gap-4 text-center">
             <div
-              className="w-20 h-20 rounded-3xl bg-white/20 border border-white/35 flex items-center justify-center text-4xl shadow-[0_10px_15px_rgba(15,23,42,0.1)]"
+              className="w-20 h-20 rounded-3xl bg-white/20 border border-white/35 flex items-center justify-center overflow-hidden shadow-[0_10px_15px_rgba(15,23,42,0.1)]"
               aria-hidden
             >
-              <span>📰</span>
+              <img src={logo} alt="KeyFeed Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <h1 className="m-0 text-2xl font-bold tracking-[-0.4px] text-white">회원가입</h1>
