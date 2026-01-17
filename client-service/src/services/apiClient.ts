@@ -134,12 +134,18 @@ class ApiClient {
       });
 
       if (!response.ok) {
-        clearStoredAuth();
+        console.error(`Refresh token failed with status: ${response.status}`);
+        // 401(Unauthorized)이나 403(Forbidden)일 때만 로그아웃 처리
+        // 5xx 서버 에러나 네트워크 에러 등에서는 로그아웃 하지 않음
+        if (response.status === 401 || response.status === 403) {
+          clearStoredAuth();
+        }
         return false;
       }
 
       const nextToken = await this.extractAccessToken(response);
       if (!nextToken) {
+        console.error("Failed to extract access token from refresh response");
         clearStoredAuth();
         return false;
       }

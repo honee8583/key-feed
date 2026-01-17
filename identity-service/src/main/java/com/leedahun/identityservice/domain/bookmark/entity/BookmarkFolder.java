@@ -46,4 +46,10 @@ public class BookmarkFolder extends BaseTimeEntity {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
+    @Column(name = "icon", length = 50)
+    private String icon;
+
+    @Column(name = "color", length = 20)
+    private String color;
+
 }

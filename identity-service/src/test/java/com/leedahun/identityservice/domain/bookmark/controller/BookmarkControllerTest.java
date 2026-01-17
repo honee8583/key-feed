@@ -56,7 +56,9 @@ class BookmarkControllerTest {
     @DisplayName("[POST /api/bookmarks/folders] 북마크 폴더 생성 성공 시 201 Created와 ID를 반환한다")
     void createFolder_success() throws Exception {
         // given
-        BookmarkFolderRequestDto request = new BookmarkFolderRequestDto("New Folder");
+        BookmarkFolderRequestDto request = BookmarkFolderRequestDto.builder()
+                .name("bookmark")
+                .build();
         Long createdFolderId = 1L;
 
         when(bookmarkService.createFolder(any(), any(BookmarkFolderRequestDto.class)))
