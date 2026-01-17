@@ -9,7 +9,8 @@ export function FolderManagementPage() {
   const [folders, setFolders] = useState<BookmarkFolderDto[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingFolder, setEditingFolder] = useState<BookmarkFolderDto | null>(null)
 
   // Bookmark viewing state
   const [selectedFolder, setSelectedFolder] = useState<BookmarkFolderDto | null>(null)
@@ -38,9 +39,24 @@ export function FolderManagementPage() {
     void fetchFolders()
   }, [fetchFolders])
 
-  const handleCreateFolder = async (name: string, icon: string, color: string) => {
-    await bookmarkApi.createFolder({ name, icon, color })
+  const handleCreateOrUpdateFolder = async (name: string, icon: string, color: string) => {
+    if (editingFolder) {
+      await bookmarkApi.updateFolder(editingFolder.folderId, { name, icon, color })
+    } else {
+      await bookmarkApi.createFolder({ name, icon, color })
+    }
     await fetchFolders()
+    setEditingFolder(null)
+  }
+
+  const openCreateModal = () => {
+    setEditingFolder(null)
+    setIsModalOpen(true)
+  }
+
+  const openEditModal = (folder: BookmarkFolderDto) => {
+    setEditingFolder(folder)
+    setIsModalOpen(true)
   }
 
   const handleDeleteFolder = async (folderId: number) => {
@@ -144,7 +160,7 @@ export function FolderManagementPage() {
             <button
               type="button"
               className="px-3 py-1.5 rounded-lg bg-white text-black text-[13px] font-semibold flex items-center gap-1.5 hover:bg-slate-200 transition-colors"
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={openCreateModal}
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <path
@@ -176,6 +192,7 @@ export function FolderManagementPage() {
                       folder={folder}
                       onDelete={handleDeleteFolder}
                       onSelect={handleFolderSelect}
+                      onEdit={openEditModal}
                     />
                   ))}
                   {folders.length === 0 && (
@@ -234,9 +251,14 @@ export function FolderManagementPage() {
       </div>
 
       <FolderManagementModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onCreateFolder={handleCreateFolder}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateOrUpdateFolder}
+        initialData={editingFolder ? {
+          name: editingFolder.name,
+          icon: editingFolder.icon || 'folder',
+          color: editingFolder.color || '#2b7fff'
+        } : undefined}
       />
     </>
   )
@@ -246,11 +268,12 @@ type FolderItemProps = {
   folder: BookmarkFolderDto
   onDelete: (folderId: number) => void
   onSelect: (folder: BookmarkFolderDto) => void
+  onEdit: (folder: BookmarkFolderDto) => void
 }
 
-function FolderItem({ folder, onDelete, onSelect }: FolderItemProps) {
+function FolderItem({ folder, onDelete, onSelect, onEdit }: FolderItemProps) {
   const [showMenu, setShowMenu] = useState(false)
-  const isDefaultFolder = folder.folderId <= 2
+  // const isDefaultFolder = folder.folderId <= 2
 
   // 색상을 받아서 Tailwind 클래스나 스타일에 적용하기 위한 유틸
   const getIconStyle = (color?: string) => {
@@ -320,25 +343,23 @@ function FolderItem({ folder, onDelete, onSelect }: FolderItemProps) {
                 className="w-full text-left px-4 py-2.5 text-[14px] text-slate-200 hover:bg-white/5 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation()
-                  // TODO: 수정 기능
+                  onEdit(folder)
                   setShowMenu(false)
                 }}
               >
                 수정
               </button>
-              {!isDefaultFolder && (
-                <button
-                  type="button"
-                  className="w-full text-left px-4 py-2.5 text-[14px] text-red-400 hover:bg-red-500/10 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDelete(folder.folderId)
-                    setShowMenu(false)
-                  }}
-                >
-                  삭제
-                </button>
-              )}
+              <button
+                type="button"
+                className="w-full text-left px-4 py-2.5 text-[14px] text-red-400 hover:bg-red-500/10 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(folder.folderId)
+                  setShowMenu(false)
+                }}
+              >
+                삭제
+              </button>
             </div>
           </>
         )}
