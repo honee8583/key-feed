@@ -52,4 +52,10 @@ public class BookmarkFolder extends BaseTimeEntity {
     @Column(name = "color", length = 20)
     private String color;
 
+    public void update(String name, String icon, String color) {
+        this.name = name;
+        this.icon = icon;
+        this.color = color;
+    }
+
 }
