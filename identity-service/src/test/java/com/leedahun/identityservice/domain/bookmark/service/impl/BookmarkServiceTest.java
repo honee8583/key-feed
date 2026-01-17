@@ -102,7 +102,9 @@ class BookmarkServiceImplTest {
         void createFolder_fail_duplicateName() {
             // given
             Long userId = 1L;
-            BookmarkFolderRequestDto request = new BookmarkFolderRequestDto("Dev");
+            BookmarkFolderRequestDto request = BookmarkFolderRequestDto.builder()
+                    .name("Dev")
+                    .build();
             User user = User.builder().id(userId).build();
 
             when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -118,7 +120,9 @@ class BookmarkServiceImplTest {
         void getUser_fail_notFound() {
             // given
             Long userId = 999L;
-            BookmarkFolderRequestDto request = new BookmarkFolderRequestDto("Test Folder");
+            BookmarkFolderRequestDto request = BookmarkFolderRequestDto.builder()
+                    .name("Test Folder")
+                    .build();
 
             when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
@@ -132,7 +136,9 @@ class BookmarkServiceImplTest {
         void createFolder_fail_limitExceeded() {
             // given
             Long userId = 1L;
-            BookmarkFolderRequestDto request = new BookmarkFolderRequestDto("Dev");
+            BookmarkFolderRequestDto request = BookmarkFolderRequestDto.builder()
+                    .name("Dev")
+                    .build();
             User user = User.builder().id(userId).build();
 
             when(userRepository.findById(userId)).thenReturn(Optional.of(user));
