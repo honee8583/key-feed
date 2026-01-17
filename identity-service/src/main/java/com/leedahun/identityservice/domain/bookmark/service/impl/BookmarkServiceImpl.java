@@ -59,6 +59,8 @@ public class BookmarkServiceImpl implements BookmarkService {
         BookmarkFolder folder = BookmarkFolder.builder()
                 .user(user)
                 .name(request.getName())
+                .icon(request.getIcon())
+                .color(request.getColor())
                 .build();
         folderRepository.save(folder);
 

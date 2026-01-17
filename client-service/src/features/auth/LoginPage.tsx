@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authApi } from '../../services/authApi'
 import type { SocialProvider } from '../../services/authApi'
 import { useAuth } from './AuthContext'
+import logo from '../../assets/logo.png'
 
 type SocialButtonConfig = {
   id: SocialProvider
@@ -111,8 +112,8 @@ export function LoginPage() {
     <div className="min-h-screen bg-black flex justify-center pt-16 px-6">
       <div className="w-full max-w-[393px] flex flex-col gap-16">
         <div className="flex flex-col gap-0">
-          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-[30px] mb-6">
-            <span>📰</span>
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
+            <img src={logo} alt="KeyFeed Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="m-0 mb-1 text-xl font-bold text-white tracking-[-0.45px]">로그인</h1>
           <p className="m-0 text-sm text-[#99a1af] tracking-[-0.15px]">나만의 맞춤 콘텐츠 피드를 만나보세요</p>

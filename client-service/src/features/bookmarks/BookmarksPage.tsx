@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { bookmarkApi, type BookmarkFolderDto, type BookmarkItemDto } from '../../services/bookmarkApi'
 import { FolderSelectSheet } from './FolderSelectSheet'
+import { BookmarkFolderIcon } from './BookmarkFolderIcon'
 
 const quickFilters = ['최신순', '읽지 않음', '노트 있음', '원문 링크']
 
@@ -24,24 +25,24 @@ export function BookmarksPage() {
   const [isFolderSheetOpen, setIsFolderSheetOpen] = useState(false)
   const [movingBookmarkId, setMovingBookmarkId] = useState<number | null>(null)
 
-  useEffect(() => {
-    const fetchFolders = async () => {
-      setIsLoadingFolders(true)
-      setFolderError(null)
-      try {
-        const response = await bookmarkApi.listFolders()
-        setFolders(response)
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : '폴더 목록을 불러오지 못했습니다.'
-        setFolderError(message)
-      } finally {
-        setIsLoadingFolders(false)
-      }
+  const fetchFolders = useCallback(async () => {
+    setIsLoadingFolders(true)
+    setFolderError(null)
+    try {
+      const response = await bookmarkApi.listFolders()
+      setFolders(response)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : '폴더 목록을 불러오지 못했습니다.'
+      setFolderError(message)
+    } finally {
+      setIsLoadingFolders(false)
     }
-
-    void fetchFolders()
   }, [])
+
+  useEffect(() => {
+    void fetchFolders()
+  }, [fetchFolders])
 
   const handleOpenFolderSheet = (bookmarkId: number) => {
     setMovingBookmarkId(bookmarkId)
@@ -154,7 +155,6 @@ export function BookmarksPage() {
             >
               <FolderIcon />
               <span>전체</span>
-              <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium">5</span>
             </button>
             <button
               type="button"
@@ -163,7 +163,6 @@ export function BookmarksPage() {
             >
               <FolderIcon />
               <span>미분류</span>
-              <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-black text-white text-[12px] font-medium hidden">0</span>
             </button>
             {!isLoadingFolders && folders.length ? (
               folders.map((folder) => {
@@ -181,9 +180,8 @@ export function BookmarksPage() {
                     } as React.CSSProperties}
                     onClick={() => setActiveFolderId(folder.folderId)}
                   >
-                    <FolderIcon />
+                    <BookmarkFolderIcon icon={folder.icon} width={16} height={16} />
                     <span>{folder.name}</span>
-                    <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-2 rounded-[6.8px] bg-white/10 text-white text-[12px] font-medium">0</span>
                   </button>
                 )
               })
@@ -272,6 +270,7 @@ export function BookmarksPage() {
           onSelectFolder={handleFolderSelect}
           folders={folders}
           currentFolderId={bookmarks.find(b => b.bookmarkId === movingBookmarkId)?.folderId}
+          onFolderCreated={fetchFolders}
         />
       </div>
     </div>

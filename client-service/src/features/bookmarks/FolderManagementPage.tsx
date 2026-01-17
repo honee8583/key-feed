@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { bookmarkApi, type BookmarkFolderDto, type BookmarkItemDto } from '../../services/bookmarkApi'
 import { FolderManagementModal } from './FolderManagementModal'
+import { BookmarkFolderIcon } from './BookmarkFolderIcon'
 
 export function FolderManagementPage() {
   const navigate = useNavigate()
@@ -133,9 +134,11 @@ export function FolderManagementPage() {
             <h1 className="text-[17px] font-bold leading-tight truncate">
               {selectedFolder ? selectedFolder.name : '폴더 관리'}
             </h1>
-            <p className="text-[13px] text-slate-500 mt-0.5">
-              {selectedFolder ? `${bookmarks.length}개의 북마크` : `${folders.length}개 폴더`}
-            </p>
+            {!selectedFolder && (
+              <p className="text-[13px] text-slate-500 mt-0.5">
+                {`${folders.length}개 폴더`}
+              </p>
+            )}
           </div>
           {!selectedFolder && (
             <button
@@ -262,7 +265,7 @@ function FolderItem({ folder, onDelete, onSelect }: FolderItemProps) {
   const iconStyle = getIconStyle(folder.color)
 
   return (
-    <div className="relative group bg-[#111] border border-white/5 rounded-2xl overflow-hidden transition-colors hover:border-white/10">
+    <div className="relative group bg-[#111] border border-white/5 rounded-2xl transition-colors hover:border-white/10">
       <div
         className="flex items-center gap-4 p-4 cursor-pointer"
         onClick={() => onSelect(folder)}
@@ -271,22 +274,12 @@ function FolderItem({ folder, onDelete, onSelect }: FolderItemProps) {
           className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
           style={iconStyle}
         >
-          <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-            <path
-              d="M3.5 8.16667C3.5 6.08001 5.19333 4.38667 7.28 4.38667H9.92493C10.5139 4.38667 11.0797 4.62116 11.4934 5.03487L13.727 7.26844C14.1407 7.68215 14.7065 7.91663 15.2954 7.91663H22.1667C24.2533 7.91663 25.9467 9.60997 25.9467 11.6966V19.8333C25.9467 21.92 24.2533 23.6133 22.1667 23.6133H7.28C5.19333 23.6133 3.5 21.92 3.5 19.8333V8.16667Z"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-          </svg>
+          <BookmarkFolderIcon icon={folder.icon} width={24} height={24} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <h3 className="text-[17px] font-semibold text-slate-50 truncate">{folder.name}</h3>
-            {isDefaultFolder && (
-              <span className="px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-white/10 text-white/70">
-                기본
-              </span>
-            )}
+
           </div>
           <p className="text-[13px] text-slate-500">
              {/* API에서 개수를 받을 수 있다면 표시, 현재는 임시 */}
