@@ -117,7 +117,7 @@ export function FolderSelectSheet({
           <FolderManagementModal
             isOpen={showCreateModal}
             onClose={() => setShowCreateModal(false)}
-            onCreateFolder={handleCreateNewFolder}
+            onSubmit={handleCreateNewFolder}
             zIndex={70}
           />
 
