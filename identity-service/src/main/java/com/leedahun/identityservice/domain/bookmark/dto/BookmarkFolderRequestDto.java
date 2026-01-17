@@ -15,4 +15,8 @@ public class BookmarkFolderRequestDto {
     @NotBlank(message = "폴더 이름은 필수입니다.")
     private String name;
 
+    private String icon;
+
+    private String color;
+
 }
