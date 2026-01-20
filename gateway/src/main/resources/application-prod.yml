@@ -38,18 +38,6 @@ spring:
                 - Path=/api/notifications/**
               filters:
                 - JwtAuthenticationFilter
-          globalcors:
-            cors-configurations:
-              '[/**]':
-                allowedOrigins: 'http://localhost:5173'
-                allow-credentials: true
-                allowedHeaders: '*'
-                allowedMethods:
-                  - PUT
-                  - GET
-                  - POST
-                  - DELETE
-                  - OPTIONS
 
 eureka:
   client:
