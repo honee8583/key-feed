@@ -205,11 +205,19 @@ class ApiClient {
       return null;
     }
 
+    // 1. data 필드가 바로 토큰 문자열인 경우 (현재 백엔드 응답 구조)
+    const dataField = (payload as { data?: unknown }).data;
+    if (typeof dataField === "string" && dataField) {
+      return dataField;
+    }
+
+    // 2. accessToken 필드가 최상단에 있는 경우
     const directToken = (payload as { accessToken?: unknown }).accessToken;
     if (typeof directToken === "string" && directToken) {
       return directToken;
     }
 
+    // 3. data 객체 안에 accessToken이 있는 경우
     const nestedToken = (payload as { data?: { accessToken?: unknown } }).data
       ?.accessToken;
     if (typeof nestedToken === "string" && nestedToken) {
