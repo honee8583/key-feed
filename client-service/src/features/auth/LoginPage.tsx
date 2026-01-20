@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authApi } from '../../services/authApi'
 import type { SocialProvider } from '../../services/authApi'
 import { useAuth } from './AuthContext'
+import { AuthInput } from './components/AuthInput'
+import { AuthPasswordInput } from './components/AuthPasswordInput'
+import { ArrowRightIcon, GoogleIcon, LockIcon, MailIcon } from './components/AuthIcons'
 import logo from '../../assets/logo.png'
 
 type SocialButtonConfig = {
@@ -53,7 +56,6 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [staySignedIn, setStaySignedIn] = useState(true)
-  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState<'idle' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
@@ -109,7 +111,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex justify-center pt-16 px-6">
+    <div className="min-h-screen bg-black flex justify-center pt-16 px-6 font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif]">
       <div className="w-full max-w-[393px] flex flex-col gap-16">
         <div className="flex flex-col gap-0">
           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
@@ -141,7 +143,7 @@ export function LoginPage() {
                     </span>
                     <span>{label}</span>
                   </div>
-                  <ArrowRightIcon />
+                  <ArrowRightIcon className="text-inherit" />
                 </button>
               ),
             )}
@@ -157,46 +159,30 @@ export function LoginPage() {
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
             <label className="flex flex-col gap-2">
               <span className="text-sm font-medium text-white tracking-[-0.15px]">이메일</span>
-              <div className="relative h-14 rounded-2xl border-[1.5px] border-[#1e2939] bg-[rgba(229,229,229,0.3)] flex items-center gap-3 px-4 pl-12 text-white focus-within:border-[#3d3d3d]">
-                <MailIcon />
-                <input
-                  type="email"
-                  inputMode="email"
-                  placeholder="example@email.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  autoComplete="email"
-                  disabled={isLoading}
-                  className="flex-1 border-none bg-transparent text-base text-white outline-none tracking-[-0.31px] placeholder:text-[#6a7282]"
-                  required
-                />
-              </div>
+              <AuthInput
+                icon={<MailIcon />}
+                type="email"
+                inputMode="email"
+                placeholder="example@email.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="email"
+                disabled={isLoading}
+                required
+              />
             </label>
 
             <label className="flex flex-col gap-2">
               <span className="text-sm font-medium text-white tracking-[-0.15px]">비밀번호</span>
-              <div className="relative h-14 rounded-2xl border-[1.5px] border-[#1e2939] bg-[rgba(229,229,229,0.3)] flex items-center gap-3 px-4 pl-12 text-white focus-within:border-[#3d3d3d]">
-                <LockIcon />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="비밀번호를 입력하세요"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  autoComplete="current-password"
-                  disabled={isLoading}
-                  minLength={6}
-                  className="flex-1 border-none bg-transparent text-base text-white outline-none tracking-[-0.31px] placeholder:text-[#6a7282]"
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent p-0 flex items-center justify-center cursor-pointer text-[#6a7282] hover:text-[#99a1af]"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
-                >
-                  <EyeIcon />
-                </button>
-              </div>
+              <AuthPasswordInput
+                placeholder="비밀번호를 입력하세요"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                disabled={isLoading}
+                minLength={6}
+                required
+              />
             </label>
 
             <div className="flex justify-between items-center text-sm">
@@ -248,129 +234,5 @@ export function LoginPage() {
         </div>
       </div>
     </div>
-  )
-}
-
-function ArrowRightIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="flex-shrink-0 text-inherit">
-      <path
-        d="M7.5 15L12.5 10L7.5 5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function MailIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
-      aria-hidden
-    >
-      <rect
-        x="3"
-        y="5"
-        width="14"
-        height="10"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M3 7L10 11L17 7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function LockIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
-      aria-hidden
-    >
-      <rect
-        x="4"
-        y="9"
-        width="12"
-        height="8"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M7 9V6.5C7 4.57 8.34 3 10 3C11.66 3 13 4.57 13 6.5V9"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-function EyeIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6a7282] flex-shrink-0"
-      aria-hidden
-    >
-      <path
-        d="M10 6.25C6.25 6.25 3.75 10 3.75 10C3.75 10 6.25 13.75 10 13.75C13.75 13.75 16.25 10 16.25 10C16.25 10 13.75 6.25 10 6.25Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle
-        cx="10"
-        cy="10"
-        r="2"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-    </svg>
-  )
-}
-
-function GoogleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="w-6 h-6">
-      <path
-        d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.7h5.4a4.6 4.6 0 0 1-2 3.1v2.6h3.2c1.9-1.7 3-4.2 3-7.5Z"
-        fill="#4285F4"
-      />
-      <path
-        d="M12 22c2.7 0 4.9-.9 6.6-2.4l-3.2-2.6c-.9.6-2 .9-3.4.9a5.9 5.9 0 0 1-5.6-4.2H3.1v2.7A10 10 0 0 0 12 22Z"
-        fill="#34A853"
-      />
-      <path
-        d="M6.4 13.7a6 6 0 0 1 0-3.7V7.3H3.1a10 10 0 0 0 0 9.4l3.3-2.9Z"
-        fill="#FBBC05"
-      />
-      <path
-        d="M12 5.5c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.8 2.5 14.6 1.6 12 1.6A10 10 0 0 0 3.1 7.3l3.3 2.7A5.9 5.9 0 0 1 12 5.5Z"
-        fill="#EA4335"
-      />
-    </svg>
   )
 }
