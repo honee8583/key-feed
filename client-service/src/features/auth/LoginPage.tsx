@@ -5,7 +5,7 @@ import type { SocialProvider } from '../../services/authApi'
 import { useAuth } from './AuthContext'
 import { AuthInput } from './components/AuthInput'
 import { AuthPasswordInput } from './components/AuthPasswordInput'
-import { ArrowRightIcon, GoogleIcon, LockIcon, MailIcon } from './components/AuthIcons'
+import { ArrowRightIcon, GoogleIcon, MailIcon } from './components/AuthIcons'
 import logo from '../../assets/logo.png'
 
 type SocialButtonConfig = {
