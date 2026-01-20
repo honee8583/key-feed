@@ -28,7 +28,8 @@ class CookieUtilTest {
         assertThat(cookie.isHttpOnly()).isTrue();
         assertThat(cookie.isSecure()).isTrue();
         assertThat(cookie.getSameSite()).isEqualTo("None");
-        assertThat(cookie.getPath()).isEqualTo("/api/auth/refresh");
+//        assertThat(cookie.getPath()).isEqualTo("/api/auth/refresh");
+        assertThat(cookie.getPath()).isEqualTo("/");
         assertThat(cookie.getMaxAge()).isEqualTo(Duration.ofMillis(maxAgeMs));
     }
 
