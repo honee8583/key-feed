@@ -167,6 +167,10 @@ export function BookmarksPage() {
             {!isLoadingFolders && folders.length ? (
               folders.map((folder) => {
                 const isActive = folder.folderId === activeFolderId
+                const folderColor = folder.color || '#ad46ff'
+                const DEFAULT_BG_OPACITY = '1A' // 10%
+                const ACTIVE_BG_OPACITY = '33' // 20%
+
                 return (
                   <button
                     key={folder.folderId}
@@ -174,9 +178,9 @@ export function BookmarksPage() {
                     className={`${isActive ? 'opacity-100 ring-1 ring-white/20' : 'opacity-80 hover:opacity-100'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-all text-[14px]`}
                     style={{
                       // 선택되었을 때는 테두리를 선명하게, 배경을 조금 더 진하게
-                      borderColor: isActive ? (folder.color || '#ad46ff') : (folder.color || '#ad46ff') + '33',
-                      background: isActive ? (folder.color || '#ad46ff') + '33' : (folder.color || '#ad46ff') + '1A',
-                      color: (folder.color || '#ad46ff'),
+                      borderColor: isActive ? folderColor : folderColor + ACTIVE_BG_OPACITY,
+                      background: isActive ? folderColor + ACTIVE_BG_OPACITY : folderColor + DEFAULT_BG_OPACITY,
+                      color: folderColor,
                     } as React.CSSProperties}
                     onClick={() => setActiveFolderId(folder.folderId)}
                   >
