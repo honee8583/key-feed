@@ -83,6 +83,25 @@ public class BookmarkServiceImpl implements BookmarkService {
         folder.update(request.getName(), request.getIcon(), request.getColor());
     }
 
+    @Override
+    @Transactional
+    public void deleteFolder(Long userId, Long folderId) {
+        // 1. 삭제할 폴더 조회
+        BookmarkFolder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new EntityNotFoundException("BookmarkFolder", folderId));
+
+        // 2. 폴더 소유권 검증
+        if (!folder.getUser().getId().equals(userId)) {
+            throw new FolderAccessDeniedException();
+        }
+
+        // 3. [중요] 해당 폴더에 속한 북마크들을 '미분류'로 이동 (관계 끊기)
+        bookmarkRepository.updateFolderToNull(folderId);
+
+        // 4. 폴더 삭제
+        folderRepository.delete(folder);
+    }
+
     /**
      * 북마크 추가
      */

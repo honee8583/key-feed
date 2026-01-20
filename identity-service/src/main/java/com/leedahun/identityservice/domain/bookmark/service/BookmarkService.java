@@ -14,6 +14,8 @@ public interface BookmarkService {
 
     void updateFolder(Long userId, Long folderId, BookmarkFolderRequestDto request);
 
+    void deleteFolder(Long userId, Long folderId);
+
     Long addBookmark(Long userId, BookmarkRequestDto request);
 
     CursorPage<BookmarkResponseDto> getBookmarks(Long userId, Long lastId, Long folderId, int size);
