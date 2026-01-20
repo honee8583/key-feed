@@ -56,6 +56,17 @@ public class BookmarkController {
     }
 
     /**
+     * 북마크 폴더 삭제
+     */
+    @DeleteMapping("/folders/{folderId}")
+    public ResponseEntity<?> deleteFolder(@AuthenticationPrincipal Long userId,
+                                          @PathVariable("folderId") Long folderId) {
+        bookmarkService.deleteFolder(userId, folderId);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.DELETE_SUCCESS.getMessage(), null));
+    }
+
+    /**
      * 북마크를 폴더에서 제거
      */
     @DeleteMapping("/{bookmarkId}/folder")

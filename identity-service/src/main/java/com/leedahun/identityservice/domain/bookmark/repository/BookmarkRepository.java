@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -59,5 +60,9 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 
     // contentId에 해당하는 북마크 목록 조회
     List<Bookmark> findAllByUserIdAndContentIdIn(Long userId, List<String> contentIds);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Bookmark b SET b.bookmarkFolder = null WHERE b.bookmarkFolder.id = :folderId")
+    void updateFolderToNull(@Param("folderId") Long folderId);
 
 }

@@ -293,6 +293,75 @@ class BookmarkServiceImplTest {
     }
 
     @Nested
+    @DisplayName("폴더 삭제 (deleteFolder)")
+    class DeleteFolder {
+
+        @Test
+        @DisplayName("성공: 폴더 내부의 북마크를 미분류로 변경 후 폴더 삭제")
+        void deleteFolder_success() {
+            // given
+            Long userId = 1L;
+            Long folderId = 10L;
+            User user = User.builder().id(userId).build();
+            BookmarkFolder folder = BookmarkFolder.builder()
+                    .id(folderId)
+                    .user(user)
+                    .build();
+
+            when(folderRepository.findById(folderId)).thenReturn(Optional.of(folder));
+
+            // when
+            bookmarkService.deleteFolder(userId, folderId);
+
+            // then
+            verify(bookmarkRepository).updateFolderToNull(folderId);
+            verify(folderRepository).delete(folder);
+        }
+
+        @Test
+        @DisplayName("실패: 존재하지 않는 폴더 삭제 시도")
+        void deleteFolder_fail_notFound() {
+            // given
+            Long userId = 1L;
+            Long invalidFolderId = 999L;
+
+            when(folderRepository.findById(invalidFolderId)).thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> bookmarkService.deleteFolder(userId, invalidFolderId))
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessageContaining("BookmarkFolder");
+
+            verify(bookmarkRepository, never()).updateFolderToNull(anyLong());
+            verify(folderRepository, never()).delete(any(BookmarkFolder.class));
+        }
+
+        @Test
+        @DisplayName("실패: 다른 사람의 폴더 삭제 시도 (접근 거부)")
+        void deleteFolder_fail_accessDenied() {
+            // given
+            Long userId = 1L;
+            Long otherUserId = 2L;
+            Long folderId = 10L;
+
+            User otherUser = User.builder().id(otherUserId).build();
+            BookmarkFolder folder = BookmarkFolder.builder()
+                    .id(folderId)
+                    .user(otherUser) // 소유자가 다름
+                    .build();
+
+            when(folderRepository.findById(folderId)).thenReturn(Optional.of(folder));
+
+            // when & then
+            assertThatThrownBy(() -> bookmarkService.deleteFolder(userId, folderId))
+                    .isInstanceOf(FolderAccessDeniedException.class);
+
+            verify(bookmarkRepository, never()).updateFolderToNull(anyLong());
+            verify(folderRepository, never()).delete(any(BookmarkFolder.class));
+        }
+    }
+
+    @Nested
     @DisplayName("북마크 추가 (addBookmark)")
     class AddBookmark {
         @Test
