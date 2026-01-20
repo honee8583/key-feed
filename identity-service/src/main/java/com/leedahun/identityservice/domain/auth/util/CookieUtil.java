@@ -18,7 +18,7 @@ public class CookieUtil {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("None")
-                .path("/api/auth/refresh")
+                .path("/")
                 .maxAge(Duration.ofMillis(maxAge))
                 .build();
     }

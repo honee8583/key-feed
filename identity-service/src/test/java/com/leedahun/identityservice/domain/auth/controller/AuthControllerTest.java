@@ -129,7 +129,8 @@ class AuthControllerTest {
         assertThat(setCookie).contains("refreshToken=");
         assertThat(setCookie).contains("HttpOnly");
         assertThat(setCookie).contains("SameSite=None");
-        assertThat(setCookie).contains("Path=/api/auth/refresh");
+//        assertThat(setCookie).contains("Path=/api/auth/refresh");
+        assertThat(setCookie).contains("Path=/");
 
         then(loginService).should(times(1)).login(any(LoginRequestDto.class));
     }
@@ -160,7 +161,8 @@ class AuthControllerTest {
         assertThat(setCookie).contains("refreshToken=");
         assertThat(setCookie).contains("HttpOnly");
         assertThat(setCookie).contains("SameSite=None");
-        assertThat(setCookie).contains("Path=/api/auth/refresh");
+//        assertThat(setCookie).contains("Path=/api/auth/refresh");
+        assertThat(setCookie).contains("Path=/");
 
         then(loginService).should(times(1)).reissueTokens(cookieValue);
     }
