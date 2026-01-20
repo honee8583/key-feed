@@ -300,6 +300,49 @@ class BookmarkRepositoryTest {
         }
     }
 
+    @Nested
+    @DisplayName("폴더 삭제 시 북마크와 연결 해제")
+    class UpdateFolderToNull {
+
+        @Test
+        @DisplayName("특정 폴더 ID를 가진 북마크들의 폴더 정보를 모두 null로 변경한다")
+        void updateFolderToNull_success() {
+            // given
+            BookmarkFolder targetFolder = folderRepository.save(
+                    BookmarkFolder.builder()
+                            .user(user)
+                            .name("Delete Target")
+                            .build()
+            );
+            Bookmark b1 = createBookmark("101", targetFolder);
+            Bookmark b2 = createBookmark("102", targetFolder);
+
+            BookmarkFolder otherFolder = folderRepository.save(
+                    BookmarkFolder.builder()
+                            .user(user)
+                            .name("Safe Folder")
+                            .build()
+            );
+            Bookmark b3 = createBookmark("103", otherFolder);
+
+            // when
+            bookmarkRepository.updateFolderToNull(targetFolder.getId());
+
+            // then
+            Bookmark updatedB1 = bookmarkRepository.findById(b1.getId()).orElseThrow();
+            Bookmark updatedB2 = bookmarkRepository.findById(b2.getId()).orElseThrow();
+            Bookmark updatedB3 = bookmarkRepository.findById(b3.getId()).orElseThrow();
+
+            // 폴더에 있던 북마크들은 폴더가 null로 변해야 함
+            assertThat(updatedB1.getBookmarkFolder()).isNull();
+            assertThat(updatedB2.getBookmarkFolder()).isNull();
+
+            // 다른 폴더에 있던 북마크는 그대로 유지되어야 함
+            assertThat(updatedB3.getBookmarkFolder()).isNotNull();
+            assertThat(updatedB3.getBookmarkFolder().getId()).isEqualTo(otherFolder.getId());
+        }
+    }
+
     private Bookmark createBookmark(String contentId, BookmarkFolder folder) {
         Bookmark bookmark = Bookmark.builder()
                 .user(user)

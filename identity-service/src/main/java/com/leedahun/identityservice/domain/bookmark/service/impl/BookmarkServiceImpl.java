@@ -83,6 +83,18 @@ public class BookmarkServiceImpl implements BookmarkService {
         folder.update(request.getName(), request.getIcon(), request.getColor());
     }
 
+    @Override
+    @Transactional
+    public void deleteFolder(Long userId, Long folderId) {
+        BookmarkFolder folder = getBookmarkFolder(folderId);
+
+        validateFolderOwner(userId, folder);
+
+        bookmarkRepository.updateFolderToNull(folderId);
+
+        folderRepository.delete(folder);
+    }
+
     /**
      * 북마크 추가
      */

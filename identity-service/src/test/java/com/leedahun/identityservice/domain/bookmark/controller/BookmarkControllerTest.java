@@ -114,6 +114,22 @@ class BookmarkControllerTest {
     }
 
     @Test
+    @DisplayName("[DELETE /api/bookmarks/folders/{folderId}] 북마크 폴더 삭제 성공 시 200 OK를 반환한다")
+    void deleteFolder_success() throws Exception {
+        // given
+        Long folderId = 10L;
+
+        // when & then
+        mockMvc.perform(delete("/api/bookmarks/folders/{folderId}", folderId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value(SuccessMessage.DELETE_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(bookmarkService).deleteFolder(any(), eq(folderId));
+    }
+
+    @Test
     @DisplayName("[DELETE /api/bookmarks/{id}/folder] 북마크를 폴더에서 제거 성공 시 200 OK를 반환한다")
     void removeBookmarkFromFolder_success() throws Exception {
         // given
