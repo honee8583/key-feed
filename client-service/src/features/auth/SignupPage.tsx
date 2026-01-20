@@ -358,7 +358,7 @@ export function SignupPage() {
               </label>
               
               <div className="flex flex-col gap-3 pl-1">
-                {AGREEMENT_ITEMS.map(({ key, label, required }) => (
+                {AGREEMENT_ITEMS.map(({ key, label }) => (
                   <div key={key} className="flex items-center justify-between text-[13px]">
                     <label className="flex items-center gap-3 cursor-pointer group flex-1 select-none">
                       <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all flex-shrink-0 ${agreements[key] ? 'bg-blue-600 border-blue-600' : 'border-slate-700 group-hover:border-slate-600'}`}>
