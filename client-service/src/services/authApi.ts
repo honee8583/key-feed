@@ -42,13 +42,19 @@ export const authApi = {
     })
   },
   sendVerificationCode(email: string) {
-    return apiClient.request<{ success: boolean }>('/auth/email/verification-code', {
+    return apiClient.request<{ success: boolean }>('/auth/email-verification/request', {
       method: 'POST',
       body: { email },
     })
   },
+  confirmVerificationCode(email: string, code: string) {
+    return apiClient.request<{ success: boolean }>('/auth/email-verification/confirm', {
+      method: 'POST',
+      body: { email, code },
+    })
+  },
   signup(payload: SignupPayload) {
-    return apiClient.request<{ token: string }>('/auth/signup', {
+    return apiClient.request<{ token: string }>('/auth/join', {
       method: 'POST',
       body: payload,
     })
