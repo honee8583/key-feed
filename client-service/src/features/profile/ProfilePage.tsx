@@ -1,272 +1,227 @@
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../auth';
-
-const figureAssets = {
-  settings:
-    'http://localhost:3845/assets/5d4a45f0326f262829346093f202523a31967c88.svg',
-  notification:
-    'http://localhost:3845/assets/155733f40f9ba1a0977946287da5216e91d52c9b.svg',
-  theme:
-    'http://localhost:3845/assets/d17fa9aa00bc6edab95c741d88f7f148421bbaca.svg',
-  general:
-    'http://localhost:3845/assets/377629d33313052cbebb6bb9e11d22d4ac452771.svg',
-  help: 'http://localhost:3845/assets/64e0f923ffb923a33e5f4675b04dd2fac38c9779.svg',
-  stats:
-    'http://localhost:3845/assets/aedcc951b7b008f22809207205bbe0b51761fcbd.svg',
-  logout:
-    'http://localhost:3845/assets/9bd56683fafd1fcbf8990b5aaa6315a6a9e1fd53.svg',
-  chevron:
-    'http://localhost:3845/assets/3d25bd377c1a23a7fad2473510412a222380c603.svg',
-  addSource:
-    'http://localhost:3845/assets/0559802f2e20b199fbbcf963a04ae79ad9da0402.svg',
-};
-
-const kpiCards = [
-  { id: 'sources', icon: '📚', value: '12', label: '구독 소스' },
-  { id: 'keywords', icon: '🔖', value: '8', label: '활성 키워드' },
-  { id: 'saved', icon: '💾', value: '40', label: '저장된 콘텐츠' },
-  { id: 'read', icon: '📖', value: '156', label: '읽은 콘텐츠' },
-];
-
-const managementLinks = [
-  {
-    id: 'sources',
-    title: '소스 관리',
-    subtitle: '수집 채널, RSS 등을 구성하세요',
-    icon: figureAssets.addSource,
-    path: '/profile/sources',
-  },
-];
-
-const settingLinks = [
-  {
-    id: 'notify',
-    title: '알림 설정',
-    subtitle: '푸시·이메일 옵션',
-    icon: figureAssets.notification,
-  },
-  {
-    id: 'theme',
-    title: '테마 설정',
-    subtitle: '밝기, 가독성, 대비',
-    icon: figureAssets.theme,
-  },
-  {
-    id: 'general',
-    title: '일반 설정',
-    subtitle: '보안, 계정, 기타',
-    icon: figureAssets.general,
-  },
-];
-
-const infoLinks = [
-  {
-    id: 'help',
-    title: '도움말',
-    subtitle: '자주 묻는 질문',
-    icon: figureAssets.help,
-  },
-  {
-    id: 'stats',
-    title: '통계',
-    subtitle: '사용 리포트',
-    icon: figureAssets.stats,
-    badge: 'NEW',
-  },
-];
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth'
+import {
+  BarChartIcon,
+  BellIcon,
+  ChevronRightIcon,
+  HelpCircleIcon,
+  LockIcon,
+  LogOutIcon,
+  PlusCircleIcon,
+  SettingsIcon,
+  SlidersIcon,
+  TrashIcon,
+} from './components/ProfileIcons'
+import { UserIcon } from '../auth/components/AuthIcons'
 
 type LinkItem = {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: string;
-  badge?: string;
-  path?: string;
-};
+  id: string
+  title: string
+  icon: React.ReactNode
+  badge?: string
+  path?: string
+  onClick?: () => void
+}
 
 export function ProfilePage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
 
   const handleLogout = () => {
     if (window.confirm('정말 로그아웃하시겠어요?')) {
-      logout();
+      logout()
     }
-  };
+  }
+
+  const handleDeleteAccount = () => {
+    if (window.confirm('정말 계정을 삭제하시겠어요? 이 작업은 되돌릴 수 없습니다.')) {
+      alert('계정 삭제 기능은 아직 구현되지 않았습니다.')
+    }
+  }
+
+  const managementLinks: LinkItem[] = [
+    {
+      id: 'sources',
+      title: '소스 관리',
+      icon: <PlusCircleIcon className="w-5 h-5" />,
+      path: '/profile/sources',
+    },
+  ]
+
+  const settingLinks: LinkItem[] = [
+    {
+      id: 'notify',
+      title: '알림 설정',
+      icon: <BellIcon className="w-5 h-5" />,
+    },
+    {
+      id: 'security',
+      title: '보안 설정',
+      icon: <LockIcon className="w-5 h-5" />,
+    },
+    {
+      id: 'general',
+      title: '일반 설정',
+      icon: <SlidersIcon className="w-5 h-5" />,
+    },
+  ]
+
+  const infoLinks: LinkItem[] = [
+    {
+      id: 'help',
+      title: '도움말',
+      icon: <HelpCircleIcon className="w-5 h-5" />,
+    },
+    {
+      id: 'stats',
+      title: '통계',
+      icon: <BarChartIcon className="w-5 h-5" />,
+      badge: 'NEW',
+    },
+  ]
 
   return (
-    <div className='relative flex min-h-screen justify-center overflow-hidden bg-[radial-gradient(circle_at_top,#050b16_45%,#03050a_70%)] px-4 py-8 pb-40 text-white'>
-      <div
-        className='absolute top-[-140px] left-5 z-0 h-[420px] w-[420px] rounded-full bg-[rgba(81,162,255,0.6)] opacity-35 blur-[120px]'
-        aria-hidden
-      />
-      <div
-        className='absolute right-[-160px] bottom-[120px] z-0 h-[520px] w-[520px] rounded-full bg-[rgba(194,122,255,0.35)] opacity-35 blur-[120px]'
-        aria-hidden
-      />
-      <div className='relative z-10 w-full max-w-[378px]'>
-        <section className='mb-10 flex flex-col gap-6' aria-label='사용자 요약'>
-          <div className='flex items-center gap-4 rounded-[28px] border border-white/20 bg-white/12 p-5 px-6 shadow-[0_20px_40px_rgba(5,10,28,0.35)] backdrop-blur-[18px]'>
-            <div
-              className='flex h-[72px] w-[72px] items-center justify-center rounded-3xl border-4 border-white/20 text-4xl'
-              aria-hidden
-            >
-              <span role='img' aria-label='사용자 아바타'>
-                👤
-              </span>
+    <div className="min-h-screen bg-black flex justify-center py-8 px-5 pb-[120px] font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif]">
+      <div className="w-full max-w-[393px] flex flex-col gap-6">
+        
+        {/* Unified Header Card */}
+        <div className="flex flex-col gap-6 p-6 rounded-[24px] bg-[#1e2939] border border-white/5 shadow-xl relative overflow-hidden">
+           {/* Background Decoration */}
+           <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-blue-500/5 rounded-full blur-[60px] translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+
+          {/* Top Section: User Info */}
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-[64px] h-[64px] rounded-[20px] bg-gradient-to-br from-[#2b7fff] to-[#4f39f6] flex items-center justify-center text-white shadow-lg">
+              <UserIcon className="w-8 h-8 opacity-90" />
             </div>
-            <div className='min-w-0 flex-1'>
-              <p className='m-0 text-xl font-bold tracking-[-0.02em]'>
-                {user?.name ?? '사용자'}
-              </p>
-              <div className='mt-1 inline-flex items-center gap-2 text-sm text-[#b7c6ff]'>
-                <span
-                  className='h-2 w-2 rounded-full bg-[#05df72] shadow-[0_0_12px_rgba(5,223,114,0.35)]'
-                  aria-hidden
-                />
-                <span>{user?.email ?? 'user@example.com'}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="m-0 text-[20px] font-bold text-white tracking-tight">
+                  {user?.name ?? '사용자'}
+                </h2>
+                <span className="px-1.5 py-0.5 rounded-[6px] bg-white/10 border border-white/10 text-[10px] font-bold text-blue-200">
+                  PRO
+                </span>
               </div>
+              <p className="m-0 text-[13px] text-slate-400 truncate font-medium">
+                {user?.email ?? 'user@example.com'}
+              </p>
             </div>
             <button
-              type='button'
-              className='flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl border-none bg-white/20 shadow-[0_10px_25px_rgba(0,0,0,0.25)] hover:bg-white/25'
-              aria-label='설정'
+              type="button"
+              className="w-10 h-10 rounded-[14px] bg-[#2a3649] border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#354256] transition-colors cursor-pointer"
             >
-              <img
-                src={figureAssets.settings}
-                alt=''
-                className='h-5 w-5'
-                aria-hidden
-              />
+              <SettingsIcon className="w-5 h-5" />
             </button>
           </div>
 
-          <div
-            className='grid grid-cols-4 gap-2.5 max-[420px]:grid-cols-2'
-            aria-label='콘텐츠 활동 요약'
-          >
-            {kpiCards.map((kpi) => (
-              <article
-                key={kpi.id}
-                className='flex min-h-[108px] flex-col justify-center gap-1 rounded-[20px] border border-white/20 bg-white/18 p-3.5 px-2 text-center'
-              >
-                <span className='text-2xl' aria-hidden>
-                  {kpi.icon}
-                </span>
-                <p className='m-0 text-lg font-semibold'>{kpi.value}</p>
-                <p className='m-0 text-xs text-[#99a1af]'>{kpi.label}</p>
-              </article>
-            ))}
+          {/* Divider */}
+          <div className="h-px w-full bg-white/5"></div>
+
+          {/* Bottom Section: KPIs */}
+          <div className="grid grid-cols-3 gap-2 relative z-10">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[18px] font-bold text-white">12</span>
+              <span className="text-[12px] text-slate-400">구독 소스</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 border-l border-white/5">
+              <span className="text-[18px] font-bold text-white">8</span>
+              <span className="text-[12px] text-slate-400">폴더</span>
+            </div>
+             <div className="flex flex-col items-center gap-1 border-l border-white/5">
+              <span className="text-[18px] font-bold text-white">40</span>
+              <span className="text-[12px] text-slate-400">저장됨</span>
+            </div>
           </div>
-        </section>
+        </div>
 
-        <ProfileSection title='관리' icon={figureAssets.settings}>
-          {managementLinks.map((item) => (
-            <ProfileListItem
-              key={item.id}
-              {...item}
-              onSelect={
-                item.path ? () => navigate(item.path as string) : undefined
-              }
-            />
-          ))}
-        </ProfileSection>
+        {/* Links Sections */}
+        <div className="flex flex-col gap-6">
+          <ProfileSection title="관리">
+            {managementLinks.map((item) => (
+              <ProfileListItem
+                key={item.id}
+                {...item}
+                onClick={item.path ? () => navigate(item.path!) : undefined}
+              />
+            ))}
+          </ProfileSection>
 
-        <ProfileSection title='설정' icon={figureAssets.settings}>
-          {settingLinks.map((item) => (
-            <ProfileListItem key={item.id} {...item} />
-          ))}
-        </ProfileSection>
+          <ProfileSection title="설정">
+            {settingLinks.map((item) => (
+              <ProfileListItem key={item.id} {...item} />
+            ))}
+          </ProfileSection>
 
-        <ProfileSection title='정보' icon={figureAssets.settings}>
-          {infoLinks.map((item) => (
-            <ProfileListItem key={item.id} {...item} />
-          ))}
-        </ProfileSection>
+          <ProfileSection title="정보">
+            {infoLinks.map((item) => (
+              <ProfileListItem key={item.id} {...item} />
+            ))}
+          </ProfileSection>
+        </div>
 
-        <button
-          type='button'
-          className='mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-[18px] border-none bg-gradient-to-br from-[#fef2f2] to-[#fdf2f8] p-4 text-base font-semibold text-[#e7000b] hover:opacity-90'
-          onClick={handleLogout}
-        >
-          <img
-            src={figureAssets.logout}
-            alt=''
-            className='h-5 w-5'
-            aria-hidden
-          />
-          로그아웃
-        </button>
-        <p className='mt-3 mb-0 text-center text-xs text-[#99a1af]'>
-          버전 1.0.0
-        </p>
+        {/* Footer Actions */}
+        <div className="flex flex-col gap-3 mt-2">
+          <button
+            onClick={handleLogout}
+            className="w-full h-[56px] rounded-[16px] bg-[#1e2939] border border-white/5 flex items-center justify-center gap-2 text-[15px] font-semibold text-slate-300 hover:bg-[#2a3649] hover:text-white transition-colors cursor-pointer"
+          >
+            <LogOutIcon className="w-4 h-4" />
+            <span>로그아웃</span>
+          </button>
+          
+          <button
+            onClick={handleDeleteAccount}
+            className="w-full h-[56px] rounded-[16px] bg-[#1e2939] border border-white/5 flex items-center justify-center gap-2 text-[15px] font-semibold text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+          >
+            <TrashIcon className="w-4 h-4" />
+            <span>계정 삭제</span>
+          </button>
+        </div>
+
+        <p className="text-center text-[12px] text-slate-600 font-medium py-2">버전 1.0.0</p>
       </div>
     </div>
-  );
+  )
 }
 
-type ProfileSectionProps = {
-  title: string;
-  icon: string;
-  children: React.ReactNode;
-};
-
-function ProfileSection({ title, icon, children }: ProfileSectionProps) {
+function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className='relative z-10 mb-7'>
-      <div className='mb-3 flex items-center gap-2'>
-        <h2 className='m-0 text-lg'>{title}</h2>
-        <img
-          src={icon}
-          alt=''
-          className='h-[18px] w-[18px] opacity-75'
-          aria-hidden
-        />
-      </div>
-      <div className='overflow-hidden rounded-[20px] border border-[rgba(229,231,235,0.5)] bg-white/90 shadow-[0_25px_60px_rgba(15,23,42,0.3)]'>
+    <div className="flex flex-col gap-3">
+      <h3 className="m-0 px-1 text-[13px] font-bold text-slate-500 uppercase tracking-wider">{title}</h3>
+      <div className="flex flex-col gap-0 bg-[#1e2939] border border-white/5 rounded-[20px] overflow-hidden shadow-sm">
         {children}
       </div>
-    </section>
-  );
+    </div>
+  )
 }
-
-type ProfileListItemProps = LinkItem & {
-  onSelect?: () => void;
-};
 
 function ProfileListItem({
   title,
-  subtitle,
   icon,
   badge,
-  onSelect,
-}: ProfileListItemProps) {
+  onClick,
+}: LinkItem) {
   return (
     <button
-      type='button'
-      className='relative flex w-full cursor-pointer items-center gap-3.5 border-t border-none border-[rgba(229,231,235,0.5)] bg-transparent px-[18px] py-4 text-left text-[#101828] first:border-t-0 hover:bg-slate-50/50'
-      onClick={onSelect}
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-4 w-full p-4 text-left border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors cursor-pointer group"
     >
-      <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f4f6fb] shadow-[0_4px_12px_rgba(15,23,42,0.08)]'>
-        <img src={icon} alt='' className='h-[22px] w-[22px]' aria-hidden />
+      <div className="w-10 h-10 rounded-[12px] bg-[#2a3649] flex items-center justify-center text-slate-400 group-hover:text-white transition-colors">
+        {icon}
       </div>
-      <div className='min-w-0 flex-1'>
-        <p className='m-0 text-base leading-snug font-semibold text-[#101828]'>
-          {title}
-        </p>
-        <p className='m-0 mt-0.5 text-[13px] text-[#6a7282]'>{subtitle}</p>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-[15px] font-medium text-white">{title}</span>
+          {badge && (
+            <span className="px-1.5 py-0.5 rounded-[6px] bg-blue-500/20 text-blue-400 text-[10px] font-bold">
+              {badge}
+            </span>
+          )}
+        </div>
       </div>
-      {badge ? (
-        <span className='rounded-lg bg-gradient-to-r from-[#155dfc] to-[#4f39f6] px-3 py-1 text-xs font-semibold text-white'>
-          {badge}
-        </span>
-      ) : null}
-      <img
-        className='h-[22px] w-[22px]'
-        src={figureAssets.chevron}
-        alt=''
-        aria-hidden
-      />
+      <ChevronRightIcon className="w-5 h-5 text-slate-600 group-hover:text-slate-400 transition-colors" />
     </button>
-  );
+  )
 }
