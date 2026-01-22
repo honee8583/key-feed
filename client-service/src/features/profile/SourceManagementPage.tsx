@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import { ToggleSwitch } from '../../components/ToggleSwitch';
 import { sourceApi, type CreatedSource } from '../../services/sourceApi';
 
-const filterChips = ['전체', 'RSS', '뉴스레터', 'YouTube', '블로그'];
+
 
 type ManagedSource = CreatedSource & {
   status: 'active' | 'paused';
@@ -15,6 +16,8 @@ export function SourceManagementPage() {
   const [items, setItems] = useState<ManagedSource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const debouncedKeyword = useDebounce(searchKeyword, 500);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,9 +26,15 @@ export function SourceManagementPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await sourceApi.listMy();
+        let response;
+        if (debouncedKeyword) {
+          response = await sourceApi.searchMy(debouncedKeyword);
+        } else {
+          response = await sourceApi.listMy();
+        }
+        
         if (cancelled) return;
-        setItems(response.map(mapSourceToCard));
+        setItems((response || []).map(mapSourceToCard));
       } catch (fetchError) {
         if (cancelled) return;
         setError(
@@ -44,7 +53,7 @@ export function SourceManagementPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [debouncedKeyword]);
 
   const handleToggle = (userSourceId: number) => {
     setItems((prev) =>
@@ -94,32 +103,9 @@ export function SourceManagementPage() {
             placeholder='소스 이름 또는 URL 검색'
             aria-label='소스 검색'
             className='flex-1 rounded-[18px] border border-white/20 bg-white/8 px-4 py-3 text-white placeholder:text-white/60 focus:ring-2 focus:ring-white/30 focus:outline-none'
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
           />
-          <button
-            type='button'
-            className='rounded-2xl border border-white/20 bg-white/8 px-3.5 py-3 text-white hover:bg-white/12 max-[420px]:w-full'
-          >
-            필터
-          </button>
-        </div>
-
-        <div
-          className='flex gap-2 overflow-x-auto pb-1'
-          aria-label='소스 유형 필터'
-        >
-          {filterChips.map((chip, index) => (
-            <button
-              key={chip}
-              type='button'
-              className={`cursor-pointer rounded-[30px] border px-4 py-2 text-[13px] whitespace-nowrap transition-colors ${
-                index === 0
-                  ? 'border-white/40 bg-white/20 text-white'
-                  : 'border-transparent bg-white/8 text-[#c8d6ff] hover:bg-white/12'
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
         </div>
 
         <section className='flex flex-col gap-4' aria-label='연결된 소스 목록'>
