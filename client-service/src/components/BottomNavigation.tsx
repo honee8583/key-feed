@@ -1,14 +1,10 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import feedIcon from '../assets/navigation/home_btn.png'
-import searchIcon from '../assets/navigation/search_btn.png'
-import bookmarkIcon from '../assets/navigation/bookmark_btn.png'
-import profileIcon from '../assets/navigation/profile_btn.png'
-import notificationIcon from '../assets/navigation/notification_btn.png'
+import { FeedIcon, SearchIcon, BookmarkIcon, NotificationIcon, ProfileIcon } from './NavigationIcons'
 
 type NavItem = {
   label: string
   path?: string
-  icon: string
+  icon: React.ComponentType<{ className?: string }>
   badge?: number
 }
 
@@ -16,27 +12,27 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: '피드',
     path: '/home',
-    icon: feedIcon,
+    icon: FeedIcon,
   },
   {
     label: '탐색',
     path: '/explore',
-    icon: searchIcon,
+    icon: SearchIcon,
   },
   {
     label: '북마크',
     path: '/bookmarks',
-    icon: bookmarkIcon,
+    icon: BookmarkIcon,
   },
   {
     label: '알림',
     path: '/notifications',
-    icon: notificationIcon,
+    icon: NotificationIcon,
   },
   {
     label: '프로필',
     path: '/profile',
-    icon: profileIcon,
+    icon: ProfileIcon,
   },
 ]
 
@@ -46,10 +42,10 @@ export function BottomNavigation() {
 
   return (
     <nav
-      className="fixed left-1/2 bottom-6 -translate-x-1/2 w-[calc(100%-32px)] max-w-[440px] grid grid-cols-5 gap-1.5 p-3 px-[18px] rounded-[28px] border border-white/25 bg-gradient-to-br from-white/18 to-white/8 shadow-[0_30px_55px_rgba(15,23,42,0.25),0_18px_30px_rgba(2,6,23,0.22)] backdrop-blur-[22px] z-40 min-[480px]:bottom-8"
+      className="fixed left-1/2 bottom-6 -translate-x-1/2 w-[calc(100%-32px)] max-w-[440px] flex items-center justify-between px-2 py-3 rounded-[32px] bg-[#0F172A]/90 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 min-[480px]:bottom-8"
       aria-label="하단 내비게이션"
     >
-      {NAV_ITEMS.map(({ label, path, badge, icon }) => {
+      {NAV_ITEMS.map(({ label, path, badge, icon: Icon }) => {
         const isActive = Boolean(path && location.pathname.startsWith(path))
         const handleClick = () => {
           if (path) {
@@ -61,40 +57,45 @@ export function BottomNavigation() {
           <button
             key={label}
             type="button"
-            className={`relative flex flex-col items-center gap-2 py-2 pb-1.5 text-[11px] font-semibold tracking-[-0.02em] rounded-[18px] transition-all duration-250 ease-in-out ${
-              isActive
-                ? 'text-white bg-gradient-to-br from-[rgba(90,201,255,0.32)] to-[rgba(128,90,255,0.28)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12),0_10px_22px_rgba(32,39,80,0.45)]'
-                : 'text-slate-100/65 hover:text-slate-100/80'
-            } active:translate-y-px`}
+            className="flex-1 relative flex flex-col items-center gap-[4px] py-1 cursor-pointer group"
             onClick={handleClick}
             aria-current={isActive ? 'page' : undefined}
           >
-            <span
-              className={`w-11 h-11 rounded-2xl inline-flex items-center justify-center transition-all duration-250 ${
-                isActive
-                  ? 'bg-[rgba(5,9,24,0.25)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35),0_10px_20px_rgba(8,10,24,0.45)]'
-                  : 'bg-white/8'
-              }`}
-              aria-hidden
-            >
-              <img
-                className={`w-[22px] h-[22px] object-contain transition-all duration-250 ${
-                  isActive ? 'grayscale-0' : 'grayscale-[0.2]'
-                }`}
-                src={icon}
-                alt=""
-                loading="lazy"
+            {/* Active Background Glow */}
+            {isActive && (
+              <div 
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[56px] h-[56px] rounded-[20px] opacity-90 transition-all duration-300 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(43, 127, 255, 0.2) 0%, rgba(81, 162, 255, 0.15) 50%, rgba(173, 70, 255, 0.2) 100%)',
+                  boxShadow: '0 0 12px rgba(66, 133, 244, 0.15)'
+                }}
               />
+            )}
+
+            {/* Icon Component */}
+            <div className={`relative w-[24px] h-[24px] z-10 transition-transform duration-200 ${isActive ? 'scale-105' : 'group-hover:scale-105'}`}>
+              <Icon 
+                className={`w-full h-full transition-colors duration-300 ${isActive ? 'text-[#5eaaff]' : 'text-[#99A1AF]'}`} 
+              />
+              {badge ? (
+                <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-[3px] rounded-full bg-[#ef4444] text-white text-[9px] font-bold flex items-center justify-center border border-[#0F172A]">
+                  {badge}
+                </span>
+              ) : null}
+            </div>
+
+            {/* Label */}
+            <span 
+              className={`text-[11px] font-medium leading-none z-10 transition-colors duration-300 ${
+                isActive ? 'text-[#5eaaff] font-bold' : 'text-[#99A1AF]'
+              }`}
+            >
+              {label}
             </span>
-            <span className="leading-none">{label}</span>
-            {badge ? (
-              <span className="absolute top-1 right-4 min-w-[18px] h-[18px] px-[5px] rounded-full bg-gradient-to-br from-[#ff5f6d] to-[#ffc371] border border-white/80 text-slate-900 text-[10px] font-bold inline-flex items-center justify-center shadow-[0_4px_8px_rgba(2,6,23,0.25)]">
-                {badge}
-              </span>
-            ) : null}
           </button>
         )
       })}
     </nav>
   )
 }
+
