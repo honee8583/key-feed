@@ -7,7 +7,7 @@ import {
   LogOutIcon,
   SettingsIcon,
   TrashIcon,
-} from './components/ProfileIcons'
+} from '../../components/common/Icons'
 import { UserIcon } from '../auth/components/AuthIcons'
 import sourceManagementIcon from '../../assets/profile/source_management_icon.png'
 import notificationIcon from '../../assets/profile/notification_icon.png'

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { bookmarkApi, type BookmarkFolderDto, type BookmarkItemDto } from '../../services/bookmarkApi'
 import { FolderSelectSheet } from './FolderSelectSheet'
 import { BookmarkFolderIcon } from './BookmarkFolderIcon'
+import { BookmarkIcon } from '../../components/common/Icons'
 
 
 
@@ -369,10 +370,4 @@ function PlusIcon() {
 
 
 
-function BookmarkIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-    </svg>
-  )
-}
+
