@@ -1,15 +1,14 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { bookmarkApi, type BookmarkFolderDto, type BookmarkItemDto } from '../../services/bookmarkApi'
 import { FolderSelectSheet } from './FolderSelectSheet'
 import { BookmarkFolderIcon } from './BookmarkFolderIcon'
+import { BookmarkIcon } from '../../components/common/Icons'
 
-const quickFilters = ['최신순', '읽지 않음', '노트 있음', '원문 링크']
+
 
 export function BookmarksPage() {
   const navigate = useNavigate()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [activeQuickFilter, setActiveQuickFilter] = useState(quickFilters[0])
   const [folders, setFolders] = useState<BookmarkFolderDto[]>([])
   const [activeFolderId, setActiveFolderId] = useState<number | null>(null)
   const [isLoadingFolders, setIsLoadingFolders] = useState(false)
@@ -117,21 +116,9 @@ export function BookmarksPage() {
   // Fetch bookmarks when folder changes
   useEffect(() => {
     nextCursorIdRef.current = null
+    window.scrollTo(0, 0)
     void fetchBookmarks(activeFolderId, true)
   }, [activeFolderId, fetchBookmarks])
-
-  const filteredBookmarks = useMemo(() => {
-    if (!searchTerm) return bookmarks
-
-    return bookmarks.filter((bookmark) => {
-      const title = bookmark.content?.title || ''
-      const summary = bookmark.content?.summary || ''
-      return (
-        title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        summary.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    })
-  }, [searchTerm, bookmarks])
 
   const handleLoadMore = () => {
     if (hasMore && !isLoadingBookmarks) {
@@ -142,89 +129,75 @@ export function BookmarksPage() {
   return (
     <div className="min-h-screen bg-black text-slate-50 font-['Pretendard','Noto_Sans_KR',system-ui,sans-serif]">
       <div className="w-full max-w-[440px] mx-auto min-h-screen flex flex-col bg-black border-x border-[#1e2939]/30">
-        <header className="bg-black/80 backdrop-blur-md border-b border-[#1e2939] px-5 pt-3 sticky top-0 z-10">
-          <div className="flex justify-between items-center h-9 mb-3">
-            <h1 className="m-0 text-xl font-bold text-white tracking-[-0.45px]">저장된 콘텐츠</h1>
-          </div>
+        <div className="sticky top-0 z-50 bg-black px-5 pt-4 pb-2">
+          <div className="flex flex-col gap-6 p-6 rounded-[24px] bg-[#101828] border border-[#1e2939] shadow-xl relative overflow-hidden">
+             {/* Background Decoration */}
+             <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-orange-500/5 rounded-full blur-[60px] translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
 
-          <div className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-none -mx-5 px-5">
-            <button
-              type="button"
-              className={`${activeFolderId === null ? 'bg-white text-black border-white' : 'bg-[#1e2939] text-[#d1d5dc] border-[#364153]'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85`}
-              onClick={() => setActiveFolderId(null)}
-            >
-              <FolderIcon />
-              <span>전체</span>
-            </button>
-            <button
-              type="button"
-              className={`${activeFolderId === 0 ? 'bg-white text-black border-white' : 'bg-[#1e2939] text-[#d1d5dc] border-[#364153]'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85`}
-              onClick={() => setActiveFolderId(0)}
-            >
-              <FolderIcon />
-              <span>미분류</span>
-            </button>
-            {!isLoadingFolders && folders.length ? (
-              folders.map((folder) => {
-                const isActive = folder.folderId === activeFolderId
-                const folderColor = folder.color || '#ad46ff'
-                const DEFAULT_BG_OPACITY = '1A' // 10%
-                const ACTIVE_BG_OPACITY = '33' // 20%
+            {/* Top Section: Title & Icon */}
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-[48px] h-[48px] rounded-[16px] bg-gradient-to-br from-[#f0b100] to-[#f54900] flex items-center justify-center text-white shadow-lg shrink-0">
+                <BookmarkIcon className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="m-0 text-[20px] font-bold text-white tracking-tight leading-tight">
+                  북마크
+                </h2>
+              </div>
+            </div>
 
-                return (
-                  <button
-                    key={folder.folderId}
-                    type="button"
-                    className={`${isActive ? 'opacity-100 ring-1 ring-white/20' : 'opacity-80 hover:opacity-100'} inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border whitespace-nowrap flex-shrink-0 transition-all text-[14px]`}
-                    style={{
-                      // 선택되었을 때는 테두리를 선명하게, 배경을 조금 더 진하게
-                      borderColor: isActive ? folderColor : folderColor + ACTIVE_BG_OPACITY,
-                      background: isActive ? folderColor + ACTIVE_BG_OPACITY : folderColor + DEFAULT_BG_OPACITY,
-                      color: folderColor,
-                    } as React.CSSProperties}
-                    onClick={() => setActiveFolderId(folder.folderId)}
-                  >
-                    <BookmarkFolderIcon icon={folder.icon} width={16} height={16} />
-                    <span>{folder.name}</span>
-                  </button>
-                )
-              })
-            ) : null}
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 h-[38px] px-[13px] rounded-[10px] border border-[#364153] bg-[#1e2939] text-[#d1d5dc] whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-85"
-              onClick={() => navigate('/bookmarks/folders')}
-            >
-              <PlusIcon />
-              <span>관리</span>
-            </button>
-          </div>
-        </header>
+            {/* Folder Tabs */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-none relative z-10">
+              <button
+                type="button"
+                className={`${activeFolderId === null ? 'bg-white text-black border-white' : 'bg-[#1e2939] text-[#99a1af] border-[#1e2939]'} inline-flex items-center gap-2 h-[38px] px-[16px] rounded-[12px] border whitespace-nowrap flex-shrink-0 transition-colors hover:opacity-90 font-medium text-[14px]`}
+                onClick={() => setActiveFolderId(null)}
+              >
+                <FolderIcon />
+                <span>전체</span>
+              </button>
+              <button
+                type="button"
+                className={`${activeFolderId === 0 ? 'bg-white text-black border-white' : 'bg-[#1e2939] text-[#99a1af] border-[#1e2939]'} inline-flex items-center gap-2 h-[38px] px-[16px] rounded-[12px] border whitespace-nowrap flex-shrink-0 transition-colors hover:opacity-90 font-medium text-[14px]`}
+                onClick={() => setActiveFolderId(0)}
+              >
+                <FolderIcon />
+                <span>미분류</span>
+              </button>
+              {!isLoadingFolders && folders.length ? (
+                folders.map((folder) => {
+                  const isActive = folder.folderId === activeFolderId
+                  const folderColor = folder.color || '#ad46ff'
+                  const DEFAULT_BG_OPACITY = '1A' // 10%
+                  const ACTIVE_BG_OPACITY = '33' // 20%
 
-        <div className="flex flex-col gap-3 bg-[rgba(15,15,20,0.8)] border border-white/10 rounded-[24px] p-[18px] mx-5 mt-4 mb-2 text-slate-50">
-          <div>
-            <input
-              className="w-full rounded-[14px] border border-white/10 bg-[rgba(2,6,23,0.6)] px-3.5 py-3 text-[14px] placeholder:text-slate-300/70"
-              type="search"
-              placeholder="저장한 콘텐츠 검색"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-          </div>
-          <div className="flex flex-wrap gap-2" aria-label="빠른 정렬">
-            {quickFilters.map((filter) => {
-              const isActive = filter === activeQuickFilter
-              return (
-                <button
-                  key={filter}
-                  type="button"
-                  className={`${isActive ? 'bg-[rgba(59,130,246,0.2)] text-[#bfdbfe] border-[rgba(59,130,246,0.5)]' : 'bg-transparent text-slate-300/95 border-white/10'} rounded-full border px-[14px] py-[6px] text-[13px] cursor-pointer`}
-                  onClick={() => setActiveQuickFilter(filter)}
-                >
-                  {filter}
-                </button>
-              )
-            })}
+                  return (
+                    <button
+                      key={folder.folderId}
+                      type="button"
+                      className={`${isActive ? 'opacity-100 ring-1 ring-white/20' : 'opacity-80 hover:opacity-100'} inline-flex items-center gap-2 h-[38px] px-[16px] rounded-[12px] border whitespace-nowrap flex-shrink-0 transition-all font-medium text-[14px]`}
+                      style={{
+                        borderColor: isActive ? folderColor : folderColor + ACTIVE_BG_OPACITY,
+                        background: isActive ? folderColor + ACTIVE_BG_OPACITY : folderColor + DEFAULT_BG_OPACITY,
+                        color: folderColor,
+                      } as React.CSSProperties}
+                      onClick={() => setActiveFolderId(folder.folderId)}
+                    >
+                      <BookmarkFolderIcon icon={folder.icon} width={16} height={16} />
+                      <span>{folder.name}</span>
+                    </button>
+                  )
+                })
+              ) : null}
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 h-[38px] px-[16px] rounded-[12px] border border-[#1e2939] bg-[#1e2939] text-[#99a1af] whitespace-nowrap flex-shrink-0 transition-colors hover:bg-[#2a3649] hover:text-white font-medium text-[14px]"
+                onClick={() => navigate('/bookmarks/folders')}
+              >
+                <PlusIcon />
+                <span>관리</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -241,7 +214,7 @@ export function BookmarksPage() {
             </div>
           ) : null}
 
-          {filteredBookmarks.map((bookmark) => (
+          {bookmarks.map((bookmark) => (
             <BookmarkCard 
               key={bookmark.bookmarkId} 
               item={bookmark} 
@@ -249,7 +222,7 @@ export function BookmarksPage() {
             />
           ))}
 
-          {!isLoadingBookmarks && !filteredBookmarks.length && !bookmarkError ? (
+          {!isLoadingBookmarks && !bookmarks.length && !bookmarkError ? (
             <div className="p-[22px] rounded-[20px] border border-white/20 bg-[rgba(255,255,255,0.03)] text-slate-50/80 text-center text-[14px]">
               저장된 북마크가 없어요.
             </div>
@@ -302,7 +275,7 @@ function BookmarkCard({ item, onMoveClick }: { item: BookmarkItemDto; onMoveClic
   }).format(new Date(publishedAt))
 
   return (
-    <article className="bg-[#111] border border-white/5 rounded-[20px] overflow-hidden">
+    <article className="bg-[#101828] border border-[#1e2939] rounded-[24px] overflow-hidden shadow-sm">
       <div className="p-5 flex flex-col gap-3">
         <div className="flex justify-between items-center text-[12px]">
           <button 
@@ -381,6 +354,7 @@ function FolderIcon() {
   )
 }
 
+
 function PlusIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -393,3 +367,7 @@ function PlusIcon() {
     </svg>
   )
 }
+
+
+
+
