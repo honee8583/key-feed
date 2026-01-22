@@ -10,6 +10,7 @@ export type CreatedSource = {
   userSourceId: number
   userDefinedName: string
   url: string
+  lastCrawledAt?: string
 }
 
 type CreateSourceResponse = {
