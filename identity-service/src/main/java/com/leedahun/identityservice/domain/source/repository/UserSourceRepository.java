@@ -15,10 +15,12 @@ public interface UserSourceRepository extends JpaRepository<UserSource, Long> {
 
     boolean existsByUserIdAndSourceId(Long userId, Long sourceId);
 
-    @Query("SELECT us FROM UserSource us JOIN FETCH us.source s " +
-            "WHERE us.user.id = :userId " +
-            "AND (LOWER(us.userDefinedName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "OR LOWER(s.url) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    @Query("""
+        SELECT us FROM UserSource us JOIN FETCH us.source s
+        WHERE us.user.id = :userId
+        AND (LOWER(us.userDefinedName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        OR LOWER(s.url) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    """)
     List<UserSource> searchByUserIdAndKeyword(@Param("userId") Long userId, @Param("keyword") String keyword);
 
 }

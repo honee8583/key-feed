@@ -24,6 +24,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -133,7 +134,7 @@ public class SourceServiceImpl implements SourceService {
     @Override
     @Transactional(readOnly = true)
     public List<SourceResponseDto> searchMySources(Long userId, String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
+        if (!StringUtils.hasText(keyword)) {
             return getSourcesByUser(userId);
         }
 
