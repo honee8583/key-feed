@@ -130,6 +130,19 @@ public class SourceServiceImpl implements SourceService {
         userSourceRepository.delete(userSource);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<SourceResponseDto> searchMySources(Long userId, String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getSourcesByUser(userId);
+        }
+
+        List<UserSource> userSources = userSourceRepository.searchByUserIdAndKeyword(userId, keyword);
+        return userSources.stream()
+                .map(SourceResponseDto::from)
+                .collect(Collectors.toList());
+    }
+
     private String discoverRssUrl(String inputUrl) {
         try {
             Document doc = Jsoup.connect(inputUrl)
