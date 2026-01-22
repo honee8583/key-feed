@@ -157,4 +157,47 @@ class UserSourceRepositoryTest {
         // then
         assertThat(exists).isFalse();
     }
+
+    @Test
+    @DisplayName("키워드로 내 소스 목록을 검색한다 (이름 또는 URL 포함, 대소문자 무시)")
+    void searchByUserIdAndKeyword_Success() {
+        // given
+        User user = User.builder()
+                .email("search@test.com")
+                .password("pw")
+                .username("searchUser")
+                .build();
+        userRepository.save(user);
+
+        Source s1 = Source.builder().url("https://spring.io/blog").build();
+        Source s2 = Source.builder().url("https://dev.java/news").build();
+        sourceRepository.save(s1);
+        sourceRepository.save(s2);
+
+        UserSource us1 = UserSource.builder()
+                .user(user)
+                .source(s1)
+                .userDefinedName("Spring Blog")
+                .build();
+
+        UserSource us2 = UserSource.builder()
+                .user(user)
+                .source(s2)
+                .userDefinedName("Official News")
+                .build();
+
+        userSourceRepository.save(us1);
+        userSourceRepository.save(us2);
+
+        // when
+        List<UserSource> result1 = userSourceRepository.searchByUserIdAndKeyword(user.getId(), "spring");
+        List<UserSource> result2 = userSourceRepository.searchByUserIdAndKeyword(user.getId(), "JAVA");
+
+        // then
+        assertThat(result1).hasSize(1);
+        assertThat(result1.get(0).getUserDefinedName()).isEqualTo("Spring Blog");
+
+        assertThat(result2).hasSize(1);
+        assertThat(result2.get(0).getSource().getUrl()).contains("java");
+    }
 }

@@ -40,4 +40,14 @@ export const sourceApi = {
 
     return response.data
   },
+  async searchMy(keyword: string) {
+    const response = await apiClient.request<SourceListResponse>(
+      `/sources/my/search?keyword=${encodeURIComponent(keyword)}`,
+      {
+        method: 'GET',
+      }
+    )
+
+    return response.data
+  },
 }
