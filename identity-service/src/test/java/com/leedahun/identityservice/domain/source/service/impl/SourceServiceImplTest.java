@@ -235,6 +235,45 @@ class SourceServiceImplTest {
         verify(userSourceRepository).delete(userSource);
     }
 
+    @Test
+    @DisplayName("소스 검색 성공 - 키워드가 있을 때 검색 리포지토리를 호출한다")
+    void searchMySources_Success_WithKeyword() {
+        // given
+        String keyword = "naver";
+        UserSource userSource = UserSource.builder()
+                .id(20L)
+                .user(User.builder().id(USER_ID).build())
+                .source(Source.builder().url(RSS_URL).build())
+                .userDefinedName(SOURCE_NAME)
+                .build();
+
+        when(userSourceRepository.searchByUserIdAndKeyword(USER_ID, keyword))
+                .thenReturn(List.of(userSource));
+
+        // when
+        List<SourceResponseDto> result = sourceService.searchMySources(USER_ID, keyword);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUserDefinedName()).isEqualTo(SOURCE_NAME);
+        verify(userSourceRepository).searchByUserIdAndKeyword(USER_ID, keyword);
+    }
+
+    @Test
+    @DisplayName("소스 검색 성공 - 키워드가 없으면 전체 목록 조회 메서드를 호출한다")
+    void searchMySources_Success_NoKeyword() {
+        // given
+        String emptyKeyword = "   ";
+        when(userSourceRepository.findByUserId(USER_ID)).thenReturn(List.of());
+
+        // when
+        sourceService.searchMySources(USER_ID, emptyKeyword);
+
+        // then
+        verify(userSourceRepository).findByUserId(USER_ID);
+        verify(userSourceRepository, never()).searchByUserIdAndKeyword(anyLong(), anyString());
+    }
+
     private void mockJsoupConnection(MockedStatic<Jsoup> jsoupMock, String inputUrl, String detectedRssUrl) {
         try {
             Connection connection = mock(Connection.class);

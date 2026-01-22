@@ -6,6 +6,7 @@ import static com.leedahun.identityservice.common.message.SuccessMessage.WRITE_S
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -87,6 +88,34 @@ class SourceControllerTest {
 
         // verify
         verify(sourceService, times(1)).getSourcesByUser(any());
+    }
+
+    @Test
+    @DisplayName("[GET /api/sources/my/search] 소스 검색 성공 시 200 OK와 검색 결과를 반환한다")
+    void searchMySources_Success() throws Exception {
+        // given
+        String keyword = "tech";
+        List<SourceResponseDto> searchResult = List.of(
+                SourceResponseDto.builder()
+                        .sourceId(11L)
+                        .userSourceId(6L)
+                        .userDefinedName("우아한형제들")
+                        .url("https://techblog.woowahan.com/feed")
+                        .build()
+        );
+
+        when(sourceService.searchMySources(any(), eq(keyword))).thenReturn(searchResult);
+
+        // when & then
+        mockMvc.perform(get("/api/sources/my/search")
+                        .param("keyword", keyword))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].userDefinedName").value("우아한형제들"));
+
+        // verify
+        verify(sourceService, times(1)).searchMySources(any(), eq(keyword));
     }
 
     @Test
