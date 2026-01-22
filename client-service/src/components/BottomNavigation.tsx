@@ -32,7 +32,6 @@ const NAV_ITEMS: NavItem[] = [
     label: '알림',
     path: '/notifications',
     icon: notificationIcon,
-    badge: 3,
   },
   {
     label: '프로필',
