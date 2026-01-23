@@ -28,6 +28,14 @@ public class SourceController {
                 .body(new HttpResponse(HttpStatus.OK, SuccessMessage.READ_SUCCESS.getMessage(), sources));
     }
 
+    @GetMapping("/my/search")
+    public ResponseEntity<?> searchMySources(@AuthenticationPrincipal Long userId,
+                                             @RequestParam String keyword) {
+        List<SourceResponseDto> sources = sourceService.searchMySources(userId, keyword);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.READ_SUCCESS.getMessage(), sources));
+    }
+
     @PostMapping
     public ResponseEntity<?> addSource(@AuthenticationPrincipal Long userId,
                                        @Valid @RequestBody SourceRequestDto request) {

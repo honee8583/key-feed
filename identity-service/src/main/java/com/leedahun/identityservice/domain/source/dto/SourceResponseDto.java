@@ -4,6 +4,8 @@ import com.leedahun.identityservice.domain.source.entity.UserSource;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class SourceResponseDto {
@@ -11,6 +13,7 @@ public class SourceResponseDto {
     private Long userSourceId;
     private String userDefinedName;
     private String url;
+    private LocalDateTime lastCrawledAt;
 
     public static SourceResponseDto from(UserSource userSource) {
         return SourceResponseDto.builder()
@@ -18,6 +21,7 @@ public class SourceResponseDto {
                 .userSourceId(userSource.getId())
                 .userDefinedName(userSource.getUserDefinedName())
                 .url(userSource.getSource().getUrl())
+                .lastCrawledAt(userSource.getSource().getLastCrawledAt())
                 .build();
     }
 }

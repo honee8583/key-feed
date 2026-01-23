@@ -1,3 +1,4 @@
 export { LoginPage } from './LoginPage'
 export { SignupPage } from './SignupPage'
-export { AuthProvider, useAuth } from './AuthContext'
+export { AuthProvider } from './AuthContext'
+export { useAuth } from './AuthContextDefinition'

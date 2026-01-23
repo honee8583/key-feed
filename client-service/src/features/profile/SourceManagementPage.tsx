@@ -1,20 +1,34 @@
-import { useEffect, useState } from 'react';
-import { ToggleSwitch } from '../../components/ToggleSwitch';
-import { sourceApi, type CreatedSource } from '../../services/sourceApi';
-
-const filterChips = ['전체', 'RSS', '뉴스레터', 'YouTube', '블로그'];
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useDebounce } from '../../hooks/useDebounce'
+import { ToggleSwitch } from '../../components/ToggleSwitch'
+import { sourceApi, type CreatedSource } from '../../services/sourceApi'
+import {
+  ArrowLeftIcon,
+  ExternalLinkIcon,
+  PlusIcon,
+  RefreshCwIcon,
+  SearchIcon,
+  TrendingUpIcon,
+} from '../../components/common/Icons'
+import { AddSourceSheet } from '../home/components/AddSourceSheet'
+import { formatRelativePublishedAt } from '../../utils/dateUtils'
+import trashIcon from '../../assets/profile/trash_icon.svg'
 
 type ManagedSource = CreatedSource & {
   status: 'active' | 'paused';
-  type: string;
-  frequency: string;
   tags: string[];
 };
 
 export function SourceManagementPage() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<ManagedSource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const debouncedKeyword = useDebounce(searchKeyword, 500);
+  const [isAddSourceOpen, setIsAddSourceOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,9 +37,15 @@ export function SourceManagementPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await sourceApi.listMy();
+        let response;
+        if (debouncedKeyword) {
+          response = await sourceApi.searchMy(debouncedKeyword);
+        } else {
+          response = await sourceApi.listMy();
+        }
+        
         if (cancelled) return;
-        setItems(response.map(mapSourceToCard));
+        setItems((response || []).map(mapSourceToCard));
       } catch (fetchError) {
         if (cancelled) return;
         setError(
@@ -34,8 +54,9 @@ export function SourceManagementPage() {
             : '소스를 불러오지 못했습니다.'
         );
       } finally {
-        if (cancelled) return;
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -44,7 +65,7 @@ export function SourceManagementPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [debouncedKeyword, refreshTrigger]);
 
   const handleToggle = (userSourceId: number) => {
     setItems((prev) =>
@@ -59,170 +80,160 @@ export function SourceManagementPage() {
     );
   };
 
+  const handleDelete = async (userSourceId: number) => {
+    if (!window.confirm('정말 이 소스를 삭제하시겠습니까?')) {
+      return
+    }
+
+    try {
+      await sourceApi.delete(userSourceId)
+      setItems(prev => prev.filter(item => item.userSourceId !== userSourceId))
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : '소스 삭제에 실패했습니다.'
+      )
+    }
+  }
+
   return (
-    <div className='relative flex min-h-screen justify-center overflow-hidden bg-[radial-gradient(circle_at_top,#050b16_50%,#03050a_80%)] px-4 py-8 pb-40 text-white'>
-      <div
-        className='absolute top-[-120px] left-10 h-[420px] w-[420px] rounded-full bg-[rgba(81,162,255,0.6)] opacity-30 blur-[140px]'
-        aria-hidden
-      />
-      <div
-        className='absolute right-[-160px] bottom-[60px] h-[480px] w-[480px] rounded-full bg-[rgba(194,122,255,0.4)] opacity-30 blur-[140px]'
-        aria-hidden
-      />
-      <div className='relative z-10 flex w-full max-w-[378px] flex-col gap-6'>
-        <header className='flex flex-col gap-4'>
+    <div className='min-h-screen bg-[#050b16] px-5 py-4 text-white font-["Pretendard"] pb-[100px]'>
+      {/* Header */}
+      <header className='flex items-center justify-between mb-6'>
+        <button 
+          onClick={() => navigate(-1)}
+          className='text-white p-1'
+          aria-label="뒤로 가기"
+        >
+          <ArrowLeftIcon className="w-6 h-6" />
+        </button>
+        <div className='flex flex-col items-center'>
+          <h1 className='text-[16px] font-bold leading-tight'>소스 관리</h1>
+          <p className='text-[12px] text-[#64748b] leading-tight mt-0.5'>구독 중인 콘텐츠 소스</p>
+        </div>
+        <button
+          className='w-10 h-10 rounded-full bg-[#3b82f6] flex items-center justify-center shadow-[0_4px_12px_rgba(59,130,246,0.4)] hover:bg-[#2563eb] transition-colors'
+          aria-label="새 소스 추가"
+          onClick={() => setIsAddSourceOpen(true)}
+        >
+          <PlusIcon className="w-5 h-5 text-white" />
+        </button>
+      </header>
+
+      {/* Search Bar */}
+      <div className='relative mb-6'>
+        <div className='absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b]'>
+          <SearchIcon className="w-5 h-5" />
+        </div>
+        <input
+          type='search'
+          placeholder='소스 이름 또는 URL 검색...'
+          className='w-full h-[48px] bg-[#1e293b] rounded-[16px] pl-11 pr-4 text-[14px] text-white placeholder:text-[#64748b] focus:outline-none focus:ring-1 focus:ring-[#3b82f6]'
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+        />
+      </div>
+
+      {/* Source List */}
+      <div className='flex flex-col gap-3'>
+        {isLoading ? (
+          <p className='text-center text-[#64748b] py-8'>로딩 중...</p>
+        ) : error ? (
+          <p className='text-center text-red-400 py-8'>{error}</p>
+        ) : items.length === 0 ? (
+          <p className='text-center text-[#64748b] py-8'>연결된 소스가 없습니다.</p>
+        ) : (
+          items.map((source) => (
+            <div 
+              key={source.userSourceId}
+              className='bg-[#0f172a] rounded-[20px] p-5 border border-[#1e293b]'
+            >
+              <div className='flex justify-between items-start mb-1'>
+                <h3 className='text-[16px] font-bold text-white max-w-[70%] truncate'>
+                  {source.userDefinedName}
+                </h3>
+
+              </div>
+
+              <div className='flex items-center gap-1.5 mb-4'>
+                <ExternalLinkIcon className="w-3.5 h-3.5 text-[#64748b]" />
+                <a 
+                  href={source.url} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className='text-[13px] text-[#64748b] truncate hover:text-[#94a3b8] transition-colors'
+                >
+                  {source.url}
+                </a>
+              </div>
+
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-1.5 text-[#64748b]'>
+                  <RefreshCwIcon className="w-3.5 h-3.5" />
+                  <span className='text-[12px]'>
+                    {source.lastCrawledAt ? formatRelativePublishedAt(source.lastCrawledAt) : '아직 수집되지 않음'}
+                  </span>
+                </div>
+                
+                <div className='flex items-center gap-3'>
+                  <button 
+                    onClick={() => handleDelete(source.userSourceId)}
+                    className='text-[#64748b] hover:text-red-400 transition-colors p-1'
+                  >
+                    <img src={trashIcon} alt="삭제" className="w-5 h-5 opacity-70 hover:opacity-100" />
+                  </button>
+                <ToggleSwitch
+                    active={source.status === 'active'}
+                    ariaLabel={source.status === 'active' ? '활성화됨' : '비활성화됨'}
+                    onToggle={() => handleToggle(source.userSourceId)}
+                  />
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Tip Section */}
+      <div className='mt-6 bg-[#0f172a]/50 rounded-[20px] p-5 border border-[#1e293b]/50'>
+        <div className='flex gap-4'>
+          <div className='w-10 h-10 rounded-full bg-[#1e293b] flex items-center justify-center flex-shrink-0'>
+            <TrendingUpIcon className="w-5 h-5 text-[#3b82f6]" />
+          </div>
           <div>
-            <p className='m-0 text-sm tracking-[0.12em] text-white/60 uppercase'>
-              소스 관리
-            </p>
-            <h1 className='m-0 text-[32px] font-bold'>내 콘텐츠 허브</h1>
-            <p className='m-0 leading-relaxed text-[#cdd6ff]'>
-              구독 중인 채널을 정리하고 새 소스를 연결하세요.
+            <h4 className='text-[14px] font-bold text-white mb-1'>소스 관리 팁</h4>
+            <p className='text-[12px] text-[#94a3b8] leading-relaxed'>
+              비활성화된 소스는 새 콘텐츠를 가져오지 않습니다. 
+              필요 없는 소스는 삭제하여 피드를 깔끔하게 유지하세요.
             </p>
           </div>
-          <button
-            type='button'
-            className='cursor-pointer self-start rounded-[18px] border-none bg-gradient-to-r from-[#155dfc] to-[#4f39f6] px-5 py-3.5 font-semibold text-white shadow-[0_15px_30px_rgba(21,93,252,0.4)] hover:opacity-90'
-          >
-            + 새 소스 추가
-          </button>
-        </header>
-
-        <div className='flex gap-2.5 max-[420px]:flex-col'>
-          <input
-            type='search'
-            placeholder='소스 이름 또는 URL 검색'
-            aria-label='소스 검색'
-            className='flex-1 rounded-[18px] border border-white/20 bg-white/8 px-4 py-3 text-white placeholder:text-white/60 focus:ring-2 focus:ring-white/30 focus:outline-none'
-          />
-          <button
-            type='button'
-            className='rounded-2xl border border-white/20 bg-white/8 px-3.5 py-3 text-white hover:bg-white/12 max-[420px]:w-full'
-          >
-            필터
-          </button>
         </div>
-
-        <div
-          className='flex gap-2 overflow-x-auto pb-1'
-          aria-label='소스 유형 필터'
-        >
-          {filterChips.map((chip, index) => (
-            <button
-              key={chip}
-              type='button'
-              className={`cursor-pointer rounded-[30px] border px-4 py-2 text-[13px] whitespace-nowrap transition-colors ${
-                index === 0
-                  ? 'border-white/40 bg-white/20 text-white'
-                  : 'border-transparent bg-white/8 text-[#c8d6ff] hover:bg-white/12'
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-
-        <section className='flex flex-col gap-4' aria-label='연결된 소스 목록'>
-          {isLoading ? (
-            <p className='m-0 rounded-[18px] bg-white/8 p-[18px] text-center text-[#c8d6ff]'>
-              연결된 소스를 불러오는 중...
-            </p>
-          ) : null}
-          {error ? (
-            <p className='m-0 rounded-[18px] bg-white/8 p-[18px] text-center text-[#ffb4b4]'>
-              {error}
-            </p>
-          ) : null}
-          {!isLoading && !error && items.length === 0 ? (
-            <p className='m-0 rounded-[18px] bg-white/8 p-[18px] text-center text-[#c8d6ff]'>
-              아직 연결된 소스가 없어요. 새 소스를 추가해보세요.
-            </p>
-          ) : null}
-          {items.map((source) => (
-            <article
-              key={source.userSourceId}
-              className='rounded-[20px] border border-slate-200/50 bg-white/92 p-[18px] text-[#101828] shadow-[0_25px_45px_rgba(15,23,42,0.3)]'
-            >
-              <header className='mb-2.5 flex justify-between gap-3'>
-                <div>
-                  <p className='m-0 text-lg font-semibold'>
-                    {source.userDefinedName}
-                  </p>
-                  <p className='m-0 mt-1 text-[13px] text-[#6a7282]'>
-                    {source.type} · {source.frequency}
-                  </p>
-                </div>
-                <ToggleSwitch
-                  active={source.status === 'active'}
-                  ariaLabel={
-                    source.status === 'active' ? '활성화됨' : '비활성화됨'
-                  }
-                  onToggle={() => handleToggle(source.userSourceId)}
-                />
-              </header>
-              <p className='mt-2.5 mb-0 text-sm text-[#4c576c]'>{source.url}</p>
-              <div className='mt-3 flex flex-wrap gap-1.5'>
-                {source.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className='rounded-xl bg-[#f0f4ff] px-2.5 py-1 text-xs text-[#155dfc]'
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <div className='mt-4 flex gap-2.5'>
-                <button
-                  type='button'
-                  className='flex-1 cursor-pointer rounded-[14px] border-none bg-[#eef2ff] py-2.5 font-semibold text-[#155dfc] hover:bg-[#e0e7ff]'
-                >
-                  편집
-                </button>
-                <button
-                  type='button'
-                  className='flex-1 cursor-pointer rounded-[14px] border-none bg-[#eef2ff] py-2.5 font-semibold text-[#155dfc] hover:bg-[#e0e7ff]'
-                >
-                  동기화
-                </button>
-                <button
-                  type='button'
-                  className='flex-1 cursor-pointer rounded-[14px] border-none bg-[rgba(243,244,246,0.8)] py-2.5 font-semibold text-[#d92d20] hover:bg-[rgba(243,244,246,1)]'
-                >
-                  삭제
-                </button>
-              </div>
-            </article>
-          ))}
-        </section>
       </div>
+
+      
+      <AddSourceSheet
+        isOpen={isAddSourceOpen}
+        onClose={() => setIsAddSourceOpen(false)}
+        onSubmit={() => setRefreshTrigger((prev) => prev + 1)}
+      />
     </div>
   );
 }
 
 function mapSourceToCard(source: CreatedSource): ManagedSource {
   const hostname = safeHostname(source.url);
-  const type = deriveSourceType(hostname);
-  const frequency = type === 'YouTube' ? '실시간' : '매일 업데이트';
   return {
     ...source,
     status: 'active',
-    type,
-    frequency,
     tags: [hostname],
   };
 }
 
 function safeHostname(url: string) {
   try {
-    return new URL(url).hostname.replace('www.', '');
-  } catch (error) {
-    return url;
+    return new URL(url).hostname.replace('www.', '')
+  } catch {
+    return url
   }
-}
-
-function deriveSourceType(host: string) {
-  if (host.includes('youtube') || host.includes('youtu.be')) return 'YouTube';
-  if (host.includes('newsletter')) return '뉴스레터';
-  if (host.includes('community')) return '커뮤니티';
-  return 'RSS';
 }

@@ -12,4 +12,6 @@ public interface SourceService {
 
     void removeUserSource(Long userId, Long userSourceId);
 
+    List<SourceResponseDto> searchMySources(Long userId, String keyword);
+
 }
