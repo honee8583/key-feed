@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { LoginResponseData } from '../../services/authApi'
 import {
   AUTH_STORAGE_KEY,
@@ -8,18 +8,8 @@ import {
   subscribeToAuthChanges,
   type AuthPersistence,
   type StoredAuthState,
-  type StoredAuthUser,
 } from '../../services/authStorage'
-
-type AuthContextValue = {
-  user: StoredAuthUser | null
-  token: string | null
-  isAuthenticated: boolean
-  login: (data: LoginResponseData, persist: AuthPersistence) => void
-  logout: () => void
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+import { AuthContext, type AuthContextValue } from './AuthContextDefinition'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<StoredAuthState | null>(() => getStoredAuth())
@@ -71,12 +61,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
 }

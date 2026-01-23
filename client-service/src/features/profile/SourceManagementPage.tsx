@@ -54,8 +54,9 @@ export function SourceManagementPage() {
             : '소스를 불러오지 못했습니다.'
         );
       } finally {
-        if (cancelled) return;
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -222,7 +223,7 @@ function mapSourceToCard(source: CreatedSource): ManagedSource {
 function safeHostname(url: string) {
   try {
     return new URL(url).hostname.replace('www.', '');
-  } catch (error) {
+  } catch {
     return url;
   }
 }

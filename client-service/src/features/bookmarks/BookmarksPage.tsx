@@ -242,6 +242,7 @@ export function BookmarksPage() {
         </section>
 
         <FolderSelectSheet
+          key={isFolderSheetOpen ? 'open' : 'closed'}
           isOpen={isFolderSheetOpen}
           onClose={() => setIsFolderSheetOpen(false)}
           onSelectFolder={handleFolderSelect}

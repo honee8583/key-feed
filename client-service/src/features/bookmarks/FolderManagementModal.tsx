@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 
+import { BookmarkFolderIcon } from './BookmarkFolderIcon'
 import {
-  BookmarkFolderIcon,
   COLORS,
   ICONS,
   ICON_LABELS,
   type ColorType,
   type IconType,
-} from './BookmarkFolderIcon'
+} from './constants'
 
 type FolderManagementModalProps = {
   isOpen: boolean

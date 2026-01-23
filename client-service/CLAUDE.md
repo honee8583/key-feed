@@ -87,15 +87,10 @@ src/
 - **임포트:** 배럴 파일을 통한 기능 상대 경로
 - **CSS:** 컴포넌트와 함께 위치 (예: `LoginPage.tsx` 옆에 `LoginPage.css`)
 - **커밋:** Conventional Commits 형식 (`feat:`, `fix:`, `refactor:`)
+  - 커밋 메시지는 **한국어**로 작성 (예: `feat: 로그인 기능 추가`)
+  - 제목은 **명령조**로 작성 (예: `fix: 버그 수정` ✓, `fix: 버그를 수정했습니다` ✗)
 
 ## 알려진 이슈 및 기술 부채
-
-### ESLint 에러 (총 5개)
-1. `src/features/auth/AuthContext.tsx:76` - Fast refresh 경고 (`useAuth` 훅 추출 필요)
-2. `src/features/notifications/NotificationPage.tsx:22` - 사용하지 않는 `nextCursorId` 변수
-3. `src/features/profile/SourceManagementPage.tsx:34` - `finally` 블록에서의 안전하지 않은 `return`
-4. `src/features/profile/SourceManagementPage.tsx:144` - 사용하지 않는 `error` 변수
-5. `src/services/apiClient.ts:195` - 정규식에서 불필요한 이스케이프 `\}`
 
 ### 누락된 인프라
 - 테스트 스위트 미구현 (Vitest + React Testing Library 고려)

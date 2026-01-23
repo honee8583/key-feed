@@ -123,7 +123,7 @@ export function useFeed() {
             await bookmarkApi.deleteBookmark(bookmarkId)
           }
         }
-      } catch (error) {
+      } catch {
         // Revert on error
         setArticles((prev) =>
           prev.map((article) =>

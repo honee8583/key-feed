@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { bookmarkApi, type BookmarkFolderDto } from '../../services/bookmarkApi'
-import { BookmarkFolderIcon, type ColorType, type IconType } from './BookmarkFolderIcon'
+import { BookmarkFolderIcon } from './BookmarkFolderIcon'
+import { type ColorType, type IconType } from './constants'
 import { FolderManagementModal } from './FolderManagementModal'
 
 type FolderSelectSheetProps = {
@@ -33,11 +34,7 @@ export function FolderSelectSheet({
     onFolderCreated?.()
   }
 
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedId(currentFolderId ?? 0)
-    }
-  }, [isOpen, currentFolderId])
+
 
   const handleClose = () => {
     setIsClosing(true)
