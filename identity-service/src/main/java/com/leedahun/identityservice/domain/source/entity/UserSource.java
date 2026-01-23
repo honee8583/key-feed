@@ -38,4 +38,12 @@ public class UserSource extends BaseTimeEntity {
     @Column(name = "user_defined_name", nullable = false, length = 100)
     private String userDefinedName;
 
+    @Column(name = "receive_feed", nullable = false)
+    @Builder.Default
+    private Boolean receiveFeed = true;
+
+    public void toggleReceiveFeed() {
+        this.receiveFeed = !this.receiveFeed;
+    }
+
 }

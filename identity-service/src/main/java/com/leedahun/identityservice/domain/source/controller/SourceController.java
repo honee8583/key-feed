@@ -52,4 +52,12 @@ public class SourceController {
                 .body(new HttpResponse(HttpStatus.OK, SuccessMessage.DELETE_SUCCESS.getMessage(), null));
     }
 
+    @PatchMapping("/my/{userSourceId}/receive-feed")
+    public ResponseEntity<?> toggleReceiveFeed(@AuthenticationPrincipal Long userId,
+                                               @PathVariable Long userSourceId) {
+        SourceResponseDto source = sourceService.toggleReceiveFeed(userId, userSourceId);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.UPDATE_SUCCESS.getMessage(), source));
+    }
+
 }

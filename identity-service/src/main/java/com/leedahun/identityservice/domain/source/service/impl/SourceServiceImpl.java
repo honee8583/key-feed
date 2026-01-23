@@ -116,6 +116,7 @@ public class SourceServiceImpl implements SourceService {
                 .user(user)
                 .source(source)
                 .userDefinedName(request.getName())
+                .receiveFeed(request.getReceiveFeed() != null ? request.getReceiveFeed() : true)
                 .build();
         userSourceRepository.save(userSource);
 
@@ -142,6 +143,14 @@ public class SourceServiceImpl implements SourceService {
         return userSources.stream()
                 .map(SourceResponseDto::from)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public SourceResponseDto toggleReceiveFeed(Long userId, Long userSourceId) {
+        UserSource userSource = userSourceRepository.findByIdAndUserId(userSourceId, userId)
+                .orElseThrow(() -> new EntityNotFoundException("UserSource", userSourceId));
+        userSource.toggleReceiveFeed();
+        return SourceResponseDto.from(userSource);
     }
 
     private String discoverRssUrl(String inputUrl) {

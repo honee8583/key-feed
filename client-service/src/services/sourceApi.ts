@@ -11,6 +11,7 @@ export type CreatedSource = {
   userDefinedName: string
   url: string
   lastCrawledAt?: string
+  receiveFeed: boolean
 }
 
 type CreateSourceResponse = {
@@ -55,5 +56,14 @@ export const sourceApi = {
     await apiClient.request(`/sources/my/${userSourceId}`, {
       method: 'DELETE',
     })
+  },
+  async toggleReceiveFeed(userSourceId: number) {
+    const response = await apiClient.request<CreateSourceResponse>(
+      `/sources/my/${userSourceId}/receive-feed`,
+      {
+        method: 'PATCH',
+      }
+    )
+    return response.data
   },
 }
