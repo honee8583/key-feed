@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { bookmarkApi, type BookmarkFolderDto } from '../../services/bookmarkApi'
 import { BookmarkFolderIcon } from './BookmarkFolderIcon'
 import { type ColorType, type IconType } from './constants'
@@ -28,35 +28,37 @@ export function FolderSelectSheet({
   const [isClosing, setIsClosing] = useState(false)
   const [selectedId, setSelectedId] = useState<number>(currentFolderId ?? 0)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleCreateNewFolder = async (name: string, icon: IconType, color: ColorType) => {
     await bookmarkApi.createFolder({ name, icon, color })
     onFolderCreated?.()
   }
 
-
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true)
-    setTimeout(() => {
+    closeTimerRef.current = setTimeout(() => {
       setIsClosing(false)
       onClose()
     }, 200)
-  }
+  }, [onClose])
 
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
     setIsClosing(true)
-    setTimeout(() => {
+    closeTimerRef.current = setTimeout(() => {
       setIsClosing(false)
       onSelectFolder(selectedId)
     }, 200)
-  }
+  }, [onSelectFolder, selectedId])
 
   useEffect(() => {
     if (!isOpen) return
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = ''
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current)
+      }
     }
   }, [isOpen])
 

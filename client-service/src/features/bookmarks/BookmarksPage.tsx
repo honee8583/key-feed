@@ -12,7 +12,7 @@ export function BookmarksPage() {
   const [folders, setFolders] = useState<BookmarkFolderDto[]>([])
   const [activeFolderId, setActiveFolderId] = useState<number | null>(null)
   const [isLoadingFolders, setIsLoadingFolders] = useState(false)
-  const [, setFolderError] = useState<string | null>(null)
+  const [folderError, setFolderError] = useState<string | null>(null)
 
   // Bookmarks state
   const [bookmarks, setBookmarks] = useState<BookmarkItemDto[]>([])
@@ -202,6 +202,12 @@ export function BookmarksPage() {
         </div>
 
         <section className="flex flex-col gap-[18px] px-5 pb-[140px]" aria-label="저장된 콘텐츠 목록">
+          {folderError ? (
+            <div className="p-[22px] rounded-[20px] border border-[rgba(239,68,68,0.5)] bg-[rgba(239,68,68,0.05)] text-[#fca5a5] text-center text-[14px]">
+              {folderError}
+            </div>
+          ) : null}
+
           {bookmarkError ? (
             <div className="p-[22px] rounded-[20px] border border-[rgba(239,68,68,0.5)] bg-[rgba(239,68,68,0.05)] text-[#fca5a5] text-center text-[14px]">
               {bookmarkError}

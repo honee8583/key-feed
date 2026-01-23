@@ -82,6 +82,8 @@ src/
 ## 코드 스타일 가이드라인
 
 - **들여쓰기:** 2칸 스페이스
+- **세미콜론:** 사용하지 않음
+- **따옴표:** 싱글 쿼트(`'`) 사용
 - **컴포넌트:** PascalCase 함수형 컴포넌트 + 훅 사용
 - **훅:** `use` 접두사 사용
 - **임포트:** 배럴 파일을 통한 기능 상대 경로
@@ -89,6 +91,31 @@ src/
 - **커밋:** Conventional Commits 형식 (`feat:`, `fix:`, `refactor:`)
   - 커밋 메시지는 **한국어**로 작성 (예: `feat: 로그인 기능 추가`)
   - 제목은 **명령조**로 작성 (예: `fix: 버그 수정` ✓, `fix: 버그를 수정했습니다` ✗)
+
+### 공통 유틸리티 재사용
+
+중복 코드 방지를 위해 기존 유틸리티를 재사용하세요:
+- **날짜 포맷팅:** `src/utils/dateUtils.ts` (`formatRelativePublishedAt`, `formatAbsoluteDate`)
+- **상수:** `src/constants/config.ts` (`FEED_PAGE_SIZE`, `NEW_CONTENT_WINDOW_MS`)
+
+### 타이머/이벤트 리스너 cleanup 패턴
+
+`setTimeout`, `setInterval`, 이벤트 리스너 사용 시 반드시 cleanup 처리:
+
+```tsx
+const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+useEffect(() => {
+  return () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+    }
+  }
+}, [])
+
+// 사용
+timerRef.current = setTimeout(() => { ... }, 1000)
+```
 
 ## 알려진 이슈 및 기술 부채
 
@@ -115,3 +142,27 @@ PR용 메인 브랜치: `dev`
 ## 디자인 참조
 
 로그인/회원가입 화면은 [KeyFeed Figma 디자인](https://www.figma.com/design/6m9N0rXf0tr5vWtAbIeyCM/KeyFeed?node-id=1-2)을 구현합니다. 디자인 스펙이 변경되면 `src/features/auth/LoginPage.css`를 업데이트하세요.
+
+## Figma MCP 연결 확인
+
+- Figma URL을 전달받았을 때 **반드시 MCP 서버 연결 상태를 먼저 확인**
+- **MCP 서버가 연결되지 않았다면**: "피그마 MCP 서버에 연결되어 있지 않습니다. 먼저 MCP 설정을 확인하고 연결해주세요."라고 응답하고 작업 중단
+- 연결 확인 방법: MCP Servers 목록에서 Figma 항목이 `connected` 또는 `running` 상태인지 체크
+
+## Figma 디자인 처리 규칙
+
+- Figma MCP 서버의 URL(예: `https://mcp.figma.com/...`)을 **절대 아이콘/이미지 소스로 사용하지 말기**
+- 디자인에서 아이콘 추출 시:
+  - 실제 아이콘 SVG 파일을 프로젝트 `public/icons/` 또는 `src/assets/icons/`에 저장
+  - import 경로: `import IconName from '@/assets/icons/icon-name.svg'`
+  - CSS: `background-image: url('/icons/icon-name.svg')` 또는 `<img src="/icons/icon-name.svg" />`
+
+## 빌드 및 검증 워크플로우
+
+모든 작업 완료 후 반드시 빌드를 수행합니다:
+
+1. `npm run lint` 실행 (필수)
+2. `npm run build` 실행
+3. 빌드 에러 발생 시: 에러 로그 표시 → 수정 → 재빌드
+4. 빌드 성공 후: `npm run preview`로 로컬 확인
+5. 성공 메시지: "빌드 성공! preview 서버: http://localhost:4173 확인하세요."

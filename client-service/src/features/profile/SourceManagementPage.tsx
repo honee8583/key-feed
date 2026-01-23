@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDebounce } from '../../hooks/useDebounce';
-import { ToggleSwitch } from '../../components/ToggleSwitch';
-import { sourceApi, type CreatedSource } from '../../services/sourceApi';
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useDebounce } from '../../hooks/useDebounce'
+import { ToggleSwitch } from '../../components/ToggleSwitch'
+import { sourceApi, type CreatedSource } from '../../services/sourceApi'
 import {
   ArrowLeftIcon,
   ExternalLinkIcon,
   PlusIcon,
   RefreshCwIcon,
   SearchIcon,
-
   TrendingUpIcon,
-} from '../../components/common/Icons';
-import { AddSourceSheet } from '../home/components/AddSourceSheet';
-import trashIcon from '../../assets/profile/trash_icon.svg';
+} from '../../components/common/Icons'
+import { AddSourceSheet } from '../home/components/AddSourceSheet'
+import { formatRelativePublishedAt } from '../../utils/dateUtils'
+import trashIcon from '../../assets/profile/trash_icon.svg'
 
 type ManagedSource = CreatedSource & {
   status: 'active' | 'paused';
@@ -80,12 +80,22 @@ export function SourceManagementPage() {
     );
   };
 
-  const handleDelete = (userSourceId: number) => {
-    if (window.confirm('정말 이 소스를 삭제하시겠습니까?')) {
-      // TODO: API Call
-      setItems(prev => prev.filter(item => item.userSourceId !== userSourceId));
+  const handleDelete = async (userSourceId: number) => {
+    if (!window.confirm('정말 이 소스를 삭제하시겠습니까?')) {
+      return
     }
-  };
+
+    try {
+      await sourceApi.delete(userSourceId)
+      setItems(prev => prev.filter(item => item.userSourceId !== userSourceId))
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : '소스 삭제에 실패했습니다.'
+      )
+    }
+  }
 
   return (
     <div className='min-h-screen bg-[#050b16] px-5 py-4 text-white font-["Pretendard"] pb-[100px]'>
@@ -162,7 +172,7 @@ export function SourceManagementPage() {
                 <div className='flex items-center gap-1.5 text-[#64748b]'>
                   <RefreshCwIcon className="w-3.5 h-3.5" />
                   <span className='text-[12px]'>
-                    {formatTimeAgo(source.lastCrawledAt)}
+                    {source.lastCrawledAt ? formatRelativePublishedAt(source.lastCrawledAt) : '아직 수집되지 않음'}
                   </span>
                 </div>
                 
@@ -222,29 +232,8 @@ function mapSourceToCard(source: CreatedSource): ManagedSource {
 
 function safeHostname(url: string) {
   try {
-    return new URL(url).hostname.replace('www.', '');
+    return new URL(url).hostname.replace('www.', '')
   } catch {
-    return url;
+    return url
   }
-}
-
-function formatTimeAgo(dateString?: string): string {
-  if (!dateString) return '아직 수집되지 않음';
-
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (diffInSeconds < 60) return '방금 전';
-  
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return `${diffInMinutes}분 전`;
-  
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours}시간 전`;
-  
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return `${diffInDays}일 전`;
-  
-  return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
 }

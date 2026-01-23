@@ -51,4 +51,9 @@ export const sourceApi = {
 
     return response.data
   },
+  async delete(userSourceId: number) {
+    await apiClient.request(`/sources/my/${userSourceId}`, {
+      method: 'DELETE',
+    })
+  },
 }

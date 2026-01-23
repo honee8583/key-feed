@@ -9,7 +9,6 @@ export function useNotifications() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [, setNextCursorId] = useState<string | null>(null)
   const [hasNext, setHasNext] = useState(false)
   const [isFetchingNext, setIsFetchingNext] = useState(false)
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false)
@@ -34,7 +33,6 @@ export function useNotifications() {
         const response = await notificationApi.list({ size: 20 })
         console.info('[notification] history nextCursorId', response.nextCursorId)
         setNotifications(response.items.map((dto) => mapToNotificationItem(dto, { isLive: false })))
-        setNextCursorId(response.nextCursorId)
         setHasNext(response.hasNext)
         nextCursorRef.current = response.nextCursorId
         hasNextRef.current = response.hasNext
@@ -77,7 +75,6 @@ export function useNotifications() {
         ...prev,
         ...response.items.map((dto) => mapToNotificationItem(dto, { isLive: false })),
       ])
-      setNextCursorId(response.nextCursorId)
       setHasNext(response.hasNext)
       nextCursorRef.current = response.nextCursorId
       hasNextRef.current = response.hasNext
