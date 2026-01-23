@@ -20,4 +20,7 @@ public class SourceRequestDto {
     @Pattern(regexp = "^(http|https)://.*", message = "URL 형식이 올바르지 않습니다.")
     private String url;
 
+    @Builder.Default
+    private Boolean receiveFeed = true;
+
 }

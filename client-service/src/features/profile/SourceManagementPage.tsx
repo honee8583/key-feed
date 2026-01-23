@@ -16,69 +16,78 @@ import { formatRelativePublishedAt } from '../../utils/dateUtils'
 import trashIcon from '../../assets/profile/trash_icon.svg'
 
 type ManagedSource = CreatedSource & {
-  status: 'active' | 'paused';
-  tags: string[];
-};
+  tags: string[]
+}
 
 export function SourceManagementPage() {
-  const navigate = useNavigate();
-  const [items, setItems] = useState<ManagedSource[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const debouncedKeyword = useDebounce(searchKeyword, 500);
-  const [isAddSourceOpen, setIsAddSourceOpen] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const navigate = useNavigate()
+  const [items, setItems] = useState<ManagedSource[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const debouncedKeyword = useDebounce(searchKeyword, 500)
+  const [isAddSourceOpen, setIsAddSourceOpen] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [togglingId, setTogglingId] = useState<number | null>(null)
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
 
     const fetchSources = async () => {
-      setIsLoading(true);
-      setError(null);
+      setIsLoading(true)
+      setError(null)
       try {
-        let response;
+        let response
         if (debouncedKeyword) {
-          response = await sourceApi.searchMy(debouncedKeyword);
+          response = await sourceApi.searchMy(debouncedKeyword)
         } else {
-          response = await sourceApi.listMy();
+          response = await sourceApi.listMy()
         }
-        
-        if (cancelled) return;
-        setItems((response || []).map(mapSourceToCard));
+
+        if (cancelled) return
+        setItems((response || []).map(mapSourceToCard))
       } catch (fetchError) {
-        if (cancelled) return;
+        if (cancelled) return
         setError(
           fetchError instanceof Error
             ? fetchError.message
             : '소스를 불러오지 못했습니다.'
-        );
+        )
       } finally {
         if (!cancelled) {
-          setIsLoading(false);
+          setIsLoading(false)
         }
       }
-    };
+    }
 
-    void fetchSources();
+    void fetchSources()
 
     return () => {
-      cancelled = true;
-    };
-  }, [debouncedKeyword, refreshTrigger]);
+      cancelled = true
+    }
+  }, [debouncedKeyword, refreshTrigger])
 
-  const handleToggle = (userSourceId: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.userSourceId === userSourceId
-          ? {
-              ...item,
-              status: item.status === 'active' ? 'paused' : 'active',
-            }
-          : item
+  const handleToggle = async (userSourceId: number) => {
+    setTogglingId(userSourceId)
+    try {
+      const updated = await sourceApi.toggleReceiveFeed(userSourceId)
+      setItems((prev) =>
+        prev.map((item) =>
+          item.userSourceId === userSourceId
+            ? { ...item, receiveFeed: updated.receiveFeed }
+            : item
+        )
       )
-    );
-  };
+    } catch (toggleError) {
+      setError(
+        toggleError instanceof Error
+          ? toggleError.message
+          : '피드 수신 설정 변경에 실패했습니다.'
+      )
+    } finally {
+      setTogglingId(null)
+    }
+  }
 
   const handleDelete = async (userSourceId: number) => {
     if (!window.confirm('정말 이 소스를 삭제하시겠습니까?')) {
@@ -101,7 +110,7 @@ export function SourceManagementPage() {
     <div className='min-h-screen bg-[#050b16] px-5 py-4 text-white font-["Pretendard"] pb-[100px]'>
       {/* Header */}
       <header className='flex items-center justify-between mb-6'>
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className='text-white p-1'
           aria-label="뒤로 가기"
@@ -145,7 +154,7 @@ export function SourceManagementPage() {
           <p className='text-center text-[#64748b] py-8'>연결된 소스가 없습니다.</p>
         ) : (
           items.map((source) => (
-            <div 
+            <div
               key={source.userSourceId}
               className='bg-[#0f172a] rounded-[20px] p-5 border border-[#1e293b]'
             >
@@ -153,14 +162,13 @@ export function SourceManagementPage() {
                 <h3 className='text-[16px] font-bold text-white max-w-[70%] truncate'>
                   {source.userDefinedName}
                 </h3>
-
               </div>
 
               <div className='flex items-center gap-1.5 mb-4'>
                 <ExternalLinkIcon className="w-3.5 h-3.5 text-[#64748b]" />
-                <a 
-                  href={source.url} 
-                  target="_blank" 
+                <a
+                  href={source.url}
+                  target="_blank"
                   rel="noreferrer"
                   className='text-[13px] text-[#64748b] truncate hover:text-[#94a3b8] transition-colors'
                 >
@@ -175,18 +183,19 @@ export function SourceManagementPage() {
                     {source.lastCrawledAt ? formatRelativePublishedAt(source.lastCrawledAt) : '아직 수집되지 않음'}
                   </span>
                 </div>
-                
+
                 <div className='flex items-center gap-3'>
-                  <button 
+                  <button
                     onClick={() => handleDelete(source.userSourceId)}
                     className='text-[#64748b] hover:text-red-400 transition-colors p-1'
                   >
                     <img src={trashIcon} alt="삭제" className="w-5 h-5 opacity-70 hover:opacity-100" />
                   </button>
-                <ToggleSwitch
-                    active={source.status === 'active'}
-                    ariaLabel={source.status === 'active' ? '활성화됨' : '비활성화됨'}
+                  <ToggleSwitch
+                    active={source.receiveFeed}
+                    ariaLabel={source.receiveFeed ? '피드 수신 중' : '피드 수신 중지'}
                     onToggle={() => handleToggle(source.userSourceId)}
+                    disabled={togglingId === source.userSourceId}
                   />
                 </div>
               </div>
@@ -204,30 +213,28 @@ export function SourceManagementPage() {
           <div>
             <h4 className='text-[14px] font-bold text-white mb-1'>소스 관리 팁</h4>
             <p className='text-[12px] text-[#94a3b8] leading-relaxed'>
-              비활성화된 소스는 새 콘텐츠를 가져오지 않습니다. 
+              비활성화된 소스는 새 콘텐츠를 가져오지 않습니다.
               필요 없는 소스는 삭제하여 피드를 깔끔하게 유지하세요.
             </p>
           </div>
         </div>
       </div>
 
-      
       <AddSourceSheet
         isOpen={isAddSourceOpen}
         onClose={() => setIsAddSourceOpen(false)}
         onSubmit={() => setRefreshTrigger((prev) => prev + 1)}
       />
     </div>
-  );
+  )
 }
 
 function mapSourceToCard(source: CreatedSource): ManagedSource {
-  const hostname = safeHostname(source.url);
+  const hostname = safeHostname(source.url)
   return {
     ...source,
-    status: 'active',
     tags: [hostname],
-  };
+  }
 }
 
 function safeHostname(url: string) {

@@ -1,6 +1,7 @@
 package com.leedahun.identityservice.domain.source.service.impl;
 
 import com.leedahun.identityservice.common.error.exception.EntityAlreadyExistsException;
+import com.leedahun.identityservice.common.error.exception.EntityNotFoundException;
 import com.leedahun.identityservice.common.message.ErrorMessage;
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
@@ -74,6 +75,7 @@ class SourceServiceImplTest {
                 .user(User.builder().id(USER_ID).build())
                 .source(Source.builder().url(RSS_URL).build())
                 .userDefinedName(SOURCE_NAME)
+                .receiveFeed(true)
                 .build();
 
         when(userSourceRepository.findByUserId(USER_ID)).thenReturn(List.of(userSource));
@@ -84,6 +86,7 @@ class SourceServiceImplTest {
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getUserDefinedName()).isEqualTo(SOURCE_NAME);
+        assertThat(result.get(0).getReceiveFeed()).isTrue();
     }
 
     @Test
@@ -245,6 +248,7 @@ class SourceServiceImplTest {
                 .user(User.builder().id(USER_ID).build())
                 .source(Source.builder().url(RSS_URL).build())
                 .userDefinedName(SOURCE_NAME)
+                .receiveFeed(true)
                 .build();
 
         when(userSourceRepository.searchByUserIdAndKeyword(USER_ID, keyword))
@@ -256,6 +260,7 @@ class SourceServiceImplTest {
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getUserDefinedName()).isEqualTo(SOURCE_NAME);
+        assertThat(result.get(0).getReceiveFeed()).isTrue();
         verify(userSourceRepository).searchByUserIdAndKeyword(USER_ID, keyword);
     }
 
@@ -274,6 +279,43 @@ class SourceServiceImplTest {
         verify(userSourceRepository, never()).searchByUserIdAndKeyword(anyLong(), anyString());
     }
 
+    @Test
+    @DisplayName("피드 수신 여부 토글 성공")
+    void toggleReceiveFeed_Success() {
+        // given
+        Long userSourceId = 10L;
+        UserSource userSource = UserSource.builder()
+                .id(userSourceId)
+                .user(User.builder().id(USER_ID).build())
+                .source(Source.builder().id(100L).url(RSS_URL).build())
+                .userDefinedName(SOURCE_NAME)
+                .receiveFeed(true)
+                .build();
+
+        when(userSourceRepository.findByIdAndUserId(userSourceId, USER_ID))
+                .thenReturn(Optional.of(userSource));
+
+        // when
+        SourceResponseDto result = sourceService.toggleReceiveFeed(USER_ID, userSourceId);
+
+        // then
+        assertThat(result.getReceiveFeed()).isFalse();
+        assertThat(userSource.getReceiveFeed()).isFalse();
+    }
+
+    @Test
+    @DisplayName("피드 수신 여부 토글 실패 - 소스를 찾을 수 없음")
+    void toggleReceiveFeed_Fail_NotFound() {
+        // given
+        Long userSourceId = 999L;
+        when(userSourceRepository.findByIdAndUserId(userSourceId, USER_ID))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> sourceService.toggleReceiveFeed(USER_ID, userSourceId))
+                .isInstanceOf(EntityNotFoundException.class);
+    }
+
     private void mockJsoupConnection(MockedStatic<Jsoup> jsoupMock, String inputUrl, String detectedRssUrl) {
         try {
             Connection connection = mock(Connection.class);
@@ -283,16 +325,14 @@ class SourceServiceImplTest {
             // HTML 문자열 생성
             String html = "<html><head><link rel='alternate' type='application/rss+xml' href='" + detectedRssUrl + "'></head><body></body></html>";
 
-            // [핵심 수정] Jsoup.parse()는 Mocking 하지 말고 '진짜 메소드'를 호출하도록 설정
             jsoupMock.when(() -> Jsoup.parse(anyString())).thenCallRealMethod();
 
-            // 이제 Jsoup.parse(html)이 null이 아닌 진짜 Document 객체를 반환함
             Document document = Jsoup.parse(html);
             document.setBaseUri(inputUrl);
 
             when(connection.get()).thenReturn(document);
 
-            // Jsoup.connect()는 가짜 Connection을 반환하도록 설정 (기존 로직)
+            // Jsoup.connect()는 가짜 Connection을 반환하도록 설정
             jsoupMock.when(() -> Jsoup.connect(inputUrl)).thenReturn(connection);
 
         } catch (IOException e) {

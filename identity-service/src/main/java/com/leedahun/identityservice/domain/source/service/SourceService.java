@@ -14,4 +14,6 @@ public interface SourceService {
 
     List<SourceResponseDto> searchMySources(Long userId, String keyword);
 
+    SourceResponseDto toggleReceiveFeed(Long userId, Long userSourceId);
+
 }
