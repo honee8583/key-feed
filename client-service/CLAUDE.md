@@ -34,7 +34,8 @@ src/
 │   ├── home/             # 무한 스크롤이 포함된 메인 피드 표시
 │   ├── bookmarks/        # 북마크 관리
 │   ├── notifications/    # SSE를 통한 실시간 알림
-│   └── profile/          # 사용자 프로필 및 콘텐츠 소스 관리
+│   ├── profile/          # 사용자 프로필 및 콘텐츠 소스 관리
+│   └── explore/          # 콘텐츠 탐색
 ├── services/             # API 클라이언트 및 스토리지 유틸리티
 │   ├── apiClient.ts      # 핵심 HTTP 클라이언트 (인증, 갱신, 큰 정수 처리)
 │   ├── authStorage.ts    # 탭 간 동기화가 포함된 토큰 저장
@@ -43,9 +44,20 @@ src/
 │   ├── bookmarkApi.ts    # 북마크 엔드포인트
 │   ├── notificationApi.ts # 알림 (REST + SSE)
 │   └── sourceApi.ts      # 콘텐츠 소스 관리
+├── hooks/                # 커스텀 훅
+│   ├── useFeed.ts        # 피드 데이터 페칭 및 상태 관리
+│   ├── useNotifications.ts # 알림 데이터 및 SSE 구독
+│   └── useDebounce.ts    # 디바운스 유틸리티 훅
+├── utils/                # 유틸리티 함수
+│   └── dateUtils.ts      # 날짜 포맷팅 (formatRelativePublishedAt 등)
+├── constants/            # 상수 정의
+│   └── config.ts         # 앱 설정 (FEED_PAGE_SIZE 등)
+├── assets/               # 정적 에셋
+│   ├── icons/            # 아이콘 이미지
+│   └── images/           # 일반 이미지
 ├── components/           # 공유 UI 컴포넌트
-├── routes/              # 라우팅 설정
-└── types/               # TypeScript 타입 정의
+├── routes/               # 라우팅 설정
+└── types/                # TypeScript 타입 정의
 ```
 
 각 기능은 컴포넌트, 스타일, 배럴 익스포트(`index.ts`)를 포함한 독립적인 모듈입니다.
