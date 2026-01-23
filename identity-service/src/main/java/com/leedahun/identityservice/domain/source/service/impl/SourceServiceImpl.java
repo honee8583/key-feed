@@ -60,9 +60,14 @@ public class SourceServiceImpl implements SourceService {
     @Transactional(readOnly = true)
     public List<SourceResponseDto> getSourcesByUser(Long userId) {
         List<UserSource> userSources = userSourceRepository.findByUserId(userId);
-        return userSources.stream()
-                .map(SourceResponseDto::from)
-                .collect(Collectors.toList());
+        return convertToResponseDtos(userSources);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SourceResponseDto> getActiveSourcesByUser(Long userId) {
+        List<UserSource> userSources = userSourceRepository.findByUserIdAndReceiveFeedTrue(userId);
+        return convertToResponseDtos(userSources);
     }
 
     @Override
@@ -140,9 +145,7 @@ public class SourceServiceImpl implements SourceService {
         }
 
         List<UserSource> userSources = userSourceRepository.searchByUserIdAndKeyword(userId, keyword);
-        return userSources.stream()
-                .map(SourceResponseDto::from)
-                .collect(Collectors.toList());
+        return convertToResponseDtos(userSources);
     }
 
     @Override
@@ -186,5 +189,11 @@ public class SourceServiceImpl implements SourceService {
             log.warn("RSS URL 자동 탐색 실패: {}. 원본 입력을 사용합니다. 오류: {}", inputUrl, e.toString());
             return inputUrl;
         }
+    }
+
+    private List<SourceResponseDto> convertToResponseDtos(List<UserSource> userSources) {
+        return userSources.stream()
+                .map(SourceResponseDto::from)
+                .collect(Collectors.toList());
     }
 }

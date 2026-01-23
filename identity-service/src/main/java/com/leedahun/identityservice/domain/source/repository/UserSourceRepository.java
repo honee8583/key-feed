@@ -11,6 +11,8 @@ public interface UserSourceRepository extends JpaRepository<UserSource, Long> {
 
     List<UserSource> findByUserId(Long userId);
 
+    List<UserSource> findByUserIdAndReceiveFeedTrue(Long userId);
+
     Optional<UserSource> findByIdAndUserId(Long userSourceId, Long userId);
 
     boolean existsByUserIdAndSourceId(Long userId, Long sourceId);
