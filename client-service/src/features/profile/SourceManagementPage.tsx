@@ -28,6 +28,7 @@ export function SourceManagementPage() {
   const debouncedKeyword = useDebounce(searchKeyword, 500)
   const [isAddSourceOpen, setIsAddSourceOpen] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [togglingId, setTogglingId] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -67,6 +68,7 @@ export function SourceManagementPage() {
   }, [debouncedKeyword, refreshTrigger])
 
   const handleToggle = async (userSourceId: number) => {
+    setTogglingId(userSourceId)
     try {
       const updated = await sourceApi.toggleReceiveFeed(userSourceId)
       setItems((prev) =>
@@ -82,6 +84,8 @@ export function SourceManagementPage() {
           ? toggleError.message
           : '피드 수신 설정 변경에 실패했습니다.'
       )
+    } finally {
+      setTogglingId(null)
     }
   }
 
@@ -191,6 +195,7 @@ export function SourceManagementPage() {
                     active={source.receiveFeed}
                     ariaLabel={source.receiveFeed ? '피드 수신 중' : '피드 수신 중지'}
                     onToggle={() => handleToggle(source.userSourceId)}
+                    disabled={togglingId === source.userSourceId}
                   />
                 </div>
               </div>
