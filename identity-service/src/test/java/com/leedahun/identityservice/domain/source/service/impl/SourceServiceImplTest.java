@@ -90,6 +90,30 @@ class SourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("피드 수신 활성화된 소스 목록 조회 성공")
+    void getActiveSourcesByUser_Success() {
+        // given
+        UserSource activeSource = UserSource.builder()
+                .id(10L)
+                .user(User.builder().id(USER_ID).build())
+                .source(Source.builder().url(RSS_URL).build())
+                .userDefinedName(SOURCE_NAME)
+                .receiveFeed(true)
+                .build();
+
+        when(userSourceRepository.findByUserIdAndReceiveFeedTrue(USER_ID)).thenReturn(List.of(activeSource));
+
+        // when
+        List<SourceResponseDto> result = sourceService.getActiveSourcesByUser(USER_ID);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUserDefinedName()).isEqualTo(SOURCE_NAME);
+        assertThat(result.get(0).getReceiveFeed()).isTrue();
+        verify(userSourceRepository).findByUserIdAndReceiveFeedTrue(USER_ID);
+    }
+
+    @Test
     @DisplayName("새 소스 등록 성공 - 모든 검증 통과")
     void addSource_Success() {
         // Jsoup Mocking Context

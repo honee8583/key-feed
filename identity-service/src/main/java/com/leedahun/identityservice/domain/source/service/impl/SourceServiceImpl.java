@@ -66,6 +66,15 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<SourceResponseDto> getActiveSourcesByUser(Long userId) {
+        List<UserSource> userSources = userSourceRepository.findByUserIdAndReceiveFeedTrue(userId);
+        return userSources.stream()
+                .map(SourceResponseDto::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public SourceResponseDto addSource(Long userId, SourceRequestDto request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));

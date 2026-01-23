@@ -159,6 +159,59 @@ class UserSourceRepositoryTest {
     }
 
     @Test
+    @DisplayName("사용자 ID로 피드 수신 활성화된 소스만 조회한다")
+    void findByUserIdAndReceiveFeedTrue_Success() {
+        // given
+        User user = User.builder()
+                .email("user@test.com")
+                .password("password")
+                .username("testUser")
+                .build();
+        userRepository.save(user);
+
+        Source source1 = Source.builder().url("https://active1.com/rss").build();
+        Source source2 = Source.builder().url("https://inactive.com/rss").build();
+        Source source3 = Source.builder().url("https://active2.com/rss").build();
+        sourceRepository.save(source1);
+        sourceRepository.save(source2);
+        sourceRepository.save(source3);
+
+        UserSource activeSource1 = UserSource.builder()
+                .user(user)
+                .source(source1)
+                .userDefinedName("활성화된 소스1")
+                .receiveFeed(true)
+                .build();
+
+        UserSource inactiveSource = UserSource.builder()
+                .user(user)
+                .source(source2)
+                .userDefinedName("비활성화된 소스")
+                .receiveFeed(false)
+                .build();
+
+        UserSource activeSource2 = UserSource.builder()
+                .user(user)
+                .source(source3)
+                .userDefinedName("활성화된 소스2")
+                .receiveFeed(true)
+                .build();
+
+        userSourceRepository.save(activeSource1);
+        userSourceRepository.save(inactiveSource);
+        userSourceRepository.save(activeSource2);
+
+        // when
+        List<UserSource> result = userSourceRepository.findByUserIdAndReceiveFeedTrue(user.getId());
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting("userDefinedName")
+                .containsExactlyInAnyOrder("활성화된 소스1", "활성화된 소스2");
+        assertThat(result).allMatch(UserSource::getReceiveFeed);
+    }
+
+    @Test
     @DisplayName("키워드로 내 소스 목록을 검색한다 (이름 또는 URL 포함, 대소문자 무시)")
     void searchByUserIdAndKeyword_Success() {
         // given
