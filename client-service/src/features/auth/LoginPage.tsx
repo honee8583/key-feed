@@ -2,7 +2,7 @@ import { useMemo, useState, type CSSProperties, type FormEvent, type ReactNode }
 import { Link, useNavigate } from 'react-router-dom'
 import { authApi } from '../../services/authApi'
 import type { SocialProvider } from '../../services/authApi'
-import { useAuth } from './AuthContext'
+import { useAuth } from './AuthContextDefinition'
 import { AuthInput } from './components/AuthInput'
 import { AuthPasswordInput } from './components/AuthPasswordInput'
 import { ArrowRightIcon, GoogleIcon, MailIcon } from './components/AuthIcons'

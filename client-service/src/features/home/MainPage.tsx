@@ -1,102 +1,39 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth'
 import { HighlightCard, type HighlightCardProps } from './components/HighlightCard'
-import { feedApi, type FeedContent } from '../../services/feedApi'
-import { ApiError } from '../../services/apiClient'
-import { bookmarkApi } from '../../services/bookmarkApi'
 import type { CreatedSource } from '../../services/sourceApi'
 import { AddSourceSheet } from './components/AddSourceSheet'
 import bookmarkIcon from '../../assets/home/bookmark_btn.png'
 import addSourceIcon from '../../assets/home/source_add_btn.png'
-
-
+import { useFeed } from '../../hooks/useFeed'
 
 const figureAssets = {
   bookmark: bookmarkIcon,
 }
 
-type HighlightArticle = HighlightCardProps & { id: string; bookmarkId: number | null }
 type AddSourceResult = { name: string; url: string; type: string; created: CreatedSource }
 
 const highlightCardActionIcons: Pick<HighlightCardProps, 'bookmarkIcon'> = {
   bookmarkIcon: figureAssets.bookmark,
 }
 
-const FEED_PAGE_SIZE = 10
-const DEFAULT_THUMBNAIL = 'https://placehold.co/600x400?text=KeyFeed'
-const ARTICLE_TYPE_ICON = '📰'
-const ARTICLE_TYPE_LABEL = '콘텐츠'
-const NEW_CONTENT_WINDOW_MS = 1000 * 60 * 60 * 24
-
 export function MainPage() {
   const { user } = useAuth()
   const welcomeName = user?.name ?? 'KeyFeed 멤버'
-  const [articles, setArticles] = useState<HighlightArticle[]>([])
-  const [nextCursorId, setNextCursorId] = useState<number | null>(null)
-  const [hasNext, setHasNext] = useState(true)
-  const [isInitialLoading, setIsInitialLoading] = useState(false)
-  const [isFetchingMore, setIsFetchingMore] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    articles,
+    isInitialLoading,
+    isFetchingMore,
+    error,
+    hasNext,
+    loadNextPage,
+    handleRetry,
+    handleBookmarkClick,
+    refresh,
+  } = useFeed()
+  
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null)
   const [isAddSourceOpen, setIsAddSourceOpen] = useState(false)
-
-  const loadFeed = useCallback(async (cursor?: number) => {
-    setError(null)
-    const isPaginationRequest = typeof cursor === 'number'
-
-    if (isPaginationRequest) {
-      setIsFetchingMore(true)
-    } else {
-      setIsInitialLoading(true)
-    }
-
-    try {
-      const response = await feedApi.list({
-        size: FEED_PAGE_SIZE,
-        ...(isPaginationRequest ? { lastId: cursor } : undefined),
-      })
-
-      setArticles((prev) => {
-        const mapped = response.content.map(convertToHighlightArticle)
-        return isPaginationRequest ? [...prev, ...mapped] : mapped
-      })
-
-      setNextCursorId(response.nextCursorId ?? null)
-      setHasNext(Boolean(response.hasNext))
-    } catch (fetchError) {
-      if (fetchError instanceof ApiError && fetchError.status === 503) {
-        setError('서버 점검 중이거나 접속이 지연되고 있어요. 잠시 후 다시 시도해주세요.')
-      } else {
-        const message =
-          fetchError instanceof Error
-            ? fetchError.message
-            : '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'
-        setError(message)
-      }
-    } finally {
-      if (isPaginationRequest) {
-        setIsFetchingMore(false)
-      } else {
-        setIsInitialLoading(false)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    void loadFeed()
-  }, [loadFeed])
-
-  const loadNextPage = useCallback(() => {
-    if (error || !hasNext || isFetchingMore || isInitialLoading) {
-      return
-    }
-
-    if (nextCursorId === null) {
-      return
-    }
-
-    void loadFeed(nextCursorId)
-  }, [error, hasNext, isFetchingMore, isInitialLoading, nextCursorId, loadFeed])
 
   useEffect(() => {
     if (!articles.length) {
@@ -124,20 +61,6 @@ export function MainPage() {
     return () => observer.disconnect()
   }, [articles.length, loadNextPage])
 
-  const handleRetry = useCallback(() => {
-    if (!articles.length) {
-      void loadFeed()
-      return
-    }
-
-    if (nextCursorId !== null) {
-      void loadFeed(nextCursorId)
-      return
-    }
-
-    void loadFeed()
-  }, [articles.length, loadFeed, nextCursorId])
-
   const hasArticles = articles.length > 0
   const showEmptyState = !isInitialLoading && !error && !hasArticles
 
@@ -147,61 +70,9 @@ export function MainPage() {
   const handleAddSourceSubmit = useCallback(
     (result: AddSourceResult) => {
       void result
-      void loadFeed()
+      void refresh()
     },
-    [loadFeed],
-  )
-
-  const handleBookmarkClick = useCallback(
-    async (articleId: string, currentBookmarked: boolean, bookmarkId: number | null) => {
-      // Optimistic update
-      setArticles((prev) =>
-        prev.map((article) => {
-          if (article.id !== articleId) return article
-          // If currently bookmarked, we are removing it -> bookmarkId becomes null
-          // If currently NOT bookmarked, we are adding it -> bookmarkId becomes temp ID (e.g. -1)
-          const nextBookmarkId = currentBookmarked ? null : -1
-          return {
-            ...article,
-            bookmarkId: nextBookmarkId,
-            isBookmarked: !currentBookmarked,
-          }
-        }),
-      )
-
-      try {
-        if (!currentBookmarked) {
-          // Add bookmark
-          const newBookmarkId = await bookmarkApi.createBookmark(articleId)
-          // Update with actual ID from server
-          setArticles((prev) =>
-            prev.map((article) =>
-              article.id === articleId ? { ...article, bookmarkId: newBookmarkId } : article,
-            ),
-          )
-        } else {
-          // Remove bookmark
-          if (bookmarkId) {
-            await bookmarkApi.deleteBookmark(bookmarkId)
-          }
-        }
-      } catch (error) {
-        // Revert on error
-        setArticles((prev) =>
-          prev.map((article) =>
-            article.id === articleId
-              ? {
-                  ...article,
-                  bookmarkId: bookmarkId, // Restore original ID
-                  isBookmarked: currentBookmarked,
-                }
-              : article,
-          ),
-        )
-        // Ideally show a toast message here
-      }
-    },
-    [],
+    [refresh],
   )
 
   return (
@@ -291,84 +162,4 @@ export function MainPage() {
       <AddSourceSheet isOpen={isAddSourceOpen} onClose={handleCloseAddSource} onSubmit={handleAddSourceSubmit} />
     </div>
   )
-}
-
-function convertToHighlightArticle(item: FeedContent): HighlightArticle {
-  return {
-    id: item.contentId.toString(),
-    title: item.title,
-    summary: item.summary,
-    linkUrl: item.originalUrl,
-    source: item.sourceName,
-    timeAgo: formatRelativePublishedAt(item.publishedAt),
-    tag: buildTagFromSource(item.sourceName),
-    typeIcon: ARTICLE_TYPE_ICON,
-    typeLabel: ARTICLE_TYPE_LABEL,
-    image: item.thumbnailUrl ?? DEFAULT_THUMBNAIL,
-    isNew: isRecentPublication(item.publishedAt),
-    isBookmarked: Boolean(item.bookmarkId),
-    bookmarkId: item.bookmarkId,
-  }
-}
-
-function formatRelativePublishedAt(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return '방금 전'
-  }
-
-  const diff = Date.now() - date.getTime()
-  const minute = 60 * 1000
-  const hour = 60 * minute
-  const day = 24 * hour
-
-  if (diff < 0) {
-    return formatAbsoluteDate(date)
-  }
-
-  if (diff < minute) {
-    return '방금 전'
-  }
-
-  if (diff < hour) {
-    const minutes = Math.floor(diff / minute)
-    return `${minutes}분 전`
-  }
-
-  if (diff < day) {
-    const hours = Math.floor(diff / hour)
-    return `${hours}시간 전`
-  }
-
-  if (diff < day * 7) {
-    const days = Math.floor(diff / day)
-    return `${days}일 전`
-  }
-
-  return formatAbsoluteDate(date)
-}
-
-function formatAbsoluteDate(date: Date) {
-  const year = date.getFullYear()
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${year}.${month}.${day}`
-}
-
-function buildTagFromSource(source: string) {
-  const trimmed = source?.trim()
-  if (!trimmed) {
-    return '#KeyFeed'
-  }
-  return `#${trimmed.replace(/\s+/g, '')}`
-}
-
-function isRecentPublication(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return false
-  }
-
-  const diff = Date.now() - date.getTime()
-  return diff >= 0 && diff <= NEW_CONTENT_WINDOW_MS
 }

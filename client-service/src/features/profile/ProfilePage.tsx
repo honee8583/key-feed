@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
 import {
   BarChartIcon,
+
+
   ChevronRightIcon,
   HelpCircleIcon,
   LogOutIcon,
@@ -9,10 +11,11 @@ import {
   TrashIcon,
 } from '../../components/common/Icons'
 import { UserIcon } from '../auth/components/AuthIcons'
-import sourceManagementIcon from '../../assets/profile/source_management_icon.png'
-import notificationIcon from '../../assets/profile/notification_icon.png'
-import securityIcon from '../../assets/profile/security_icon.png'
-import generalIcon from '../../assets/profile/general_settings_icon.png'
+import sourceManagementIcon from '../../assets/profile/source_management.svg'
+import notificationSettingsIcon from '../../assets/profile/notification_settings.svg'
+import securitySettingsIcon from '../../assets/profile/security_settings.svg'
+import generalSettingsIcon from '../../assets/profile/general_settings.svg'
+
 
 type LinkItem = {
   id: string
@@ -43,7 +46,7 @@ export function ProfilePage() {
     {
       id: 'sources',
       title: '소스 관리',
-      icon: <img src={sourceManagementIcon} alt="소스 관리" className="w-[40px] h-[40px] object-contain" />,
+      icon: <img src={sourceManagementIcon} alt="소스 관리" className="w-[40px] h-[40px]" />,
       path: '/profile/sources',
     },
   ]
@@ -52,17 +55,17 @@ export function ProfilePage() {
     {
       id: 'notify',
       title: '알림 설정',
-      icon: <img src={notificationIcon} alt="알림 설정" className="w-[40px] h-[40px] object-contain" />,
+      icon: <img src={notificationSettingsIcon} alt="알림 설정" className="w-[40px] h-[40px]" />,
     },
     {
       id: 'security',
       title: '보안 설정',
-      icon: <img src={securityIcon} alt="보안 설정" className="w-[40px] h-[40px] object-contain" />,
+      icon: <img src={securitySettingsIcon} alt="보안 설정" className="w-[40px] h-[40px]" />,
     },
     {
       id: 'general',
       title: '일반 설정',
-      icon: <img src={generalIcon} alt="일반 설정" className="w-[40px] h-[40px] object-contain" />,
+      icon: <img src={generalSettingsIcon} alt="일반 설정" className="w-[40px] h-[40px]" />,
     },
   ]
 

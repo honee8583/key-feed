@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { authApi } from '../../services/authApi'
 import type { SocialProvider } from '../../services/authApi'
@@ -61,6 +61,7 @@ const AGREEMENT_ITEMS: { key: AgreementKey; label: string; required: boolean }[]
 
 export function SignupPage() {
   const navigate = useNavigate()
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -80,6 +81,14 @@ export function SignupPage() {
   const [isSendingCode, setIsSendingCode] = useState(false)
   const [feedback, setFeedback] = useState<'idle' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current)
+      }
+    }
+  }, [])
 
   const isEmailValid = useMemo(() => /\S+@\S+\.\S+/.test(email), [email])
   const passwordsMatch = password.trim().length >= 8 && password === confirmPassword
@@ -173,7 +182,7 @@ export function SignupPage() {
       })
       setFeedback('success')
       setMessage('가입이 완료되었어요! 로그인 화면으로 이동합니다.')
-      setTimeout(() => {
+      redirectTimerRef.current = setTimeout(() => {
         navigate('/login')
       }, 1500)
     } catch (error) {
