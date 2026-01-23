@@ -36,15 +36,15 @@ class SourceInternalControllerTest {
     private SourceService sourceService;
 
     @Test
-    @DisplayName("[GET /internal/sources/user/{userId}] 유저의 구독 소스 목록 조회 성공 시 200 OK와 리스트를 반환한다")
+    @DisplayName("[GET /internal/sources/user/{userId}] 유저의 피드 수신 활성화된 소스 목록 조회 성공 시 200 OK와 리스트를 반환한다")
     void getUserSources_success() throws Exception {
         // given
         Long userId = 1L;
-        SourceResponseDto source1 = SourceResponseDto.builder().build();
-        SourceResponseDto source2 = SourceResponseDto.builder().build();
+        SourceResponseDto source1 = SourceResponseDto.builder().receiveFeed(true).build();
+        SourceResponseDto source2 = SourceResponseDto.builder().receiveFeed(true).build();
         List<SourceResponseDto> responseList = List.of(source1, source2);
 
-        when(sourceService.getSourcesByUser(userId)).thenReturn(responseList);
+        when(sourceService.getActiveSourcesByUser(userId)).thenReturn(responseList);
 
         // when & then
         mockMvc.perform(get("/internal/sources/user/{userId}", userId)
@@ -52,6 +52,6 @@ class SourceInternalControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(2));
 
-        verify(sourceService).getSourcesByUser(userId);
+        verify(sourceService).getActiveSourcesByUser(userId);
     }
 }

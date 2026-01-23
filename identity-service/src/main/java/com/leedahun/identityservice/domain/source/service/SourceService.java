@@ -8,6 +8,8 @@ public interface SourceService {
 
     List<SourceResponseDto> getSourcesByUser(Long userId);
 
+    List<SourceResponseDto> getActiveSourcesByUser(Long userId);
+
     SourceResponseDto addSource(Long userId, SourceRequestDto request);
 
     void removeUserSource(Long userId, Long userSourceId);

@@ -19,7 +19,7 @@ public class SourceInternalController {
 
     @GetMapping("/user/{userId}")
     public List<SourceResponseDto> getUserSources(@PathVariable Long userId) {
-        return sourceService.getSourcesByUser(userId);
+        return sourceService.getActiveSourcesByUser(userId);
     }
 
 }
