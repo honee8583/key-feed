@@ -2,6 +2,7 @@ package com.leedahun.identityservice.domain.source.controller;
 
 import static com.leedahun.identityservice.common.message.SuccessMessage.DELETE_SUCCESS;
 import static com.leedahun.identityservice.common.message.SuccessMessage.READ_SUCCESS;
+import static com.leedahun.identityservice.common.message.SuccessMessage.UPDATE_SUCCESS;
 import static com.leedahun.identityservice.common.message.SuccessMessage.WRITE_SUCCESS;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -66,12 +68,14 @@ class SourceControllerTest {
                         .userSourceId(5L)
                         .userDefinedName("네이버 D2")
                         .url("https://d2.naver.com/d2.atom")
+                        .receiveFeed(true)
                         .build(),
                 SourceResponseDto.builder()
                         .sourceId(11L)
                         .userSourceId(6L)
                         .userDefinedName("우아한형제들")
                         .url("https://techblog.woowahan.com/feed")
+                        .receiveFeed(true)
                         .build()
         );
 
@@ -101,6 +105,7 @@ class SourceControllerTest {
                         .userSourceId(6L)
                         .userDefinedName("우아한형제들")
                         .url("https://techblog.woowahan.com/feed")
+                        .receiveFeed(true)
                         .build()
         );
 
@@ -133,6 +138,7 @@ class SourceControllerTest {
                 .userSourceId(6L)
                 .userDefinedName("우아한형제들")
                 .url("https://techblog.woowahan.com/feed")
+                .receiveFeed(true)
                 .build();
 
         when(sourceService.addSource(any(), any(SourceRequestDto.class))).thenReturn(responseDto);
@@ -203,5 +209,52 @@ class SourceControllerTest {
 
         // verify
         verify(sourceService, times(1)).removeUserSource(any(), any());
+    }
+
+    @Test
+    @DisplayName("[PATCH /api/sources/my/{userSourceId}/receive-feed] 피드 수신 여부 토글 성공 시 200 OK와 변경된 소스 정보를 반환한다")
+    void toggleReceiveFeed_success() throws Exception {
+        // given
+        Long userSourceId = 5L;
+
+        SourceResponseDto responseDto = SourceResponseDto.builder()
+                .sourceId(10L)
+                .userSourceId(userSourceId)
+                .userDefinedName("네이버 D2")
+                .url("https://d2.naver.com/d2.atom")
+                .receiveFeed(false)
+                .build();
+
+        when(sourceService.toggleReceiveFeed(any(), eq(userSourceId))).thenReturn(responseDto);
+
+        // when & then
+        mockMvc.perform(patch("/api/sources/my/{userSourceId}/receive-feed", userSourceId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value(UPDATE_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data.receiveFeed").value(false));
+
+        // verify
+        verify(sourceService, times(1)).toggleReceiveFeed(any(), eq(userSourceId));
+    }
+
+    @Test
+    @DisplayName("[PATCH /api/sources/my/{userSourceId}/receive-feed] 존재하지 않는 소스 토글 시 404 Not Found를 반환한다")
+    void toggleReceiveFeed_fail_notFound() throws Exception {
+        // given
+        Long badUserSourceId = 99L;
+
+        when(sourceService.toggleReceiveFeed(any(), eq(badUserSourceId)))
+                .thenThrow(new EntityNotFoundException("UserSource", badUserSourceId));
+
+        // when & then
+        mockMvc.perform(patch("/api/sources/my/{userSourceId}/receive-feed", badUserSourceId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.data").value(nullValue()));
+
+        // verify
+        verify(sourceService, times(1)).toggleReceiveFeed(any(), eq(badUserSourceId));
     }
 }

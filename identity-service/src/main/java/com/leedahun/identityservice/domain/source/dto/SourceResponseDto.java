@@ -14,6 +14,7 @@ public class SourceResponseDto {
     private String userDefinedName;
     private String url;
     private LocalDateTime lastCrawledAt;
+    private Boolean receiveFeed;
 
     public static SourceResponseDto from(UserSource userSource) {
         return SourceResponseDto.builder()
@@ -22,6 +23,7 @@ public class SourceResponseDto {
                 .userDefinedName(userSource.getUserDefinedName())
                 .url(userSource.getSource().getUrl())
                 .lastCrawledAt(userSource.getSource().getLastCrawledAt())
+                .receiveFeed(userSource.getReceiveFeed())
                 .build();
     }
 }
