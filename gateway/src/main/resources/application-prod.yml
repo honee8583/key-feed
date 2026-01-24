@@ -20,6 +20,12 @@ spring:
                 - Path=/api/keywords/**
               filters:
                 - JwtAuthenticationFilter
+            - id: identity-user-service
+              uri: http://identity-service
+              predicates:
+                - Path=/api/users/**
+              filters:
+                - JwtAuthenticationFilter
             - id: feed-service
               uri: http://feed-service
               predicates:
