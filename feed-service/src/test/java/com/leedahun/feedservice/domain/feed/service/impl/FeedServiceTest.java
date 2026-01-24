@@ -106,6 +106,99 @@ class FeedServiceImplTest {
             assertThatThrownBy(() -> feedService.fetchUserSourceMapping(userId))
                     .isInstanceOf(InternalServerProcessingException.class);
         }
+
+        @Test
+        @DisplayName("성공: userDefinedName이 null인 소스는 매핑에서 제외된다")
+        void success_null_userDefinedName_filtered() {
+            // given
+            Long userId = 1L;
+            SourceResponseDto sourceWithNull = SourceResponseDto.builder()
+                    .sourceId(10L)
+                    .userDefinedName(null)
+                    .build();
+
+            when(userInternalApiClient.getUserSources(userId)).thenReturn(List.of(sourceWithNull));
+
+            // when
+            Map<Long, String> result = feedService.fetchUserSourceMapping(userId);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("성공: userDefinedName이 빈 문자열인 소스는 매핑에서 제외된다")
+        void success_empty_userDefinedName_filtered() {
+            // given
+            Long userId = 1L;
+            SourceResponseDto sourceWithEmpty = SourceResponseDto.builder()
+                    .sourceId(10L)
+                    .userDefinedName("")
+                    .build();
+
+            when(userInternalApiClient.getUserSources(userId)).thenReturn(List.of(sourceWithEmpty));
+
+            // when
+            Map<Long, String> result = feedService.fetchUserSourceMapping(userId);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("성공: userDefinedName이 공백만 있는 소스는 매핑에서 제외된다")
+        void success_whitespace_userDefinedName_filtered() {
+            // given
+            Long userId = 1L;
+            SourceResponseDto sourceWithWhitespace = SourceResponseDto.builder()
+                    .sourceId(10L)
+                    .userDefinedName("   ")
+                    .build();
+
+            when(userInternalApiClient.getUserSources(userId)).thenReturn(List.of(sourceWithWhitespace));
+
+            // when
+            Map<Long, String> result = feedService.fetchUserSourceMapping(userId);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("성공: 유효한 userDefinedName만 매핑에 포함된다")
+        void success_mixed_userDefinedName_only_valid_included() {
+            // given
+            Long userId = 1L;
+            SourceResponseDto validSource = SourceResponseDto.builder()
+                    .sourceId(10L)
+                    .userDefinedName("내 기술 블로그")
+                    .build();
+            SourceResponseDto nullSource = SourceResponseDto.builder()
+                    .sourceId(20L)
+                    .userDefinedName(null)
+                    .build();
+            SourceResponseDto emptySource = SourceResponseDto.builder()
+                    .sourceId(30L)
+                    .userDefinedName("")
+                    .build();
+            SourceResponseDto anotherValidSource = SourceResponseDto.builder()
+                    .sourceId(40L)
+                    .userDefinedName("개발 뉴스")
+                    .build();
+
+            when(userInternalApiClient.getUserSources(userId))
+                    .thenReturn(List.of(validSource, nullSource, emptySource, anotherValidSource));
+
+            // when
+            Map<Long, String> result = feedService.fetchUserSourceMapping(userId);
+
+            // then
+            assertThat(result).hasSize(2);
+            assertThat(result.get(10L)).isEqualTo("내 기술 블로그");
+            assertThat(result.get(40L)).isEqualTo("개발 뉴스");
+            assertThat(result).doesNotContainKey(20L);
+            assertThat(result).doesNotContainKey(30L);
+        }
     }
 
     @Nested

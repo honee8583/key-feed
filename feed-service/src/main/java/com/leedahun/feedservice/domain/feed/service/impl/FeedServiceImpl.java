@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -48,6 +49,7 @@ public class FeedServiceImpl implements FeedService {
             }
 
             return userSources.stream()
+                    .filter(source -> StringUtils.hasText(source.getUserDefinedName()))
                     .collect(Collectors.toMap(
                             SourceResponseDto::getSourceId,
                             SourceResponseDto::getUserDefinedName,
