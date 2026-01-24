@@ -52,4 +52,8 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
 
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
 }
