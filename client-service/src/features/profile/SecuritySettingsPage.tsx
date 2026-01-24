@@ -2,6 +2,67 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { userApi } from '../../services/userApi'
 
+type PasswordInputProps = {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  error?: string
+  showPassword?: boolean
+  onToggleShowPassword?: () => void
+}
+
+function PasswordInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  error,
+  showPassword,
+  onToggleShowPassword,
+}: PasswordInputProps) {
+  const isPasswordHidden = !showPassword
+
+  return (
+    <div className="space-y-2">
+      <label className="text-[15px] font-medium">{label}</label>
+      <div className="relative">
+        <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${error ? 'text-rose-500' : 'text-[#99A1AF]'}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <input 
+          type={isPasswordHidden ? "password" : "text"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`w-full bg-[#1C1C1E] border rounded-xl h-[52px] pl-12 pr-12 text-white placeholder-[#585858] focus:outline-none transition-colors ${
+            error ? 'border-rose-500 focus:border-rose-500' : 'border-[#2C2C2E] focus:border-[#5a4cf5]'
+          }`}
+        />
+        {onToggleShowPassword && (
+          <button 
+            type="button"
+            onClick={onToggleShowPassword}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#99A1AF]"
+          >
+            {showPassword ? (
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            ) : (
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            )}
+          </button>
+        )}
+      </div>
+      {error && (
+        <p className="text-xs text-rose-500 pl-1">{error}</p>
+      )}
+    </div>
+  )
+}
+
 export function SecuritySettingsPage() {
   const navigate = useNavigate()
   const [currentPassword, setCurrentPassword] = useState('')
@@ -104,112 +165,37 @@ export function SecuritySettingsPage() {
       <div className="space-y-6">
         
         {/* Current Password */}
-        <div className="space-y-2">
-          <label className="text-[15px] font-medium">현재 비밀번호</label>
-          <div className="relative">
-            <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.currentPassword ? 'text-rose-500' : 'text-[#99A1AF]'}`}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-            </div>
-            <input 
-              type={showCurrentPassword ? "text" : "password"}
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="현재 비밀번호를 입력하세요"
-              className={`w-full bg-[#1C1C1E] border rounded-xl h-[52px] pl-12 pr-12 text-white placeholder-[#585858] focus:outline-none transition-colors ${
-                errors.currentPassword ? 'border-rose-500 focus:border-rose-500' : 'border-[#2C2C2E] focus:border-[#5a4cf5]'
-              }`}
-            />
-            <button 
-              type="button"
-              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#99A1AF]"
-            >
-              {showCurrentPassword ? (
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              ) : (
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              )}
-            </button>
-          </div>
-          {errors.currentPassword && (
-            <p className="text-xs text-rose-500 pl-1">{errors.currentPassword}</p>
-          )}
-        </div>
+        <PasswordInput
+          label="현재 비밀번호"
+          value={currentPassword}
+          onChange={setCurrentPassword}
+          placeholder="현재 비밀번호를 입력하세요"
+          error={errors.currentPassword}
+          showPassword={showCurrentPassword}
+          onToggleShowPassword={() => setShowCurrentPassword((prev) => !prev)}
+        />
 
         {/* New Password */}
-        <div className="space-y-2">
-          <label className="text-[15px] font-medium">새 비밀번호</label>
-          <div className="relative">
-            <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.newPassword ? 'text-rose-500' : 'text-[#99A1AF]'}`}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-            </div>
-            <input 
-              type={showNewPassword ? "text" : "password"}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="새 비밀번호를 입력하세요"
-              className={`w-full bg-[#1C1C1E] border rounded-xl h-[52px] pl-12 pr-12 text-white placeholder-[#585858] focus:outline-none transition-colors ${
-                errors.newPassword ? 'border-rose-500 focus:border-rose-500' : 'border-[#2C2C2E] focus:border-[#5a4cf5]'
-              }`}
-            />
-            <button 
-              type="button"
-              onClick={() => setShowNewPassword(!showNewPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#99A1AF]"
-            >
-              {showNewPassword ? (
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              ) : (
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              )}
-            </button>
-          </div>
-          {errors.newPassword && (
-            <p className="text-xs text-rose-500 pl-1">{errors.newPassword}</p>
-          )}
-        </div>
+        <PasswordInput
+          label="새 비밀번호"
+          value={newPassword}
+          onChange={setNewPassword}
+          placeholder="새 비밀번호를 입력하세요"
+          error={errors.newPassword}
+          showPassword={showNewPassword}
+          onToggleShowPassword={() => setShowNewPassword((prev) => !prev)}
+        />
 
         {/* Confirm Password */}
-        <div className="space-y-2">
-          <label className="text-[15px] font-medium">새 비밀번호 확인</label>
-          <div className="relative">
-            <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.confirmPassword ? 'text-rose-500' : 'text-[#99A1AF]'}`}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-            </div>
-            <input 
-              type={showConfirmPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="새 비밀번호를 다시 입력하세요"
-              className={`w-full bg-[#1C1C1E] border rounded-xl h-[52px] pl-12 pr-12 text-white placeholder-[#585858] focus:outline-none transition-colors ${
-                errors.confirmPassword ? 'border-rose-500 focus:border-rose-500' : 'border-[#2C2C2E] focus:border-[#5a4cf5]'
-              }`}
-            />
-            <button 
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#99A1AF]"
-            >
-              {showConfirmPassword ? (
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              ) : (
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              )}
-            </button>
-          </div>
-          {errors.confirmPassword && (
-            <p className="text-xs text-rose-500 pl-1">{errors.confirmPassword}</p>
-          )}
-        </div>
+        <PasswordInput
+          label="새 비밀번호 확인"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          placeholder="새 비밀번호를 다시 입력하세요"
+          error={errors.confirmPassword}
+          showPassword={showConfirmPassword}
+          onToggleShowPassword={() => setShowConfirmPassword((prev) => !prev)}
+        />
 
       </div>
 
