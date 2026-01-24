@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/feed")
@@ -28,8 +28,8 @@ public class FeedController {
     public ResponseEntity<?> getMyFeeds(@AuthenticationPrincipal Long userId,
                                         @RequestParam(value = "lastId", required = false) Long lastId,
                                         @RequestParam(value = "size", defaultValue = "10") int size) {
-        List<Long> sourceIds = feedService.fetchUserSourceIds(userId);
-        CommonPageResponse<ContentFeedResponseDto> feeds = feedService.getPersonalizedFeeds(userId, sourceIds, lastId, size);
+        Map<Long, String> sourceMapping = feedService.fetchUserSourceMapping(userId);
+        CommonPageResponse<ContentFeedResponseDto> feeds = feedService.getPersonalizedFeeds(userId, sourceMapping, lastId, size);
         return ResponseEntity.ok()
                 .body(new HttpResponse(HttpStatus.OK, READ_SUCCESS.getMessage(), feeds));
     }

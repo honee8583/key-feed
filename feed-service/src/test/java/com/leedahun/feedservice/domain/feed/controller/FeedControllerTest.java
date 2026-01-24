@@ -17,7 +17,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 import static com.leedahun.feedservice.common.message.SuccessMessage.READ_SUCCESS;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,20 +49,20 @@ class FeedControllerTest {
     void getMyFeeds_success() throws Exception {
         Long lastId = 100L;
         int size = 20;
-        List<Long> sourceIds = List.of(1L, 2L);
+        Map<Long, String> sourceMapping = Map.of(1L, "소스1", 2L, "소스2");
 
         ContentFeedResponseDto feedItem = new ContentFeedResponseDto();
 
         CommonPageResponse<ContentFeedResponseDto> response = new CommonPageResponse<>(
-                List.of(feedItem),
+                java.util.List.of(feedItem),
                 90L,
                 true
         );
 
-        when(feedService.fetchUserSourceIds(any())).thenReturn(sourceIds);
+        when(feedService.fetchUserSourceMapping(any())).thenReturn(sourceMapping);
 
         // 변경된 부분: userId(첫 번째 인자)를 any()로 처리하여 서비스 호출 검증
-        when(feedService.getPersonalizedFeeds(any(), eq(sourceIds), eq(lastId), eq(size)))
+        when(feedService.getPersonalizedFeeds(any(), eq(sourceMapping), eq(lastId), eq(size)))
                 .thenReturn(response);
 
         mockMvc.perform(get("/api/feed")
@@ -75,14 +75,14 @@ class FeedControllerTest {
                 .andExpect(jsonPath("$.data.content").isArray())
                 .andExpect(jsonPath("$.data.hasNext").value(true));
 
-        verify(feedService).fetchUserSourceIds(any());
-        verify(feedService).getPersonalizedFeeds(any(), eq(sourceIds), eq(lastId), eq(size));
+        verify(feedService).fetchUserSourceMapping(any());
+        verify(feedService).getPersonalizedFeeds(any(), eq(sourceMapping), eq(lastId), eq(size));
     }
 
     @Test
     @DisplayName("[GET /api/feed] 파라미터가 없으면 기본값으로 피드 목록을 조회한다")
     void getMyFeeds_defaultParams() throws Exception {
-        List<Long> sourceIds = List.of(1L, 2L);
+        Map<Long, String> sourceMapping = Map.of(1L, "소스1", 2L, "소스2");
 
         CommonPageResponse<ContentFeedResponseDto> emptyResponse = new CommonPageResponse<>(
                 Collections.emptyList(),
@@ -90,10 +90,10 @@ class FeedControllerTest {
                 false
         );
 
-        when(feedService.fetchUserSourceIds(any())).thenReturn(sourceIds);
+        when(feedService.fetchUserSourceMapping(any())).thenReturn(sourceMapping);
 
         // 변경된 부분: 기본값 size=10 확인, userId는 any()
-        when(feedService.getPersonalizedFeeds(any(), eq(sourceIds), eq(null), eq(10)))
+        when(feedService.getPersonalizedFeeds(any(), eq(sourceMapping), eq(null), eq(10)))
                 .thenReturn(emptyResponse);
 
         mockMvc.perform(get("/api/feed"))
@@ -103,7 +103,7 @@ class FeedControllerTest {
                 .andExpect(jsonPath("$.data.content").isEmpty())
                 .andExpect(jsonPath("$.data.hasNext").value(false));
 
-        verify(feedService).fetchUserSourceIds(any());
-        verify(feedService).getPersonalizedFeeds(any(), eq(sourceIds), eq(null), eq(10));
+        verify(feedService).fetchUserSourceMapping(any());
+        verify(feedService).getPersonalizedFeeds(any(), eq(sourceMapping), eq(null), eq(10));
     }
 }

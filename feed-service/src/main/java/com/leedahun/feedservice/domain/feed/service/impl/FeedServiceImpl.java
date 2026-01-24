@@ -40,16 +40,19 @@ public class FeedServiceImpl implements FeedService {
                     .withZone(ZoneOffset.UTC);
 
     @Override
-    public List<Long> fetchUserSourceIds(Long userId) {
+    public Map<Long, String> fetchUserSourceMapping(Long userId) {
         try {
             List<SourceResponseDto> userSources = userInternalApiClient.getUserSources(userId);
             if (CollectionUtils.isEmpty(userSources)) {
-                return Collections.emptyList();
+                return Collections.emptyMap();
             }
 
             return userSources.stream()
-                    .map(SourceResponseDto::getSourceId)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toMap(
+                            SourceResponseDto::getSourceId,
+                            SourceResponseDto::getUserDefinedName,
+                            (existing, replacement) -> existing
+                    ));
         } catch (FeignException e) {
             log.error("Identity Service 호출 실패. userId: {}, status: {}, error: {}", userId, e.status(), e.getMessage());
             throw new InternalApiRequestException(IDENTITY_SERVICE_REQUEST_FAIL.getMessage());
@@ -60,14 +63,16 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeeds(Long userId, List<Long> sourceIds, Long lastPublishedAt, int size) {
-        if (CollectionUtils.isEmpty(sourceIds)) {
+    public CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeeds(Long userId, Map<Long, String> sourceMapping, Long lastPublishedAt, int size) {
+        if (sourceMapping == null || sourceMapping.isEmpty()) {
             return CommonPageResponse.<ContentFeedResponseDto>builder()
                     .content(Collections.emptyList())
                     .hasNext(false)
                     .nextCursorId(null)
                     .build();
         }
+
+        List<Long> sourceIds = new ArrayList<>(sourceMapping.keySet());
 
         Pageable pageable = buildPageable(size);
         List<ContentDocument> documents = searchDocuments(sourceIds, lastPublishedAt, pageable);
@@ -76,7 +81,7 @@ public class FeedServiceImpl implements FeedService {
         List<ContentDocument> resultList = trimResultList(documents, hasNext, size);
 
         List<ContentFeedResponseDto> feeds = resultList.stream()
-                .map(ContentFeedResponseDto::from)
+                .map(content -> ContentFeedResponseDto.from(content, sourceMapping))
                 .collect(Collectors.toList());
 
         if (userId != null && !feeds.isEmpty()) {
