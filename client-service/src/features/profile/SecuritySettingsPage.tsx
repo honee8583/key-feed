@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { userApi } from '../../services/userApi'
 
 export function SecuritySettingsPage() {
   const navigate = useNavigate()
@@ -10,10 +11,63 @@ export function SecuritySettingsPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  
+  // Validation errors
+  const [errors, setErrors] = useState<{
+    currentPassword?: string
+    newPassword?: string
+    confirmPassword?: string
+  }>({})
+  
+  // General error for toast/alert - currently using alert() directly, so just logging for now or removing if unused.
+  // const [globalError, setGlobalError] = useState<string | null>(null)
 
-  const handleSave = () => {
-    // Implement password change logic here
-    console.log('Password change requested')
+  const handleSave = async () => {
+    // Reset errors
+    setErrors({})
+    // setGlobalError(null)
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      alert('모든 항목을 입력해주세요.')
+      return
+    }
+
+    try {
+      const response = await userApi.changePassword({
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      })
+      
+      if (response && response.status === 200) {
+        alert(response.message || '비밀번호가 성공적으로 변경되었습니다.')
+        navigate(-1)
+      }
+    } catch (error: unknown) {
+      const apiError = error as { status: number; message: string; data: unknown }
+      if (apiError && apiError.status) {
+        // Validation Error
+        if (apiError.status === 400) {
+          if (apiError.data && typeof apiError.data === 'object' && apiError.data !== null) {
+            // Field specific validation errors
+             setErrors(apiError.data as { currentPassword?: string; newPassword?: string; confirmPassword?: string })
+          } else {
+             // General 400 error (e.g. mismatch confirm or same password) with message
+             alert(apiError.message || '입력값이 올바르지 않습니다.')
+          }
+        } 
+        // Unauthorized (Wrong current password)
+        else if (apiError.status === 401) {
+           alert(apiError.message || '비밀번호가 일치하지 않습니다.')
+        }
+        else {
+           alert(apiError.message || '요청 처리에 실패했습니다.')
+        }
+      } else {
+         console.error('Password change error:', error)
+         alert('알 수 없는 오류가 발생했습니다.')
+      }
+    }
   }
 
   return (
@@ -53,7 +107,7 @@ export function SecuritySettingsPage() {
         <div className="space-y-2">
           <label className="text-[15px] font-medium">현재 비밀번호</label>
           <div className="relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#99A1AF]">
+            <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.currentPassword ? 'text-rose-500' : 'text-[#99A1AF]'}`}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -64,7 +118,9 @@ export function SecuritySettingsPage() {
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="현재 비밀번호를 입력하세요"
-              className="w-full bg-[#1C1C1E] border border-[#2C2C2E] rounded-xl h-[52px] pl-12 pr-12 text-white placeholder-[#585858] focus:outline-none focus:border-[#5a4cf5] transition-colors"
+              className={`w-full bg-[#1C1C1E] border rounded-xl h-[52px] pl-12 pr-12 text-white placeholder-[#585858] focus:outline-none transition-colors ${
+                errors.currentPassword ? 'border-rose-500 focus:border-rose-500' : 'border-[#2C2C2E] focus:border-[#5a4cf5]'
+              }`}
             />
             <button 
               type="button"
@@ -78,13 +134,16 @@ export function SecuritySettingsPage() {
               )}
             </button>
           </div>
+          {errors.currentPassword && (
+            <p className="text-xs text-rose-500 pl-1">{errors.currentPassword}</p>
+          )}
         </div>
 
         {/* New Password */}
         <div className="space-y-2">
           <label className="text-[15px] font-medium">새 비밀번호</label>
           <div className="relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#99A1AF]">
+            <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.newPassword ? 'text-rose-500' : 'text-[#99A1AF]'}`}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -95,7 +154,9 @@ export function SecuritySettingsPage() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="새 비밀번호를 입력하세요"
-              className="w-full bg-[#1C1C1E] border border-[#2C2C2E] rounded-xl h-[52px] pl-12 pr-12 text-white placeholder-[#585858] focus:outline-none focus:border-[#5a4cf5] transition-colors"
+              className={`w-full bg-[#1C1C1E] border rounded-xl h-[52px] pl-12 pr-12 text-white placeholder-[#585858] focus:outline-none transition-colors ${
+                errors.newPassword ? 'border-rose-500 focus:border-rose-500' : 'border-[#2C2C2E] focus:border-[#5a4cf5]'
+              }`}
             />
             <button 
               type="button"
@@ -109,13 +170,16 @@ export function SecuritySettingsPage() {
               )}
             </button>
           </div>
+          {errors.newPassword && (
+            <p className="text-xs text-rose-500 pl-1">{errors.newPassword}</p>
+          )}
         </div>
 
         {/* Confirm Password */}
         <div className="space-y-2">
           <label className="text-[15px] font-medium">새 비밀번호 확인</label>
           <div className="relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#99A1AF]">
+            <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.confirmPassword ? 'text-rose-500' : 'text-[#99A1AF]'}`}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -126,7 +190,9 @@ export function SecuritySettingsPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="새 비밀번호를 다시 입력하세요"
-              className="w-full bg-[#1C1C1E] border border-[#2C2C2E] rounded-xl h-[52px] pl-12 pr-12 text-white placeholder-[#585858] focus:outline-none focus:border-[#5a4cf5] transition-colors"
+              className={`w-full bg-[#1C1C1E] border rounded-xl h-[52px] pl-12 pr-12 text-white placeholder-[#585858] focus:outline-none transition-colors ${
+                errors.confirmPassword ? 'border-rose-500 focus:border-rose-500' : 'border-[#2C2C2E] focus:border-[#5a4cf5]'
+              }`}
             />
             <button 
               type="button"
@@ -140,6 +206,9 @@ export function SecuritySettingsPage() {
               )}
             </button>
           </div>
+          {errors.confirmPassword && (
+            <p className="text-xs text-rose-500 pl-1">{errors.confirmPassword}</p>
+          )}
         </div>
 
       </div>
@@ -186,3 +255,4 @@ export function SecuritySettingsPage() {
     </div>
   )
 }
+
