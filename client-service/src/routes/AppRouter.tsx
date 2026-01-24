@@ -5,7 +5,7 @@ import { MainPage } from '../features/home'
 import { ExplorePage } from '../features/explore'
 import { BookmarksPage } from '../features/bookmarks'
 import { FolderManagementPage } from '../features/bookmarks/FolderManagementPage'
-import { ProfilePage, SourceManagementPage } from '../features/profile'
+import { ProfilePage, SecuritySettingsPage, SourceManagementPage } from '../features/profile'
 import { NotificationPage } from '../features/notifications'
 import { BottomNavigation } from '../components/BottomNavigation'
 
@@ -80,6 +80,16 @@ export function AppRouter() {
               <ProtectedRoute>
                 <AppLayout>
                   <NotificationPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/security"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <SecuritySettingsPage />
                 </AppLayout>
               </ProtectedRoute>
             }

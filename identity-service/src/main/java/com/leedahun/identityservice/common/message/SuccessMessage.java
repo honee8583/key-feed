@@ -17,7 +17,9 @@ public enum SuccessMessage {
     EMAIL_SEND_SUCCESS("이메일 전송에 성공하였습니다."),
     EMAIL_VERIFIED("이메일 인증이 완료되었습니다."),
 
-    URL_VALIDATION_SUCCESS("URL 검증 성공");
+    URL_VALIDATION_SUCCESS("URL 검증 성공"),
+
+    PASSWORD_CHANGE_SUCCESS("비밀번호가 성공적으로 변경되었습니다.");
 
     private final String message;
 }
