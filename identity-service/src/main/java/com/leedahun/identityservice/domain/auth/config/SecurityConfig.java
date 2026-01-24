@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/keywords/**").authenticated()
                 .requestMatchers("/api/sources/**").authenticated()
                 .requestMatchers("/api/bookmarks/**").authenticated()
+                .requestMatchers("/api/users/**").authenticated()
 
                 // 마이크로서비스간의 통신
                 .requestMatchers("/internal/**").permitAll()

@@ -61,6 +61,7 @@ export function ProfilePage() {
       id: 'security',
       title: '보안 설정',
       icon: <img src={securitySettingsIcon} alt="보안 설정" className="w-[40px] h-[40px]" />,
+      path: '/profile/security',
     },
     {
       id: 'general',
@@ -152,7 +153,11 @@ export function ProfilePage() {
 
           <ProfileSection title="설정">
             {settingLinks.map((item) => (
-              <ProfileListItem key={item.id} {...item} />
+              <ProfileListItem
+                key={item.id}
+                {...item}
+                onClick={item.path ? () => navigate(item.path!) : undefined}
+              />
             ))}
           </ProfileSection>
 

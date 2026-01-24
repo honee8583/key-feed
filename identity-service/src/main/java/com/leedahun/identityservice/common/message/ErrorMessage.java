@@ -46,7 +46,11 @@ public enum ErrorMessage {
     URL_INVALID_CONTENT_TYPE("RSS 피드 형식이 아닐 수 있습니다."),
 
     // RSS 파싱 관련 에러 메시지
-    RSS_PARSING_FAILED("RSS 피드를 파싱할 수 없습니다. URL을 확인해주세요.");
+    RSS_PARSING_FAILED("RSS 피드를 파싱할 수 없습니다. URL을 확인해주세요."),
+
+    // 비밀번호 변경 관련 에러 메시지
+    PASSWORD_MISMATCH("새 비밀번호가 일치하지 않습니다."),
+    SAME_PASSWORD("현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.");
 
     private final String message;
 }
