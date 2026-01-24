@@ -1,6 +1,6 @@
-package com.leedahun.feedservice.domain.client;
+package com.leedahun.feedservice.infra.client;
 
-import com.leedahun.feedservice.domain.client.dto.SourceResponseDto;
+import com.leedahun.feedservice.infra.client.dto.SourceResponseDto;
 import com.leedahun.feedservice.domain.feed.dto.KeywordResponseDto;
 import java.util.List;
 import java.util.Map;

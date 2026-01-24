@@ -1,4 +1,4 @@
-package com.leedahun.feedservice.domain.client.dto;
+package com.leedahun.feedservice.infra.client.dto;
 
 import lombok.Builder;
 import lombok.Getter;
