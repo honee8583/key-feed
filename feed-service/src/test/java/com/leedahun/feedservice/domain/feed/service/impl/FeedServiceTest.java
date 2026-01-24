@@ -3,8 +3,8 @@ package com.leedahun.feedservice.domain.feed.service.impl;
 import com.leedahun.feedservice.common.error.exception.InternalApiRequestException;
 import com.leedahun.feedservice.common.error.exception.InternalServerProcessingException;
 import com.leedahun.feedservice.common.response.CommonPageResponse;
-import com.leedahun.feedservice.domain.client.UserInternalApiClient;
-import com.leedahun.feedservice.domain.client.dto.SourceResponseDto;
+import com.leedahun.feedservice.infra.client.UserInternalApiClient;
+import com.leedahun.feedservice.infra.client.dto.SourceResponseDto;
 import com.leedahun.feedservice.domain.feed.document.ContentDocument;
 import com.leedahun.feedservice.domain.feed.dto.ContentFeedResponseDto;
 import com.leedahun.feedservice.domain.feed.repository.ContentDocumentRepository;
@@ -41,36 +41,38 @@ class FeedServiceImplTest {
     private ContentDocumentRepository contentDocumentRepository;
 
     @Nested
-    @DisplayName("유저 구독 소스 ID 목록 조회 (FetchUserSourceIds)")
-    class FetchUserSourceIdsTest {
+    @DisplayName("유저 구독 소스 매핑 조회 (FetchUserSourceMapping)")
+    class FetchUserSourceMappingTest {
 
         @Test
-        @DisplayName("성공: FeignClient로부터 소스 목록을 받아와 ID 리스트로 반환한다")
+        @DisplayName("성공: FeignClient로부터 소스 목록을 받아와 sourceId-userDefinedName 매핑을 반환한다")
         void success() {
             // given
             Long userId = 1L;
-            SourceResponseDto mockDto = mock(SourceResponseDto.class);
-            when(mockDto.getSourceId()).thenReturn(10L);
+            SourceResponseDto mockDto = SourceResponseDto.builder()
+                    .sourceId(10L)
+                    .userDefinedName("내 기술 블로그")
+                    .build();
 
             when(userInternalApiClient.getUserSources(userId)).thenReturn(List.of(mockDto));
 
             // when
-            List<Long> result = feedService.fetchUserSourceIds(userId);
+            Map<Long, String> result = feedService.fetchUserSourceMapping(userId);
 
             // then
             assertThat(result).hasSize(1);
-            assertThat(result.get(0)).isEqualTo(10L);
+            assertThat(result.get(10L)).isEqualTo("내 기술 블로그");
         }
 
         @Test
-        @DisplayName("성공: 구독한 소스가 없으면 빈 리스트를 반환한다")
+        @DisplayName("성공: 구독한 소스가 없으면 빈 맵을 반환한다")
         void success_empty() {
             // given
             Long userId = 1L;
             when(userInternalApiClient.getUserSources(userId)).thenReturn(Collections.emptyList());
 
             // when
-            List<Long> result = feedService.fetchUserSourceIds(userId);
+            Map<Long, String> result = feedService.fetchUserSourceMapping(userId);
 
             // then
             assertThat(result).isEmpty();
@@ -88,7 +90,7 @@ class FeedServiceImplTest {
 
             // when
             // then
-            assertThatThrownBy(() -> feedService.fetchUserSourceIds(userId))
+            assertThatThrownBy(() -> feedService.fetchUserSourceMapping(userId))
                     .isInstanceOf(InternalApiRequestException.class);
         }
 
@@ -101,8 +103,101 @@ class FeedServiceImplTest {
 
             // when
             // then
-            assertThatThrownBy(() -> feedService.fetchUserSourceIds(userId))
+            assertThatThrownBy(() -> feedService.fetchUserSourceMapping(userId))
                     .isInstanceOf(InternalServerProcessingException.class);
+        }
+
+        @Test
+        @DisplayName("성공: userDefinedName이 null인 소스는 매핑에서 제외된다")
+        void success_null_userDefinedName_filtered() {
+            // given
+            Long userId = 1L;
+            SourceResponseDto sourceWithNull = SourceResponseDto.builder()
+                    .sourceId(10L)
+                    .userDefinedName(null)
+                    .build();
+
+            when(userInternalApiClient.getUserSources(userId)).thenReturn(List.of(sourceWithNull));
+
+            // when
+            Map<Long, String> result = feedService.fetchUserSourceMapping(userId);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("성공: userDefinedName이 빈 문자열인 소스는 매핑에서 제외된다")
+        void success_empty_userDefinedName_filtered() {
+            // given
+            Long userId = 1L;
+            SourceResponseDto sourceWithEmpty = SourceResponseDto.builder()
+                    .sourceId(10L)
+                    .userDefinedName("")
+                    .build();
+
+            when(userInternalApiClient.getUserSources(userId)).thenReturn(List.of(sourceWithEmpty));
+
+            // when
+            Map<Long, String> result = feedService.fetchUserSourceMapping(userId);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("성공: userDefinedName이 공백만 있는 소스는 매핑에서 제외된다")
+        void success_whitespace_userDefinedName_filtered() {
+            // given
+            Long userId = 1L;
+            SourceResponseDto sourceWithWhitespace = SourceResponseDto.builder()
+                    .sourceId(10L)
+                    .userDefinedName("   ")
+                    .build();
+
+            when(userInternalApiClient.getUserSources(userId)).thenReturn(List.of(sourceWithWhitespace));
+
+            // when
+            Map<Long, String> result = feedService.fetchUserSourceMapping(userId);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("성공: 유효한 userDefinedName만 매핑에 포함된다")
+        void success_mixed_userDefinedName_only_valid_included() {
+            // given
+            Long userId = 1L;
+            SourceResponseDto validSource = SourceResponseDto.builder()
+                    .sourceId(10L)
+                    .userDefinedName("내 기술 블로그")
+                    .build();
+            SourceResponseDto nullSource = SourceResponseDto.builder()
+                    .sourceId(20L)
+                    .userDefinedName(null)
+                    .build();
+            SourceResponseDto emptySource = SourceResponseDto.builder()
+                    .sourceId(30L)
+                    .userDefinedName("")
+                    .build();
+            SourceResponseDto anotherValidSource = SourceResponseDto.builder()
+                    .sourceId(40L)
+                    .userDefinedName("개발 뉴스")
+                    .build();
+
+            when(userInternalApiClient.getUserSources(userId))
+                    .thenReturn(List.of(validSource, nullSource, emptySource, anotherValidSource));
+
+            // when
+            Map<Long, String> result = feedService.fetchUserSourceMapping(userId);
+
+            // then
+            assertThat(result).hasSize(2);
+            assertThat(result.get(10L)).isEqualTo("내 기술 블로그");
+            assertThat(result.get(40L)).isEqualTo("개발 뉴스");
+            assertThat(result).doesNotContainKey(20L);
+            assertThat(result).doesNotContainKey(30L);
         }
     }
 
@@ -111,14 +206,14 @@ class FeedServiceImplTest {
     class GetPersonalizedFeedsTest {
 
         @Test
-        @DisplayName("성공: sourceIds가 비어있으면 저장소 조회 없이 빈 페이지를 반환한다")
-        void success_empty_sourceIds() {
+        @DisplayName("성공: sourceMapping이 비어있으면 저장소 조회 없이 빈 페이지를 반환한다")
+        void success_empty_sourceMapping() {
             // given
             Long userId = 1L;
-            List<Long> sourceIds = Collections.emptyList();
+            Map<Long, String> sourceMapping = Collections.emptyMap();
 
             // when
-            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceIds, null, 10);
+            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceMapping, null, 10);
 
             // then
             assertThat(response.getContent()).isEmpty();
@@ -131,29 +226,29 @@ class FeedServiceImplTest {
         void success_first_page_has_next() {
             // given
             Long userId = 1L;
-            List<Long> sourceIds = List.of(100L, 200L);
+            Map<Long, String> sourceMapping = Map.of(100L, "소스1", 200L, "소스2");
             int size = 2;
 
             // doc1, doc2: 결과 리스트에 포함되어 DTO 변환 시 getter가 호출되므로 스터빙 필요 (Helper 사용)
-            ContentDocument doc1 = createMockContentDocument("doc1", LocalDateTime.now());
-            ContentDocument doc2 = createMockContentDocument("doc2", LocalDateTime.now().minusHours(1));
+            ContentDocument doc1 = createMockContentDocument("doc1", 100L, LocalDateTime.now());
+            ContentDocument doc2 = createMockContentDocument("doc2", 200L, LocalDateTime.now().minusHours(1));
 
             // doc3: 단순히 리스트 크기(hasNext) 확인용으로만 쓰이고 잘려나감.
             // 내부 메서드가 호출되지 않으므로 스터빙을 하지 않은 'Raw Mock' 사용 (UnnecessaryStubbing 방지)
             ContentDocument doc3 = mock(ContentDocument.class);
 
             // size(2) + 1 = 3개를 반환하도록 설정
-            when(contentDocumentRepository.searchBySourceIdsFirstPage(eq(sourceIds), any(Pageable.class)))
+            when(contentDocumentRepository.searchBySourceIdsFirstPage(anyList(), any(Pageable.class)))
                     .thenReturn(List.of(doc1, doc2, doc3));
 
             // when
-            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceIds, null, size);
+            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceMapping, null, size);
 
             // then
             assertThat(response.getContent()).hasSize(2);
             assertThat(response.isHasNext()).isTrue();
             assertThat(response.getNextCursorId()).isNotNull();
-            verify(contentDocumentRepository).searchBySourceIdsFirstPage(eq(sourceIds), any(Pageable.class));
+            verify(contentDocumentRepository).searchBySourceIdsFirstPage(anyList(), any(Pageable.class));
         }
 
         @Test
@@ -161,22 +256,22 @@ class FeedServiceImplTest {
         void success_next_page_no_next() {
             // given
             Long userId = 1L;
-            List<Long> sourceIds = List.of(100L);
+            Map<Long, String> sourceMapping = Map.of(100L, "내 기술 블로그");
             long lastPublishedAt = System.currentTimeMillis();
             int size = 10;
 
-            ContentDocument doc1 = createMockContentDocument("doc1", LocalDateTime.now());
+            ContentDocument doc1 = createMockContentDocument("doc1", 100L, LocalDateTime.now());
 
-            when(contentDocumentRepository.searchBySourceIdsAndCursor(eq(sourceIds), anyString(), any(Pageable.class)))
+            when(contentDocumentRepository.searchBySourceIdsAndCursor(anyList(), anyString(), any(Pageable.class)))
                     .thenReturn(List.of(doc1));
 
             // when
-            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceIds, lastPublishedAt, size);
+            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceMapping, lastPublishedAt, size);
 
             // then
             assertThat(response.getContent()).hasSize(1);
             assertThat(response.isHasNext()).isFalse();
-            verify(contentDocumentRepository).searchBySourceIdsAndCursor(eq(sourceIds), anyString(), any(Pageable.class));
+            verify(contentDocumentRepository).searchBySourceIdsAndCursor(anyList(), anyString(), any(Pageable.class));
         }
 
         @Test
@@ -184,11 +279,11 @@ class FeedServiceImplTest {
         void success_map_bookmark_info() {
             // given
             Long userId = 1L;
-            List<Long> sourceIds = List.of(100L);
+            Map<Long, String> sourceMapping = Map.of(100L, "내 기술 블로그");
             int size = 10;
 
-            ContentDocument doc = createMockContentDocument("content-1", LocalDateTime.now());
-            when(contentDocumentRepository.searchBySourceIdsFirstPage(eq(sourceIds), any(Pageable.class)))
+            ContentDocument doc = createMockContentDocument("content-1", 100L, LocalDateTime.now());
+            when(contentDocumentRepository.searchBySourceIdsFirstPage(anyList(), any(Pageable.class)))
                     .thenReturn(List.of(doc));
 
             Map<String, Long> bookmarkMap = Map.of("content-1", 999L);
@@ -196,7 +291,7 @@ class FeedServiceImplTest {
                     .thenReturn(bookmarkMap);
 
             // when
-            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceIds, null, size);
+            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceMapping, null, size);
 
             // then
             assertThat(response.getContent().get(0).getBookmarkId()).isEqualTo(999L);
@@ -207,11 +302,11 @@ class FeedServiceImplTest {
         void exception_ignore_bookmark_api_fail() {
             // given
             Long userId = 1L;
-            List<Long> sourceIds = List.of(100L);
+            Map<Long, String> sourceMapping = Map.of(100L, "내 기술 블로그");
             int size = 10;
 
-            ContentDocument doc = createMockContentDocument("doc1", LocalDateTime.now());
-            when(contentDocumentRepository.searchBySourceIdsFirstPage(eq(sourceIds), any(Pageable.class)))
+            ContentDocument doc = createMockContentDocument("doc1", 100L, LocalDateTime.now());
+            when(contentDocumentRepository.searchBySourceIdsFirstPage(anyList(), any(Pageable.class)))
                     .thenReturn(List.of(doc));
 
             // 북마크 API 호출 시 예외 발생 설정
@@ -219,13 +314,36 @@ class FeedServiceImplTest {
                     .thenThrow(new RuntimeException("Internal API Connection Fail"));
 
             // when
-            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceIds, null, size);
+            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceMapping, null, size);
 
             // then
             assertThat(response.getContent()).hasSize(1);
             assertThat(response.getContent().get(0).getContentId()).isEqualTo("doc1");
             assertThat(response.getContent().get(0).getBookmarkId()).isNull(); // 예외 발생 시 null 처리 확인
             verify(userInternalApiClient).getBookmarkedContentIds(eq(userId), anyList());
+        }
+
+        @Test
+        @DisplayName("성공: userDefinedName이 피드 sourceName에 정상 매핑된다")
+        void success_userDefinedName_mapped_to_sourceName() {
+            // given
+            Long userId = 1L;
+            Map<Long, String> sourceMapping = Map.of(100L, "내 기술 블로그", 200L, "개발 뉴스");
+            int size = 10;
+
+            ContentDocument doc1 = createMockContentDocument("content-1", 100L, LocalDateTime.now());
+            ContentDocument doc2 = createMockContentDocument("content-2", 200L, LocalDateTime.now().minusHours(1));
+
+            when(contentDocumentRepository.searchBySourceIdsFirstPage(anyList(), any(Pageable.class)))
+                    .thenReturn(List.of(doc1, doc2));
+
+            // when
+            CommonPageResponse<ContentFeedResponseDto> response = feedService.getPersonalizedFeeds(userId, sourceMapping, null, size);
+
+            // then
+            assertThat(response.getContent()).hasSize(2);
+            assertThat(response.getContent().get(0).getSourceName()).isEqualTo("내 기술 블로그");
+            assertThat(response.getContent().get(1).getSourceName()).isEqualTo("개발 뉴스");
         }
     }
 
@@ -238,8 +356,8 @@ class FeedServiceImplTest {
         void success() {
             // given
             List<String> contentIds = List.of("c1", "c2");
-            ContentDocument doc1 = createMockContentDocument("c1", LocalDateTime.now());
-            ContentDocument doc2 = createMockContentDocument("c2", LocalDateTime.now());
+            ContentDocument doc1 = createMockContentDocument("c1", 100L, LocalDateTime.now());
+            ContentDocument doc2 = createMockContentDocument("c2", 200L, LocalDateTime.now());
 
             when(contentDocumentRepository.findAllById(contentIds)).thenReturn(List.of(doc1, doc2));
 
@@ -253,10 +371,11 @@ class FeedServiceImplTest {
     }
 
     // --- Helper Method ---
-    private ContentDocument createMockContentDocument(String id, LocalDateTime publishedAt) {
+    private ContentDocument createMockContentDocument(String id, Long sourceId, LocalDateTime publishedAt) {
         ContentDocument doc = mock(ContentDocument.class);
         // 실제로 호출될 객체들만 이 메서드를 통해 생성하므로 strict stubbing 준수 가능
         when(doc.getId()).thenReturn(id);
+        when(doc.getSourceId()).thenReturn(sourceId);
         when(doc.getPublishedAt()).thenReturn(publishedAt);
         return doc;
     }

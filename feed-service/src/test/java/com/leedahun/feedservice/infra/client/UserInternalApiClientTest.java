@@ -1,4 +1,4 @@
-package com.leedahun.feedservice.domain.client;
+package com.leedahun.feedservice.infra.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
