@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { userApi } from '../../services/userApi'
 
 type PasswordInputProps = {
@@ -89,7 +90,7 @@ export function SecuritySettingsPage() {
     // setGlobalError(null)
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      alert('모든 항목을 입력해주세요.')
+      toast.error('모든 항목을 입력해주세요.', { duration: 3000 })
       return
     }
 
@@ -101,7 +102,7 @@ export function SecuritySettingsPage() {
       })
       
       if (response && response.status === 200) {
-        alert(response.message || '비밀번호가 성공적으로 변경되었습니다.')
+        toast.success(response.message || '비밀번호가 성공적으로 변경되었습니다.', { duration: 3000 })
         navigate(-1)
       }
     } catch (error: unknown) {
@@ -114,19 +115,19 @@ export function SecuritySettingsPage() {
              setErrors(apiError.data as { currentPassword?: string; newPassword?: string; confirmPassword?: string })
           } else {
              // General 400 error (e.g. mismatch confirm or same password) with message
-             alert(apiError.message || '입력값이 올바르지 않습니다.')
+             toast.error(apiError.message || '입력값이 올바르지 않습니다.', { duration: 3000 })
           }
         } 
         // Unauthorized (Wrong current password)
         else if (apiError.status === 401) {
-           alert(apiError.message || '비밀번호가 일치하지 않습니다.')
+           toast.error(apiError.message || '비밀번호가 일치하지 않습니다.', { duration: 3000 })
         }
         else {
-           alert(apiError.message || '요청 처리에 실패했습니다.')
+           toast.error(apiError.message || '요청 처리에 실패했습니다.', { duration: 3000 })
         }
       } else {
          console.error('Password change error:', error)
-         alert('알 수 없는 오류가 발생했습니다.')
+         toast.error('알 수 없는 오류가 발생했습니다.', { duration: 3000 })
       }
     }
   }
