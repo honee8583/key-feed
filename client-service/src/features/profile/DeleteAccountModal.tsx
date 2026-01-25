@@ -32,28 +32,25 @@ export function DeleteAccountModal({ isOpen, onClose, onSuccess }: DeleteAccount
       await userApi.deleteAccount(password)
       onSuccess()
     } catch (err: unknown) {
-      const apiError = err as { status: number; message: string; msg?: string; data: unknown }
+      let errorMessage = '계정 삭제에 실패했습니다.'
       
-      if (apiError.status === 400) {
-        // 이미 탈퇴한 회원 or 비밀번호 누락
-        if (apiError.msg === '이미 탈퇴한 회원입니다.' || apiError.message === '이미 탈퇴한 회원입니다.') {
-           setError(apiError.message || apiError.msg || '잘못된 요청입니다.')
-        } else if (apiError.data && typeof apiError.data === 'object') {
-           // 비밀번호 누락: data.password 확인
-           const errorData = apiError.data as { password?: string }
-           if (errorData.password) {
-             setError(errorData.password)
-           } else {
-             setError(apiError.message || '입력값이 올바르지 않습니다.')
-           }
-        } else {
-           setError(apiError.message || '잘못된 요청입니다.')
+      if (err && typeof err === 'object' && 'status' in err) {
+        const apiError = err as { status: number; message?: string; msg?: string; data?: { password?: string } }
+        const message = apiError.message || apiError.msg
+
+        switch (apiError.status) {
+          case 400:
+            errorMessage = apiError.data?.password || message || '잘못된 요청입니다.'
+            break
+          case 401:
+            errorMessage = message || '비밀번호가 일치하지 않습니다.'
+            break
+          default:
+            if (message) errorMessage = message
+            break
         }
-      } else if (apiError.status === 401) {
-        setError(apiError.message || '비밀번호가 일치하지 않습니다.')
-      } else {
-        setError(apiError.message || '계정 삭제에 실패했습니다.')
       }
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
