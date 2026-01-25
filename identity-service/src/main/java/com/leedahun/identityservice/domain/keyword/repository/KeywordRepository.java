@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -26,6 +27,8 @@ public interface KeywordRepository extends JpaRepository<Keyword, Long> {
             "AND us.source.id = :sourceId")
     List<Long> findUserIdsByNamesAndSourceId(@Param("keywords") Set<String> keywords, @Param("sourceId") Long sourceId);
 
-    void deleteAllByUserId(Long userId);
+    @Modifying
+    @Query("DELETE FROM Keyword k WHERE k.user.id = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 
 }

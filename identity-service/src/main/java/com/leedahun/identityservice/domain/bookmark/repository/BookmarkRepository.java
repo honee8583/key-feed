@@ -65,6 +65,8 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     @Query("UPDATE Bookmark b SET b.bookmarkFolder = null WHERE b.bookmarkFolder.id = :folderId")
     void updateFolderToNull(@Param("folderId") Long folderId);
 
-    void deleteAllByUserId(Long userId);
+    @Modifying
+    @Query("DELETE FROM Bookmark b WHERE b.user.id = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 
 }
