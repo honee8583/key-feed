@@ -7,7 +7,6 @@ import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.exception.InvalidPasswordException;
 import com.leedahun.identityservice.domain.auth.exception.PasswordMismatchException;
 import com.leedahun.identityservice.domain.auth.exception.SamePasswordException;
-import com.leedahun.identityservice.domain.auth.exception.UserAlreadyWithdrawnException;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
 import com.leedahun.identityservice.domain.auth.service.UserService;
 import com.leedahun.identityservice.domain.bookmark.repository.BookmarkFolderRepository;
@@ -54,21 +53,16 @@ public class UserServiceImpl implements UserService {
     public void withdraw(Long userId, WithdrawRequestDto requestDto) {
         User user = resolveUser(userId);
 
-        if (user.isWithdraw()) {
-            throw new UserAlreadyWithdrawnException();
-        }
-
         if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
             throw new InvalidPasswordException();
         }
 
-        // 관련 데이터 삭제 (순서 중요: 외래키 제약조건 고려)
         bookmarkRepository.deleteAllByUserId(userId);
         bookmarkFolderRepository.deleteAllByUserId(userId);
         userSourceRepository.deleteAllByUserId(userId);
         keywordRepository.deleteAllByUserId(userId);
 
-        user.withdraw();
+        userRepository.delete(user);
     }
 
     private User resolveUser(Long userId) {
