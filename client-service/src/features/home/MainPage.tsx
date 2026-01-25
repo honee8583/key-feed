@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth'
+import { TagIcon, PlusIcon } from '../../components/common/Icons'
+import { KeywordManagementModal } from './components/KeywordManagementModal'
 import { HighlightCard, type HighlightCardProps } from './components/HighlightCard'
 import type { CreatedSource } from '../../services/sourceApi'
 import { AddSourceSheet } from './components/AddSourceSheet'
@@ -34,6 +36,7 @@ export function MainPage() {
   
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null)
   const [isAddSourceOpen, setIsAddSourceOpen] = useState(false)
+  const [isKeywordModalOpen, setIsKeywordModalOpen] = useState(false)
 
   useEffect(() => {
     if (!articles.length) {
@@ -86,6 +89,22 @@ export function MainPage() {
             <p className="mt-3 mb-0 text-slate-100/65">맞춤 콘텐츠를 탐색하세요</p>
           </div>
         </header>
+
+        <button 
+          onClick={() => setIsKeywordModalOpen(true)}
+          className="w-full bg-[#161b26] border border-white/5 rounded-[24px] p-5 flex items-center justify-between cursor-pointer hover:bg-[#1c2230] transition-colors group text-left"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-[18px] bg-[#3B82F6]/10 flex items-center justify-center text-[#3B82F6] group-hover:scale-110 transition-transform">
+              <TagIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-[17px] font-bold text-white mb-0.5">키워드 관리</h3>
+              <p className="text-[14px] text-slate-400">관심 키워드를 추가하고 관리하세요</p>
+            </div>
+          </div>
+          <PlusIcon className="w-6 h-6 text-slate-500 group-hover:text-white transition-colors" />
+        </button>
 
 
 
@@ -160,6 +179,7 @@ export function MainPage() {
       </button>
 
       <AddSourceSheet isOpen={isAddSourceOpen} onClose={handleCloseAddSource} onSubmit={handleAddSourceSubmit} />
+      <KeywordManagementModal isOpen={isKeywordModalOpen} onClose={() => setIsKeywordModalOpen(false)} />
     </div>
   )
 }

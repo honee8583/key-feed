@@ -1,5 +1,6 @@
 import { Suspense, useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import { LoginPage, SignupPage, useAuth } from '../features/auth'
 import { MainPage } from '../features/home'
 import { ExplorePage } from '../features/explore'
@@ -14,6 +15,17 @@ export function AppRouter() {
 
   return (
     <BrowserRouter>
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1e2939',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          },
+        }}
+      />
       <ScrollToTop />
       <Suspense
         fallback={

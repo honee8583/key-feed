@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { bookmarkApi, type BookmarkFolderDto, type BookmarkItemDto } from '../../services/bookmarkApi'
 import { FolderManagementModal } from './FolderManagementModal'
 import { BookmarkFolderIcon } from './BookmarkFolderIcon'
+import { AlertCircleIcon } from '../../components/common/Icons'
 
 export function FolderManagementPage() {
   const navigate = useNavigate()
@@ -59,17 +61,122 @@ export function FolderManagementPage() {
     setIsModalOpen(true)
   }
 
-  const handleDeleteFolder = async (folderId: number) => {
-    if (!confirm('이 폴더를 삭제하시겠습니까?')) {
-      return
-    }
-    try {
-      await bookmarkApi.deleteFolder(folderId)
-      await fetchFolders()
-    } catch (err) {
-      const message = err instanceof Error ? err.message : '폴더 삭제에 실패했습니다.'
-      alert(message)
-    }
+  const handleDeleteFolder = (folderId: number) => {
+    toast.custom((t) => (
+      <div
+        className={`${
+          t.visible ? 'animate-enter' : 'animate-leave'
+        } max-w-md w-full bg-[#1e2939] shadow-lg rounded-2xl pointer-events-auto flex flex-col border border-white/10`}
+        style={{
+          animation: t.visible 
+            ? '0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards enter-animation' 
+            : '0.23s forwards leave-animation'
+        }}
+      >
+        <div className="p-4 flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+               <AlertCircleIcon className="w-6 h-6 text-red-500" />
+             </div>
+             <div className="flex-1 min-w-0">
+               <h3 className="text-[15px] font-bold text-white mb-0.5">폴더를 삭제하시겠습니까?</h3>
+               <p className="text-[13px] text-slate-400 leading-snug">
+                 이 작업은 되돌릴 수 없습니다.
+               </p>
+             </div>
+          </div>
+        </div>
+        <div className="flex border-t border-white/10">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="flex-1 px-4 py-3 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors first:rounded-bl-2xl"
+          >
+            취소
+          </button>
+          <div className="w-[1px] bg-white/10" />
+          <button
+             onClick={() => {
+                toast.dismiss(t.id)
+                
+                // Optimistic UI update: Remove folder immediately to prevent interactions
+                setFolders(prev => prev.filter(f => f.folderId !== folderId))
+
+                // Allow UI to update (close toast and list) before starting async operation
+                setTimeout(async () => {
+                    try {
+                      await bookmarkApi.deleteFolder(folderId)
+                      // Sync with server state
+                      await fetchFolders()
+                      
+                      const successId = toast.success('폴더가 삭제되었습니다', {
+                          duration: 3000,
+                          id: `folder-del-success-${Date.now()}`,
+                          style: {
+                            background: '#1e2939',
+                            color: '#fff',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                          },
+                          iconTheme: {
+                            primary: '#fff',
+                            secondary: '#1e2939',
+                          },
+                      })
+                      
+                      setTimeout(() => {
+                        toast.dismiss(successId)
+                      }, 3000)
+
+                    } catch (err) {
+                       // Check if error is 'not found' (treat as success)
+                       const errorMessage = err instanceof Error ? err.message : '';
+                       const isNotFound = errorMessage.includes('not found') || 
+                                         errorMessage.includes('존재하지 않는') ||
+                                         (err as { status?: number }).status === 404;
+
+                       if (isNotFound) {
+                           // Already deleted, just sync
+                           await fetchFolders();
+                           // Show success anyway to reassure user
+                           const successId = toast.success('폴더가 삭제되었습니다', {
+                                duration: 3000,
+                                id: `folder-del-success-skip-${Date.now()}`,
+                            });
+                             setTimeout(() =>  toast.dismiss(successId), 3000);
+                       } else {
+                           // Rollback/Sync on real error
+                           await fetchFolders()
+                           
+                           const message = errorMessage || '폴더 삭제에 실패했습니다.'
+                           console.error(err)
+                           const errorId = toast.error(message, {
+                              duration: 3000,
+                              id: `folder-del-error-${Date.now()}`,
+                              style: {
+                                background: '#1e2939',
+                                color: '#ff4b4b',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                              }
+                           })
+                           
+                           setTimeout(() => {
+                            toast.dismiss(errorId)
+                           }, 3000)
+                       }
+                    }
+                }, 0)
+             }}
+            className="flex-1 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors last:rounded-br-2xl"
+          >
+            삭제
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity,
+      position: 'top-center',
+    })
   }
 
   const fetchBookmarks = useCallback(
