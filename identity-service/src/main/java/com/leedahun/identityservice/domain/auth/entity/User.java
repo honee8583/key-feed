@@ -56,8 +56,4 @@ public class User extends BaseTimeEntity {
         this.password = encodedPassword;
     }
 
-    public void withdraw() {
-        this.isWithdraw = true;
-    }
-
 }
