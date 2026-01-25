@@ -28,3 +28,33 @@
 
 ## 주석 지침
 - 사용되지 않는 주석은 제거하기
+
+## 🧩 UI 컴포넌트 사용 가이드
+### Toast Notification (react-hot-toast)
+- 알림 메시지나 확인 창이 필요할 때는 `alert`나 `confirm` 대신 `react-hot-toast`를 사용
+- **설치 확인**: `npm install react-hot-toast`
+- **사용법**:
+  ```typescript
+  import toast from 'react-hot-toast';
+
+  // 성공
+  toast.success('성공 메시지');
+  
+  // 에러
+  toast.error('에러 메시지');
+  
+  // Promise 상태 처리 (로딩 -> 성공/실패)
+  toast.promise(myPromise, {
+    loading: '로딩 중...',
+    success: '성공!',
+    error: '실패',
+  });
+  
+  // 커스텀 UI (확인 모달 등)
+  toast.custom((t) => (
+    <div>
+      Custom Content
+      <button onClick={() => toast.dismiss(t.id)}>닫기</button>
+    </div>
+  ));
+  ```

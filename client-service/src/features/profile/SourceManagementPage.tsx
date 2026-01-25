@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { useDebounce } from '../../hooks/useDebounce'
 import { ToggleSwitch } from '../../components/ToggleSwitch'
 import { sourceApi, type CreatedSource } from '../../services/sourceApi'
@@ -10,6 +11,7 @@ import {
   RefreshCwIcon,
   SearchIcon,
   TrendingUpIcon,
+  AlertCircleIcon,
 } from '../../components/common/Icons'
 import { AddSourceSheet } from '../home/components/AddSourceSheet'
 import { formatRelativePublishedAt } from '../../utils/dateUtils'
@@ -79,31 +81,110 @@ export function SourceManagementPage() {
         )
       )
     } catch (toggleError) {
-      setError(
+      toast.error(
         toggleError instanceof Error
           ? toggleError.message
-          : '피드 수신 설정 변경에 실패했습니다.'
+          : '피드 수신 설정 변경에 실패했습니다.',
+          { duration: 3000 }
       )
     } finally {
       setTogglingId(null)
     }
   }
 
-  const handleDelete = async (userSourceId: number) => {
-    if (!window.confirm('정말 이 소스를 삭제하시겠습니까?')) {
-      return
-    }
+  const handleDelete = (userSourceId: number) => {
+    toast.custom((t) => (
+      <div
+        className={`${
+          t.visible ? 'animate-enter' : 'animate-leave'
+        } max-w-md w-full bg-[#1e2939] shadow-lg rounded-2xl pointer-events-auto flex flex-col border border-white/10`}
+        style={{
+          animation: t.visible 
+            ? '0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards enter-animation' 
+            : '0.23s forwards leave-animation'
+        }}
+      >
+        <div className="p-4 flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+               <AlertCircleIcon className="w-6 h-6 text-red-500" />
+             </div>
+             <div className="flex-1 min-w-0">
+               <h3 className="text-[15px] font-bold text-white mb-0.5">소스를 삭제하시겠습니까?</h3>
+               <p className="text-[13px] text-slate-400 leading-snug">
+                 삭제된 소스는 복구할 수 없습니다.
+               </p>
+             </div>
+          </div>
+        </div>
+        <div className="flex border-t border-white/10">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="flex-1 px-4 py-3 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors first:rounded-bl-2xl"
+          >
+            취소
+          </button>
+          <div className="w-[1px] bg-white/10" />
+          <button
+             onClick={() => {
+                toast.dismiss(t.id)
+                
+                // Allow UI to update (close toast) before starting async operation
+                setTimeout(async () => {
+                    // Global dismiss backup not needed inside here if we trust specific ID default
+                    
+                    try {
+                      await sourceApi.delete(userSourceId)
+                      setItems(prev => prev.filter(item => item.userSourceId !== userSourceId))
+                      
+                      const successId = toast.success('소스가 삭제되었습니다', {
+                          duration: 3000,
+                          id: `src-del-success-${Date.now()}`,
+                          style: {
+                            background: '#1e2939',
+                            color: '#fff',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                          },
+                          iconTheme: {
+                            primary: '#fff',
+                            secondary: '#1e2939',
+                          },
+                      })
+                      
+                      setTimeout(() => {
+                        toast.dismiss(successId)
+                      }, 3000)
 
-    try {
-      await sourceApi.delete(userSourceId)
-      setItems(prev => prev.filter(item => item.userSourceId !== userSourceId))
-    } catch (deleteError) {
-      setError(
-        deleteError instanceof Error
-          ? deleteError.message
-          : '소스 삭제에 실패했습니다.'
-      )
-    }
+                    } catch (error) {
+                       console.error(error)
+                       const errorId = toast.error('삭제에 실패했습니다', {
+                          duration: 3000,
+                          id: `src-del-error-${Date.now()}`,
+                          style: {
+                            background: '#1e2939',
+                            color: '#ff4b4b',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                          }
+                       })
+                       
+                       setTimeout(() => {
+                        toast.dismiss(errorId)
+                       }, 3000)
+                    }
+                }, 0)
+             }}
+            className="flex-1 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors last:rounded-br-2xl"
+          >
+            삭제
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity,
+      position: 'top-center',
+    })
   }
 
   return (

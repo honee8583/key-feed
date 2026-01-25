@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.identityservice.common.message.SuccessMessage;
 import com.leedahun.identityservice.domain.auth.config.SecurityConfig;
 import com.leedahun.identityservice.domain.auth.dto.PasswordChangeRequestDto;
+import com.leedahun.identityservice.domain.auth.dto.WithdrawRequestDto;
 import com.leedahun.identityservice.domain.auth.exception.InvalidPasswordException;
 import com.leedahun.identityservice.domain.auth.exception.PasswordMismatchException;
 import com.leedahun.identityservice.domain.auth.exception.SamePasswordException;
@@ -183,6 +185,66 @@ class UserControllerTest {
 
         // when & then
         mockMvc.perform(patch("/api/users/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("[DELETE /api/users] 회원탈퇴 성공 시 200 OK와 성공 메시지를 반환한다")
+    void withdraw_success() throws Exception {
+        // given
+        setAuthentication(USER_ID);
+
+        WithdrawRequestDto requestDto = WithdrawRequestDto.builder()
+                .password("currentPW!")
+                .build();
+
+        willDoNothing().given(userService).withdraw(eq(USER_ID), any(WithdrawRequestDto.class));
+
+        // when & then
+        mockMvc.perform(delete("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("200"))
+                .andExpect(jsonPath("$.message").value(SuccessMessage.WITHDRAW_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        then(userService).should(times(1)).withdraw(eq(USER_ID), any(WithdrawRequestDto.class));
+    }
+
+    @Test
+    @DisplayName("[DELETE /api/users] 비밀번호가 틀리면 InvalidPasswordException이 발생한다")
+    void withdraw_wrongPassword_throws() throws Exception {
+        // given
+        setAuthentication(USER_ID);
+
+        WithdrawRequestDto requestDto = WithdrawRequestDto.builder()
+                .password("wrongPassword")
+                .build();
+
+        willThrow(new InvalidPasswordException()).given(userService).withdraw(eq(USER_ID), any(WithdrawRequestDto.class));
+
+        // when & then
+        mockMvc.perform(delete("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(requestDto)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("[DELETE /api/users] 비밀번호가 비어있으면 400 BAD REQUEST를 반환한다")
+    void withdraw_blankPassword_returns400() throws Exception {
+        // given
+        setAuthentication(USER_ID);
+
+        WithdrawRequestDto requestDto = WithdrawRequestDto.builder()
+                .password("")
+                .build();
+
+        // when & then
+        mockMvc.perform(delete("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(requestDto)))
                 .andExpect(status().isBadRequest());

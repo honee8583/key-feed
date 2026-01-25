@@ -19,4 +19,11 @@ export const userApi = {
       body: payload,
     })
   },
+  
+  deleteAccount(password: string) {
+    return apiClient.request<void>('/users', {
+      method: 'DELETE',
+      body: { password },
+    })
+  },
 }

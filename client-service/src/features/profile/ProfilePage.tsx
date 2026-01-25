@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
 import {
@@ -17,6 +18,8 @@ import securitySettingsIcon from '../../assets/profile/security_settings.svg'
 import generalSettingsIcon from '../../assets/profile/general_settings.svg'
 
 
+import { DeleteAccountModal } from './DeleteAccountModal'
+
 type LinkItem = {
   id: string
   title: string
@@ -29,6 +32,7 @@ type LinkItem = {
 export function ProfilePage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
   const handleLogout = () => {
     if (window.confirm('정말 로그아웃하시겠어요?')) {
@@ -37,9 +41,12 @@ export function ProfilePage() {
   }
 
   const handleDeleteAccount = () => {
-    if (window.confirm('정말 계정을 삭제하시겠어요? 이 작업은 되돌릴 수 없습니다.')) {
-      alert('계정 삭제 기능은 아직 구현되지 않았습니다.')
-    }
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleDeleteSuccess = () => {
+    logout()
+    // Additional cleanup if needed
   }
 
   const managementLinks: LinkItem[] = [
@@ -189,6 +196,12 @@ export function ProfilePage() {
 
         <p className="text-center text-[12px] text-slate-600 font-medium py-2">버전 1.0.0</p>
       </div>
+
+      <DeleteAccountModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onSuccess={handleDeleteSuccess}
+      />
     </div>
   )
 }

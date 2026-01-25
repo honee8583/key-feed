@@ -9,12 +9,17 @@ import static org.mockito.BDDMockito.verify;
 
 import com.leedahun.identityservice.common.error.exception.EntityNotFoundException;
 import com.leedahun.identityservice.domain.auth.dto.PasswordChangeRequestDto;
+import com.leedahun.identityservice.domain.auth.dto.WithdrawRequestDto;
 import com.leedahun.identityservice.domain.auth.entity.Role;
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.exception.InvalidPasswordException;
 import com.leedahun.identityservice.domain.auth.exception.PasswordMismatchException;
 import com.leedahun.identityservice.domain.auth.exception.SamePasswordException;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
+import com.leedahun.identityservice.domain.bookmark.repository.BookmarkFolderRepository;
+import com.leedahun.identityservice.domain.bookmark.repository.BookmarkRepository;
+import com.leedahun.identityservice.domain.keyword.repository.KeywordRepository;
+import com.leedahun.identityservice.domain.source.repository.UserSourceRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +37,18 @@ class UserServiceImplTest {
 
     @Mock
     BCryptPasswordEncoder passwordEncoder;
+
+    @Mock
+    KeywordRepository keywordRepository;
+
+    @Mock
+    UserSourceRepository userSourceRepository;
+
+    @Mock
+    BookmarkFolderRepository bookmarkFolderRepository;
+
+    @Mock
+    BookmarkRepository bookmarkRepository;
 
     @InjectMocks
     UserServiceImpl userService;
@@ -175,6 +192,80 @@ class UserServiceImplTest {
                 .isInstanceOf(SamePasswordException.class);
 
         verify(passwordEncoder, never()).encode(any());
+    }
+
+    @Test
+    @DisplayName("회원탈퇴 성공")
+    void withdraw_success() {
+        // given
+        User user = User.builder()
+                .id(USER_ID)
+                .email(EMAIL)
+                .password(ENCODED_PASSWORD)
+                .role(Role.USER)
+                .build();
+
+        WithdrawRequestDto requestDto = WithdrawRequestDto.builder()
+                .password(CURRENT_PASSWORD)
+                .build();
+
+        given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(CURRENT_PASSWORD, ENCODED_PASSWORD)).willReturn(true);
+
+        // when
+        userService.withdraw(USER_ID, requestDto);
+
+        // then
+        verify(userRepository).findById(USER_ID);
+        verify(passwordEncoder).matches(CURRENT_PASSWORD, ENCODED_PASSWORD);
+        verify(bookmarkRepository).deleteAllByUserId(USER_ID);
+        verify(bookmarkFolderRepository).deleteAllByUserId(USER_ID);
+        verify(userSourceRepository).deleteAllByUserId(USER_ID);
+        verify(keywordRepository).deleteAllByUserId(USER_ID);
+        verify(userRepository).delete(user);
+    }
+
+    @Test
+    @DisplayName("회원탈퇴 실패 - 사용자 없음")
+    void withdraw_userNotFound_throws() {
+        // given
+        WithdrawRequestDto requestDto = WithdrawRequestDto.builder()
+                .password(CURRENT_PASSWORD)
+                .build();
+
+        given(userRepository.findById(USER_ID)).willReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> userService.withdraw(USER_ID, requestDto))
+                .isInstanceOf(EntityNotFoundException.class);
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(bookmarkRepository, never()).deleteAllByUserId(any());
+    }
+
+    @Test
+    @DisplayName("회원탈퇴 실패 - 비밀번호 불일치")
+    void withdraw_wrongPassword_throws() {
+        // given
+        User user = User.builder()
+                .id(USER_ID)
+                .email(EMAIL)
+                .password(ENCODED_PASSWORD)
+                .role(Role.USER)
+                .build();
+
+        WithdrawRequestDto requestDto = WithdrawRequestDto.builder()
+                .password("wrongPassword")
+                .build();
+
+        given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("wrongPassword", ENCODED_PASSWORD)).willReturn(false);
+
+        // when / then
+        assertThatThrownBy(() -> userService.withdraw(USER_ID, requestDto))
+                .isInstanceOf(InvalidPasswordException.class);
+
+        verify(bookmarkRepository, never()).deleteAllByUserId(any());
     }
 
 }
