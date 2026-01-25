@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { TagIcon, TrashIcon, PlusIcon } from '../../../components/common/Icons'
+import toast from 'react-hot-toast'
+import { TagIcon, TrashIcon, PlusIcon, AlertCircleIcon } from '../../../components/common/Icons'
 import { keywordApi, type Keyword } from '../../../services/keywordApi'
 
 type KeywordManagementModalProps = {
@@ -46,33 +47,133 @@ export function KeywordManagementModal({ isOpen, onClose }: KeywordManagementMod
     
     // Prevent duplicates
     if (keywords.some(k => k.name.toLowerCase() === text.toLowerCase())) {
-        alert('이미 등록된 키워드입니다.')
+        toast.error('이미 등록된 키워드입니다.')
         return
     }
 
     setIsSubmitting(true)
+    const loadingId = toast.loading('추가 중...')
+    
     try {
       const newKeyword = await keywordApi.addKeyword(text)
+      
+      // Explicitly dismiss loading toast
+      toast.dismiss(loadingId)
+
+      // Create new success toast with manual timeout backup
+      const successId = toast.success('키워드가 추가되었습니다.', {
+        duration: 3000,
+        id: `add-success-${Date.now()}`,
+      })
+      
+      setTimeout(() => {
+        toast.dismiss(successId)
+      }, 3000)
+      
       setKeywords(prev => [newKeyword, ...prev])
       setInputText('')
     } catch (error) {
-      console.error('Failed to add keyword', error)
-      alert('키워드 추가에 실패했습니다.')
+       console.error(error)
+       toast.dismiss(loadingId)
+       
+       const errorId = toast.error('키워드 추가에 실패했습니다.', {
+         duration: 3000,
+         id: `add-error-${Date.now()}`,
+       })
+       
+       setTimeout(() => {
+         toast.dismiss(errorId)
+       }, 3000)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleDeleteKeyword = async (id: number) => {
-    if (!window.confirm('이 키워드를 삭제하시겠습니까?')) return
+  const handleDeleteKeyword = (id: number) => {
+    toast.custom((t) => (
+      <div 
+        className={`${
+          t.visible ? 'animate-enter' : 'animate-leave'
+        } w-full max-w-sm bg-[#1e2939] shadow-2xl rounded-2xl border border-white/10 pointer-events-auto flex flex-col overflow-hidden`}
+        style={{
+          animation: t.visible 
+            ? '0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards enter-animation' 
+            : '0.23s forwards leave-animation'
+        }}
+      >
+        <div className="p-5 flex items-start gap-4">
+          <div className="shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+            <AlertCircleIcon className="w-5 h-5 text-red-500" />
+          </div>
+          <div className="flex-1 pt-1">
+            <h3 className="text-[16px] font-bold text-white leading-tight">키워드 삭제</h3>
+            <p className="mt-2 text-sm text-slate-400 leading-relaxed">
+              정말 이 키워드를 삭제하시겠습니까? 삭제 후에는 관련 콘텐츠 알림을 받을 수 없습니다.
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2 p-3 bg-black/20 border-t border-white/5">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+          >
+            취소
+          </button>
+          <button
+             onClick={async () => {
+                toast.dismiss() // Dismiss all toasts immediately
+                try {
+                  await keywordApi.deleteKeyword(id)
+                  setKeywords(prev => prev.filter(k => k.keywordId !== id))
+                  
+                  // Forcefully handle success toast lifecycle
+                  const successId = toast.success('키워드가 삭제되었습니다', {
+                      duration: 3000, // Try library duration first
+                      id: `del-success-${Date.now()}`,
+                      style: {
+                        background: '#1e2939',
+                        color: '#fff',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      },
+                      iconTheme: {
+                        primary: '#fff',
+                        secondary: '#1e2939',
+                      },
+                  })
+                  
+                  // Backup manual dismissal incase library timer fails
+                  setTimeout(() => {
+                    toast.dismiss(successId)
+                  }, 3000)
 
-    try {
-      await keywordApi.deleteKeyword(id)
-      setKeywords(prev => prev.filter(k => k.keywordId !== id))
-    } catch (error) {
-      console.error('Failed to delete keyword', error)
-      alert('삭제에 실패했습니다.')
-    }
+                } catch (error) {
+                   console.error(error)
+                   const errorId = toast.error('삭제에 실패했습니다', {
+                      duration: 3000,
+                      id: `del-error-${Date.now()}`,
+                      style: {
+                        background: '#1e2939',
+                        color: '#ff4b4b',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      }
+                   })
+                   
+                   // Backup manual dismissal
+                   setTimeout(() => {
+                    toast.dismiss(errorId)
+                   }, 3000)
+                }
+             }}
+            className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 active:bg-red-700 rounded-xl transition-colors shadow-lg shadow-red-500/20"
+          >
+            삭제하기
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity, position: 'top-center' })
   }
 
   if (!isOpen) return null
