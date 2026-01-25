@@ -15,7 +15,6 @@ import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.exception.InvalidPasswordException;
 import com.leedahun.identityservice.domain.auth.exception.PasswordMismatchException;
 import com.leedahun.identityservice.domain.auth.exception.SamePasswordException;
-import com.leedahun.identityservice.domain.auth.exception.UserAlreadyWithdrawnException;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
 import com.leedahun.identityservice.domain.bookmark.repository.BookmarkFolderRepository;
 import com.leedahun.identityservice.domain.bookmark.repository.BookmarkRepository;
@@ -223,7 +222,7 @@ class UserServiceImplTest {
         verify(bookmarkFolderRepository).deleteAllByUserId(USER_ID);
         verify(userSourceRepository).deleteAllByUserId(USER_ID);
         verify(keywordRepository).deleteAllByUserId(USER_ID);
-        assertThat(user.isWithdraw()).isTrue();
+        verify(userRepository).delete(user);
     }
 
     @Test
@@ -239,32 +238,6 @@ class UserServiceImplTest {
         // when / then
         assertThatThrownBy(() -> userService.withdraw(USER_ID, requestDto))
                 .isInstanceOf(EntityNotFoundException.class);
-
-        verify(passwordEncoder, never()).matches(any(), any());
-        verify(bookmarkRepository, never()).deleteAllByUserId(any());
-    }
-
-    @Test
-    @DisplayName("회원탈퇴 실패 - 이미 탈퇴한 사용자")
-    void withdraw_alreadyWithdrawn_throws() {
-        // given
-        User user = User.builder()
-                .id(USER_ID)
-                .email(EMAIL)
-                .password(ENCODED_PASSWORD)
-                .role(Role.USER)
-                .isWithdraw(true)
-                .build();
-
-        WithdrawRequestDto requestDto = WithdrawRequestDto.builder()
-                .password(CURRENT_PASSWORD)
-                .build();
-
-        given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
-
-        // when / then
-        assertThatThrownBy(() -> userService.withdraw(USER_ID, requestDto))
-                .isInstanceOf(UserAlreadyWithdrawnException.class);
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(bookmarkRepository, never()).deleteAllByUserId(any());

@@ -19,7 +19,6 @@ import com.leedahun.identityservice.domain.auth.dto.WithdrawRequestDto;
 import com.leedahun.identityservice.domain.auth.exception.InvalidPasswordException;
 import com.leedahun.identityservice.domain.auth.exception.PasswordMismatchException;
 import com.leedahun.identityservice.domain.auth.exception.SamePasswordException;
-import com.leedahun.identityservice.domain.auth.exception.UserAlreadyWithdrawnException;
 import com.leedahun.identityservice.domain.auth.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -232,25 +231,6 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(requestDto)))
                 .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("[DELETE /api/users] 이미 탈퇴한 회원이면 UserAlreadyWithdrawnException이 발생한다")
-    void withdraw_alreadyWithdrawn_throws() throws Exception {
-        // given
-        setAuthentication(USER_ID);
-
-        WithdrawRequestDto requestDto = WithdrawRequestDto.builder()
-                .password("currentPW!")
-                .build();
-
-        willThrow(new UserAlreadyWithdrawnException()).given(userService).withdraw(eq(USER_ID), any(WithdrawRequestDto.class));
-
-        // when & then
-        mockMvc.perform(delete("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(requestDto)))
-                .andExpect(status().isBadRequest());
     }
 
     @Test
