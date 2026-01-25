@@ -18,6 +18,7 @@ import com.leedahun.identityservice.domain.auth.dto.TokenResult;
 import com.leedahun.identityservice.domain.auth.entity.Role;
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.exception.InvalidPasswordException;
+import com.leedahun.identityservice.domain.auth.exception.UserAlreadyWithdrawnException;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
 import com.leedahun.identityservice.domain.auth.util.JwtUtil;
 import java.util.Optional;
@@ -168,6 +169,28 @@ class LoginServiceTest {
         assertThatThrownBy(() -> loginService.reissueTokens("refresh.raw"))
                 .isInstanceOf(EntityNotFoundException.class);
 
+        verify(jwtUtil, never()).createAccessToken(anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("탈퇴한 회원이 로그인 시도하면 UserAlreadyWithdrawnException이 발생한다")
+    void login_withdrawnUser_throws() {
+        // given
+        User user = User.builder()
+                .id(1L)
+                .email(EMAIL)
+                .password(ENC_PW)
+                .role(Role.USER)
+                .isWithdraw(true)
+                .build();
+
+        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(user));
+
+        // when / then
+        assertThatThrownBy(() -> loginService.login(new LoginRequestDto(EMAIL, RAW_PW)))
+                .isInstanceOf(UserAlreadyWithdrawnException.class);
+
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
         verify(jwtUtil, never()).createAccessToken(anyLong(), any());
     }
 

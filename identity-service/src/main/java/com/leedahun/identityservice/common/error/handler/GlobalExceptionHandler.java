@@ -8,6 +8,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,6 +46,12 @@ public class GlobalExceptionHandler {
         });
 
         return ResponseEntity.badRequest().body(new HttpResponse(HttpStatus.BAD_REQUEST, ErrorMessage.INVALID_INPUT_VALUE.getMessage(), errors));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        return ResponseEntity.badRequest()
+                .body(new HttpResponse(HttpStatus.BAD_REQUEST, ErrorMessage.INVALID_INPUT_VALUE.getMessage(), null));
     }
 
 }

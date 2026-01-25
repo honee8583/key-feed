@@ -9,6 +9,7 @@ import com.leedahun.identityservice.domain.auth.dto.TokenResult;
 import com.leedahun.identityservice.domain.auth.entity.Role;
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.exception.InvalidPasswordException;
+import com.leedahun.identityservice.domain.auth.exception.UserAlreadyWithdrawnException;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
 import com.leedahun.identityservice.domain.auth.service.LoginService;
 import com.leedahun.identityservice.domain.auth.util.JwtUtil;
@@ -31,6 +32,10 @@ public class LoginServiceImpl implements LoginService {
     public LoginResult login(LoginRequestDto loginRequestDto) {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("User", loginRequestDto.getEmail()));
+
+        if (user.isWithdraw()) {
+            throw new UserAlreadyWithdrawnException();
+        }
 
         if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPassword())) {
             throw new InvalidPasswordException();
