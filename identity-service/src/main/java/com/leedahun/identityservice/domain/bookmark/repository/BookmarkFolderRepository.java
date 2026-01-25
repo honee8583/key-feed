@@ -15,4 +15,6 @@ public interface BookmarkFolderRepository extends JpaRepository<BookmarkFolder, 
     // 사용자의 북마크 폴더 개수
     long countByUserId(Long userId);
 
+    void deleteAllByUserId(Long userId);
+
 }

@@ -26,4 +26,6 @@ public interface KeywordRepository extends JpaRepository<Keyword, Long> {
             "AND us.source.id = :sourceId")
     List<Long> findUserIdsByNamesAndSourceId(@Param("keywords") Set<String> keywords, @Param("sourceId") Long sourceId);
 
+    void deleteAllByUserId(Long userId);
+
 }

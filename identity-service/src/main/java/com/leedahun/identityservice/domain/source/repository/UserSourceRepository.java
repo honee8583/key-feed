@@ -25,4 +25,6 @@ public interface UserSourceRepository extends JpaRepository<UserSource, Long> {
     """)
     List<UserSource> searchByUserIdAndKeyword(@Param("userId") Long userId, @Param("keyword") String keyword);
 
+    void deleteAllByUserId(Long userId);
+
 }
