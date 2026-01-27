@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.*;
 
+import static com.leedahun.identityservice.common.constant.HttpConstants.USER_AGENT;
 import static com.leedahun.identityservice.common.message.ErrorMessage.*;
 
 @Slf4j
@@ -15,7 +16,6 @@ import static com.leedahun.identityservice.common.message.ErrorMessage.*;
 public class UrlValidator {
 
     private static final int TIMEOUT = 10000; // 10초
-    private static final String USER_AGENT = "Mozilla/5.0 (compatible; KeyFeedBot/1.0)";
 
     private static final String CONTENT_TYPE_XML = "xml";
     private static final String CONTENT_TYPE_RSS = "rss";
