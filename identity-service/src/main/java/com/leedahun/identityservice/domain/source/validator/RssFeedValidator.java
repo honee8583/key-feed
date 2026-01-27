@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 public class RssFeedValidator {
 
     private static final int TIMEOUT = 10000; // 10초
+    private static final String USER_AGENT = "Mozilla/5.0 (compatible; KeyFeedBot/1.0)";
 
     /**
      * RSS 피드가 실제로 파싱 가능한지 검증
@@ -31,6 +32,7 @@ public class RssFeedValidator {
             URLConnection con = new URL(feedUrl).openConnection();
             con.setConnectTimeout(TIMEOUT); // 10초
             con.setReadTimeout(TIMEOUT);    // 10초
+            con.setRequestProperty("User-Agent", USER_AGENT);
 
             String xmlData;
             try (InputStream in = con.getInputStream()) {
