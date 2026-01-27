@@ -11,6 +11,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 
+import static com.leedahun.identityservice.common.constant.HttpConstants.USER_AGENT;
+
 @Slf4j
 @Component
 public class RssFeedValidator {
@@ -31,6 +33,7 @@ public class RssFeedValidator {
             URLConnection con = new URL(feedUrl).openConnection();
             con.setConnectTimeout(TIMEOUT); // 10초
             con.setReadTimeout(TIMEOUT);    // 10초
+            con.setRequestProperty("User-Agent", USER_AGENT);
 
             String xmlData;
             try (InputStream in = con.getInputStream()) {

@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.leedahun.identityservice.common.constant.HttpConstants.USER_AGENT;
 import static com.leedahun.identityservice.common.message.ErrorMessage.RSS_PARSING_FAILED;
 
 @Slf4j
@@ -47,7 +48,6 @@ public class SourceServiceImpl implements SourceService {
 
     // Jsoup 설정 상수
     private static final int JSOUP_TIMEOUT = 10000; // 10초
-    private static final String USER_AGENT = "Mozilla/5.0 (compatible; KeyFeedBot/1.0)";
 
     // RSS/Atom 피드 탐지용 CSS 선택자
     private static final String RSS_LINK_SELECTOR = "link[type=application/rss+xml]";
