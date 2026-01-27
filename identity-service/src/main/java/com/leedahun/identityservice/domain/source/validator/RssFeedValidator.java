@@ -11,12 +11,13 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 
+import static com.leedahun.identityservice.common.constant.HttpConstants.USER_AGENT;
+
 @Slf4j
 @Component
 public class RssFeedValidator {
 
     private static final int TIMEOUT = 10000; // 10초
-    private static final String USER_AGENT = "Mozilla/5.0 (compatible; KeyFeedBot/1.0)";
 
     /**
      * RSS 피드가 실제로 파싱 가능한지 검증
