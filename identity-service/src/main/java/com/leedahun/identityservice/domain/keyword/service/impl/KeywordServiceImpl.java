@@ -5,6 +5,7 @@ import com.leedahun.identityservice.common.error.exception.EntityNotFoundExcepti
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
+import com.leedahun.identityservice.domain.keyword.dto.TrendingKeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.entity.Keyword;
 import com.leedahun.identityservice.domain.keyword.exception.KeywordLimitExceededException;
 import com.leedahun.identityservice.domain.keyword.repository.KeywordRepository;
@@ -12,6 +13,8 @@ import com.leedahun.identityservice.domain.keyword.service.KeywordService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,6 +88,13 @@ public class KeywordServiceImpl implements KeywordService {
         }
 
         return keywordRepository.findUserIdsByNames(keywords);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "trendingKeywords", cacheManager = "cacheManager")
+    public List<TrendingKeywordResponseDto> getTrendingKeywords() {
+        return keywordRepository.findTrendingKeywords(PageRequest.of(0, 10));
     }
 
     private User findUserById(Long userId) {

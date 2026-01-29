@@ -1,6 +1,8 @@
 package com.leedahun.identityservice.domain.keyword.service;
 
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
+import com.leedahun.identityservice.domain.keyword.dto.TrendingKeywordResponseDto;
+
 import java.util.List;
 import java.util.Set;
 
@@ -16,4 +18,5 @@ public interface KeywordService {
 
     List<Long> findUserIdsByKeywords(Set<String> keywords);
 
+    List<TrendingKeywordResponseDto> getTrendingKeywords();
 }
