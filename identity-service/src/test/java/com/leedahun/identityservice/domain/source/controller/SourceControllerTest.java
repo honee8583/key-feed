@@ -28,6 +28,8 @@ import com.leedahun.identityservice.domain.source.dto.RecommendedSourceResponseD
 import com.leedahun.identityservice.domain.source.dto.SourceRequestDto;
 import com.leedahun.identityservice.domain.source.dto.SourceResponseDto;
 import com.leedahun.identityservice.domain.source.service.SourceService;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -276,7 +278,7 @@ class SourceControllerTest {
                         .build()
         );
 
-        when(sourceService.getRecommendedSources(any())).thenReturn(recommendedList);
+        when(sourceService.getRecommendedSources(any(), any(Pageable.class))).thenReturn(recommendedList);
 
         // when & then
         mockMvc.perform(get("/api/sources/recommended"))
@@ -289,14 +291,14 @@ class SourceControllerTest {
                 .andExpect(jsonPath("$.data[1].sourceId").value(101));
 
         // verify
-        verify(sourceService, times(1)).getRecommendedSources(any());
+        verify(sourceService, times(1)).getRecommendedSources(any(), any(Pageable.class));
     }
 
     @Test
     @DisplayName("[GET /api/sources/recommended] 키워드 없는 사용자는 빈 배열을 반환한다")
     void getRecommendedSources_emptyKeywords_returnsEmptyList() throws Exception {
         // given
-        when(sourceService.getRecommendedSources(any())).thenReturn(List.of());
+        when(sourceService.getRecommendedSources(any(), any(Pageable.class))).thenReturn(List.of());
 
         // when & then
         mockMvc.perform(get("/api/sources/recommended"))
@@ -306,6 +308,22 @@ class SourceControllerTest {
                 .andExpect(jsonPath("$.data", hasSize(0)));
 
         // verify
-        verify(sourceService, times(1)).getRecommendedSources(any());
+        verify(sourceService, times(1)).getRecommendedSources(any(), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("[GET /api/sources/recommended] size 파라미터로 조회 개수를 지정할 수 있다")
+    void getRecommendedSources_withSizeParam() throws Exception {
+        // given
+        when(sourceService.getRecommendedSources(any(), any(Pageable.class))).thenReturn(List.of());
+
+        // when & then
+        mockMvc.perform(get("/api/sources/recommended")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+
+        // verify
+        verify(sourceService, times(1)).getRecommendedSources(any(), any(Pageable.class));
     }
 }

@@ -29,6 +29,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
 import java.util.List;
@@ -362,11 +364,11 @@ class SourceServiceImplTest {
         when(projection.getSubscriberCount()).thenReturn(10L);
 
         when(keywordRepository.findByUserId(USER_ID)).thenReturn(userKeywords);
-        when(sourceRepository.findRecommendedSourcesByKeywords(keywordNames, USER_ID))
+        when(sourceRepository.findRecommendedSourcesByKeywords(eq(keywordNames), eq(USER_ID), any(Pageable.class)))
                 .thenReturn(List.of(projection));
 
         // when
-        List<RecommendedSourceResponseDto> result = sourceService.getRecommendedSources(USER_ID);
+        List<RecommendedSourceResponseDto> result = sourceService.getRecommendedSources(USER_ID, PageRequest.of(0, 10));
 
         // then
         assertThat(result).hasSize(1);
@@ -382,11 +384,11 @@ class SourceServiceImplTest {
         when(keywordRepository.findByUserId(USER_ID)).thenReturn(List.of());
 
         // when
-        List<RecommendedSourceResponseDto> result = sourceService.getRecommendedSources(USER_ID);
+        List<RecommendedSourceResponseDto> result = sourceService.getRecommendedSources(USER_ID, PageRequest.of(0, 10));
 
         // then
         assertThat(result).isEmpty();
-        verify(sourceRepository, never()).findRecommendedSourcesByKeywords(any(), any());
+        verify(sourceRepository, never()).findRecommendedSourcesByKeywords(any(), any(), any(Pageable.class));
     }
 
     @Test
@@ -395,11 +397,11 @@ class SourceServiceImplTest {
         // given
         Keyword keyword = Keyword.builder().id(1L).name("AI").build();
         when(keywordRepository.findByUserId(USER_ID)).thenReturn(List.of(keyword));
-        when(sourceRepository.findRecommendedSourcesByKeywords(List.of("AI"), USER_ID))
+        when(sourceRepository.findRecommendedSourcesByKeywords(eq(List.of("AI")), eq(USER_ID), any(Pageable.class)))
                 .thenReturn(List.of());
 
         // when
-        List<RecommendedSourceResponseDto> result = sourceService.getRecommendedSources(USER_ID);
+        List<RecommendedSourceResponseDto> result = sourceService.getRecommendedSources(USER_ID, PageRequest.of(0, 10));
 
         // then
         assertThat(result).isEmpty();

@@ -8,6 +8,8 @@ import com.leedahun.identityservice.domain.source.dto.SourceResponseDto;
 import com.leedahun.identityservice.domain.source.service.SourceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -62,8 +64,9 @@ public class SourceController {
     }
 
     @GetMapping("/recommended")
-    public ResponseEntity<?> getRecommendedSources(@AuthenticationPrincipal Long userId) {
-        List<RecommendedSourceResponseDto> recommended = sourceService.getRecommendedSources(userId);
+    public ResponseEntity<?> getRecommendedSources(@AuthenticationPrincipal Long userId,
+                                                   @PageableDefault(size = 10) Pageable pageable) {
+        List<RecommendedSourceResponseDto> recommended = sourceService.getRecommendedSources(userId, pageable);
         return ResponseEntity.ok()
                 .body(new HttpResponse(HttpStatus.OK, SuccessMessage.READ_SUCCESS.getMessage(), recommended));
     }

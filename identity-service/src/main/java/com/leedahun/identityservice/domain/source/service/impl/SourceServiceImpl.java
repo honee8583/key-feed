@@ -30,6 +30,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import org.springframework.data.domain.Pageable;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -205,7 +207,7 @@ public class SourceServiceImpl implements SourceService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RecommendedSourceResponseDto> getRecommendedSources(Long userId) {
+    public List<RecommendedSourceResponseDto> getRecommendedSources(Long userId, Pageable pageable) {
         List<String> userKeywords = keywordRepository.findByUserId(userId)
                 .stream()
                 .map(Keyword::getName)
@@ -215,7 +217,7 @@ public class SourceServiceImpl implements SourceService {
             return Collections.emptyList();
         }
 
-        return sourceRepository.findRecommendedSourcesByKeywords(userKeywords, userId)
+        return sourceRepository.findRecommendedSourcesByKeywords(userKeywords, userId, pageable)
                 .stream()
                 .map(source -> RecommendedSourceResponseDto.builder()
                         .sourceId(source.getSourceId())

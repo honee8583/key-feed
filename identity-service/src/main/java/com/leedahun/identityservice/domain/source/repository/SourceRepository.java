@@ -3,6 +3,7 @@ package com.leedahun.identityservice.domain.source.repository;
 import com.leedahun.identityservice.domain.source.entity.Source;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,11 +25,11 @@ public interface SourceRepository extends JpaRepository<Source, Long> {
             )
             GROUP BY s.id, s.url
             ORDER BY subscriberCount DESC
-            LIMIT 10
             """)
     List<RecommendedSourceProjection> findRecommendedSourcesByKeywords(
             @Param("keywordNames") List<String> keywordNames,
-            @Param("userId") Long userId);
+            @Param("userId") Long userId,
+            Pageable pageable);
 
     interface RecommendedSourceProjection {
         Long getSourceId();
