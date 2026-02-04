@@ -5,6 +5,9 @@ import com.leedahun.identityservice.common.error.exception.EntityNotFoundExcepti
 import com.leedahun.identityservice.common.message.ErrorMessage;
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
+import com.leedahun.identityservice.domain.keyword.entity.Keyword;
+import com.leedahun.identityservice.domain.keyword.repository.KeywordRepository;
+import com.leedahun.identityservice.domain.source.dto.RecommendedSourceResponseDto;
 import com.leedahun.identityservice.domain.source.dto.SourceRequestDto;
 import com.leedahun.identityservice.domain.source.dto.SourceResponseDto;
 import com.leedahun.identityservice.domain.source.entity.Source;
@@ -12,6 +15,7 @@ import com.leedahun.identityservice.domain.source.entity.UserSource;
 import com.leedahun.identityservice.domain.source.exception.InvalidRssUrlException;
 import com.leedahun.identityservice.domain.source.exception.SourceValidationException;
 import com.leedahun.identityservice.domain.source.repository.SourceRepository;
+import com.leedahun.identityservice.domain.source.repository.SourceRepository.RecommendedSourceProjection;
 import com.leedahun.identityservice.domain.source.repository.UserSourceRepository;
 import com.leedahun.identityservice.domain.source.service.SourceService;
 import com.leedahun.identityservice.domain.source.validator.RobotsTxtValidator;
@@ -27,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +47,7 @@ public class SourceServiceImpl implements SourceService {
     private final SourceRepository sourceRepository;
     private final UserSourceRepository userSourceRepository;
     private final UserRepository userRepository;
+    private final KeywordRepository keywordRepository;
     private final UrlValidator urlValidator;
     private final RobotsTxtValidator robotsTxtValidator;
     private final RssFeedValidator rssFeedValidator;
@@ -195,5 +201,27 @@ public class SourceServiceImpl implements SourceService {
         return userSources.stream()
                 .map(SourceResponseDto::from)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RecommendedSourceResponseDto> getRecommendedSources(Long userId) {
+        List<String> userKeywords = keywordRepository.findByUserId(userId)
+                .stream()
+                .map(Keyword::getName)
+                .toList();
+
+        if (userKeywords.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return sourceRepository.findRecommendedSourcesByKeywords(userKeywords, userId)
+                .stream()
+                .map(source -> RecommendedSourceResponseDto.builder()
+                        .sourceId(source.getSourceId())
+                        .url(source.getUrl())
+                        .subscriberCount(source.getSubscriberCount())
+                        .build())
+                .toList();
     }
 }

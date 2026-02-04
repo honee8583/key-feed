@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leedahun.identityservice.common.error.exception.EntityNotFoundException;
 import com.leedahun.identityservice.domain.auth.config.SecurityConfig;
 import com.leedahun.identityservice.domain.auth.util.test.WithAnonymousUser;
+import com.leedahun.identityservice.domain.source.dto.RecommendedSourceResponseDto;
 import com.leedahun.identityservice.domain.source.dto.SourceRequestDto;
 import com.leedahun.identityservice.domain.source.dto.SourceResponseDto;
 import com.leedahun.identityservice.domain.source.service.SourceService;
@@ -256,5 +257,55 @@ class SourceControllerTest {
 
         // verify
         verify(sourceService, times(1)).toggleReceiveFeed(any(), eq(badUserSourceId));
+    }
+
+    @Test
+    @DisplayName("[GET /api/sources/recommended] 추천 소스 조회 성공 시 200 OK와 추천 목록을 반환한다")
+    void getRecommendedSources_success() throws Exception {
+        // given
+        List<RecommendedSourceResponseDto> recommendedList = List.of(
+                RecommendedSourceResponseDto.builder()
+                        .sourceId(100L)
+                        .url("https://techblog.example.com/rss")
+                        .subscriberCount(45L)
+                        .build(),
+                RecommendedSourceResponseDto.builder()
+                        .sourceId(101L)
+                        .url("https://devblog.example.com/feed")
+                        .subscriberCount(30L)
+                        .build()
+        );
+
+        when(sourceService.getRecommendedSources(any())).thenReturn(recommendedList);
+
+        // when & then
+        mockMvc.perform(get("/api/sources/recommended"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value(READ_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].sourceId").value(100))
+                .andExpect(jsonPath("$.data[0].subscriberCount").value(45))
+                .andExpect(jsonPath("$.data[1].sourceId").value(101));
+
+        // verify
+        verify(sourceService, times(1)).getRecommendedSources(any());
+    }
+
+    @Test
+    @DisplayName("[GET /api/sources/recommended] 키워드 없는 사용자는 빈 배열을 반환한다")
+    void getRecommendedSources_emptyKeywords_returnsEmptyList() throws Exception {
+        // given
+        when(sourceService.getRecommendedSources(any())).thenReturn(List.of());
+
+        // when & then
+        mockMvc.perform(get("/api/sources/recommended"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value(READ_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data", hasSize(0)));
+
+        // verify
+        verify(sourceService, times(1)).getRecommendedSources(any());
     }
 }

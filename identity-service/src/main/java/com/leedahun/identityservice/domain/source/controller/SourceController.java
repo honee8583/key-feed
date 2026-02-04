@@ -2,6 +2,7 @@ package com.leedahun.identityservice.domain.source.controller;
 
 import com.leedahun.identityservice.common.message.SuccessMessage;
 import com.leedahun.identityservice.common.response.HttpResponse;
+import com.leedahun.identityservice.domain.source.dto.RecommendedSourceResponseDto;
 import com.leedahun.identityservice.domain.source.dto.SourceRequestDto;
 import com.leedahun.identityservice.domain.source.dto.SourceResponseDto;
 import com.leedahun.identityservice.domain.source.service.SourceService;
@@ -58,6 +59,13 @@ public class SourceController {
         SourceResponseDto source = sourceService.toggleReceiveFeed(userId, userSourceId);
         return ResponseEntity.ok()
                 .body(new HttpResponse(HttpStatus.OK, SuccessMessage.UPDATE_SUCCESS.getMessage(), source));
+    }
+
+    @GetMapping("/recommended")
+    public ResponseEntity<?> getRecommendedSources(@AuthenticationPrincipal Long userId) {
+        List<RecommendedSourceResponseDto> recommended = sourceService.getRecommendedSources(userId);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.READ_SUCCESS.getMessage(), recommended));
     }
 
 }

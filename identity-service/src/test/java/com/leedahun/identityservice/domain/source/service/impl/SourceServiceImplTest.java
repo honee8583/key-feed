@@ -5,12 +5,16 @@ import com.leedahun.identityservice.common.error.exception.EntityNotFoundExcepti
 import com.leedahun.identityservice.common.message.ErrorMessage;
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
+import com.leedahun.identityservice.domain.keyword.entity.Keyword;
+import com.leedahun.identityservice.domain.keyword.repository.KeywordRepository;
+import com.leedahun.identityservice.domain.source.dto.RecommendedSourceResponseDto;
 import com.leedahun.identityservice.domain.source.dto.SourceRequestDto;
 import com.leedahun.identityservice.domain.source.dto.SourceResponseDto;
 import com.leedahun.identityservice.domain.source.entity.Source;
 import com.leedahun.identityservice.domain.source.entity.UserSource;
 import com.leedahun.identityservice.domain.source.exception.SourceValidationException;
 import com.leedahun.identityservice.domain.source.repository.SourceRepository;
+import com.leedahun.identityservice.domain.source.repository.SourceRepository.RecommendedSourceProjection;
 import com.leedahun.identityservice.domain.source.repository.UserSourceRepository;
 import com.leedahun.identityservice.domain.source.validator.RobotsTxtValidator;
 import com.leedahun.identityservice.domain.source.validator.RssFeedValidator;
@@ -60,6 +64,9 @@ class SourceServiceImplTest {
 
     @Mock
     private RssFeedValidator rssFeedValidator;
+
+    @Mock
+    private KeywordRepository keywordRepository;
 
     private final Long USER_ID = 1L;
     private final String INPUT_URL = "https://d2.naver.com";
@@ -338,6 +345,64 @@ class SourceServiceImplTest {
         // when & then
         assertThatThrownBy(() -> sourceService.toggleReceiveFeed(USER_ID, userSourceId))
                 .isInstanceOf(EntityNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("추천 소스 조회 성공 - 공통 키워드 기반 추천")
+    void getRecommendedSources_Success() {
+        // given
+        Keyword keyword1 = Keyword.builder().id(1L).name("AI").build();
+        Keyword keyword2 = Keyword.builder().id(2L).name("머신러닝").build();
+        List<Keyword> userKeywords = List.of(keyword1, keyword2);
+        List<String> keywordNames = List.of("AI", "머신러닝");
+
+        RecommendedSourceProjection projection = mock(RecommendedSourceProjection.class);
+        when(projection.getSourceId()).thenReturn(100L);
+        when(projection.getUrl()).thenReturn("https://example.com/rss");
+        when(projection.getSubscriberCount()).thenReturn(10L);
+
+        when(keywordRepository.findByUserId(USER_ID)).thenReturn(userKeywords);
+        when(sourceRepository.findRecommendedSourcesByKeywords(keywordNames, USER_ID))
+                .thenReturn(List.of(projection));
+
+        // when
+        List<RecommendedSourceResponseDto> result = sourceService.getRecommendedSources(USER_ID);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSourceId()).isEqualTo(100L);
+        assertThat(result.get(0).getUrl()).isEqualTo("https://example.com/rss");
+        assertThat(result.get(0).getSubscriberCount()).isEqualTo(10L);
+    }
+
+    @Test
+    @DisplayName("추천 소스 조회 - 키워드 없는 사용자는 빈 배열 반환")
+    void getRecommendedSources_EmptyKeywords_ReturnsEmptyList() {
+        // given
+        when(keywordRepository.findByUserId(USER_ID)).thenReturn(List.of());
+
+        // when
+        List<RecommendedSourceResponseDto> result = sourceService.getRecommendedSources(USER_ID);
+
+        // then
+        assertThat(result).isEmpty();
+        verify(sourceRepository, never()).findRecommendedSourcesByKeywords(any(), any());
+    }
+
+    @Test
+    @DisplayName("추천 소스 조회 - 추천할 소스 없을 때 빈 배열 반환")
+    void getRecommendedSources_NoRecommendations_ReturnsEmptyList() {
+        // given
+        Keyword keyword = Keyword.builder().id(1L).name("AI").build();
+        when(keywordRepository.findByUserId(USER_ID)).thenReturn(List.of(keyword));
+        when(sourceRepository.findRecommendedSourcesByKeywords(List.of("AI"), USER_ID))
+                .thenReturn(List.of());
+
+        // when
+        List<RecommendedSourceResponseDto> result = sourceService.getRecommendedSources(USER_ID);
+
+        // then
+        assertThat(result).isEmpty();
     }
 
     private void mockJsoupConnection(MockedStatic<Jsoup> jsoupMock, String inputUrl, String detectedRssUrl) {
