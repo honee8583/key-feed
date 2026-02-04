@@ -78,8 +78,12 @@ export const sourceApi = {
     )
     return response.data
   },
-  async getRecommended() {
-    const response = await apiClient.request<RecommendedSourceResponse>('/sources/recommended', {
+  async getRecommended(size?: number) {
+    const url = size 
+      ? `/sources/recommended?size=${size}` 
+      : '/sources/recommended'
+      
+    const response = await apiClient.request<RecommendedSourceResponse>(url, {
       method: 'GET',
     })
     return response.data

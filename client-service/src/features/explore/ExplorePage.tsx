@@ -49,7 +49,7 @@ export function ExplorePage() {
   useEffect(() => {
     const fetchRecommended = async () => {
       try {
-        const responseData = await sourceApi.getRecommended()
+        const responseData = await sourceApi.getRecommended(10)
         const mappedSources = responseData.map((item: RecommendedSourceData) => {
            let hostname = item.url;
            try {
