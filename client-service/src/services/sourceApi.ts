@@ -26,6 +26,18 @@ type SourceListResponse = {
   data: CreatedSource[]
 }
 
+export type RecommendedSourceData = {
+  sourceId: number
+  url: string
+  subscriberCount: number
+}
+
+type RecommendedSourceResponse = {
+  status: number
+  message: string
+  data: RecommendedSourceData[]
+}
+
 export const sourceApi = {
   async create(payload: CreateSourceRequest) {
     const response = await apiClient.request<CreateSourceResponse>('/sources', {
@@ -64,6 +76,16 @@ export const sourceApi = {
         method: 'PATCH',
       }
     )
+    return response.data
+  },
+  async getRecommended(size?: number) {
+    const url = size 
+      ? `/sources/recommended?size=${size}` 
+      : '/sources/recommended'
+      
+    const response = await apiClient.request<RecommendedSourceResponse>(url, {
+      method: 'GET',
+    })
     return response.data
   },
 }
