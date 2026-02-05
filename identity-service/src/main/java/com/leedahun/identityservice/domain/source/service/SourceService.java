@@ -1,7 +1,10 @@
 package com.leedahun.identityservice.domain.source.service;
 
+import com.leedahun.identityservice.domain.source.dto.RecommendedSourceResponseDto;
 import com.leedahun.identityservice.domain.source.dto.SourceRequestDto;
 import com.leedahun.identityservice.domain.source.dto.SourceResponseDto;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 public interface SourceService {
@@ -17,5 +20,7 @@ public interface SourceService {
     List<SourceResponseDto> searchMySources(Long userId, String keyword);
 
     SourceResponseDto toggleReceiveFeed(Long userId, Long userSourceId);
+
+    List<RecommendedSourceResponseDto> getRecommendedSources(Long userId, Pageable pageable);
 
 }
