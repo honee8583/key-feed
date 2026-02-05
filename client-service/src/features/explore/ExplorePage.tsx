@@ -4,6 +4,7 @@ import { sourceApi, type RecommendedSourceData } from '../../services/sourceApi'
 
 import sourceIcon from '../../assets/explore/source-icon.svg'
 import trendingIcon from '../../assets/explore/trending-icon.svg'
+import { AddSourceSheet } from '../home/components/AddSourceSheet'
 import profileImage from '../../assets/explore/fireship.png' // Placeholder
 
 // Extend the types to support new visual data if needed
@@ -23,6 +24,7 @@ type RecommendedSourceUI = {
   subscribers: string
   image: string
   url: string
+  isSubscribed?: boolean
 }
 
 // Updated data with theme info to match design
@@ -65,7 +67,8 @@ export function ExplorePage() {
             description: item.url, // Use URL as description for now
             subscribers: `${item.subscriberCount}명 구독`,
             image: profileImage, // Default placeholder
-            url: item.url
+            url: item.url,
+            isSubscribed: false
           }
         })
         setRecommendedSources(mappedSources)
@@ -75,7 +78,30 @@ export function ExplorePage() {
     }
 
     fetchRecommended()
+    fetchRecommended()
   }, [])
+
+  const [addSourceSheet, setAddSourceSheet] = useState<{
+    isOpen: boolean
+    initialName: string
+    initialUrl: string
+  }>({
+    isOpen: false,
+    initialName: '',
+    initialUrl: '',
+  })
+
+  const openAddSourceSheet = (name: string, url: string) => {
+    setAddSourceSheet({
+      isOpen: true,
+      initialName: name,
+      initialUrl: url,
+    })
+  }
+
+  const closeAddSourceSheet = () => {
+    setAddSourceSheet((prev) => ({ ...prev, isOpen: false }))
+  }
 
   return (
     <div className="min-h-screen bg-black text-white font-['Inter','Noto_Sans_KR',sans-serif] pb-24">
@@ -184,12 +210,23 @@ export function ExplorePage() {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  className="shrink-0 bg-[#3B82F6] hover:bg-[#2563EB] active:bg-[#1D4ED8] text-white text-[13px] font-medium py-1.5 px-3.5 rounded-full transition-colors"
-                >
-                  + 추가
-                </button>
+                {source.isSubscribed ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="shrink-0 bg-slate-700 text-slate-400 text-[13px] font-medium py-1.5 px-3.5 rounded-full cursor-default"
+                  >
+                    구독중
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => openAddSourceSheet(source.name, source.url)}
+                    className="shrink-0 bg-[#3B82F6] hover:bg-[#2563EB] active:bg-[#1D4ED8] text-white text-[13px] font-medium py-1.5 px-3.5 rounded-full transition-colors"
+                  >
+                    + 추가
+                  </button>
+                )}
               </div>
             ))}
             {recommendedSources.length === 0 && (
@@ -200,6 +237,24 @@ export function ExplorePage() {
           </div>
         </section>
       </div>
+
+      <AddSourceSheet
+        isOpen={addSourceSheet.isOpen}
+        onClose={closeAddSourceSheet}
+        initialName={addSourceSheet.initialName}
+        initialUrl={addSourceSheet.initialUrl}
+        onSubmit={(payload) => {
+          // Optional: Refresh recommended list or show feedback if needed
+          // For now, the AddSourceSheet handles the API call and success logic internally/via toast
+          setRecommendedSources(prev => prev.map(source => {
+             if (source.url === payload.url) {
+               return { ...source, isSubscribed: true }
+             }
+             return source
+           }))
+          closeAddSourceSheet()
+        }}
+      />
     </div>
   )
 }
