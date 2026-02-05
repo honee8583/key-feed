@@ -59,4 +59,10 @@ export const authApi = {
       body: payload,
     })
   },
+  resetPassword(payload: { email: string; code: string; password: string }) {
+    return apiClient.request<{ success: boolean }>('/auth/password-reset', {
+      method: 'POST',
+      body: payload,
+    })
+  },
 }
