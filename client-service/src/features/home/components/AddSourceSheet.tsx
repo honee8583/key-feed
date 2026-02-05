@@ -9,12 +9,14 @@ type AddSourceSheetProps = {
   isOpen: boolean
   onClose: () => void
   onSubmit?: (payload: { name: string; url: string; type: SourceType; created: CreatedSource }) => void
+  initialName?: string
+  initialUrl?: string
 }
 
-export function AddSourceSheet({ isOpen, onClose, onSubmit }: AddSourceSheetProps) {
+export function AddSourceSheet({ isOpen, onClose, onSubmit, initialName = '', initialUrl = '' }: AddSourceSheetProps) {
   const [sourceType, setSourceType] = useState<SourceType>('blog')
-  const [sourceName, setSourceName] = useState('')
-  const [sourceUrl, setSourceUrl] = useState('')
+  const [sourceName, setSourceName] = useState(initialName)
+  const [sourceUrl, setSourceUrl] = useState(initialUrl)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -31,6 +33,13 @@ export function AddSourceSheet({ isOpen, onClose, onSubmit }: AddSourceSheetProp
     if (!isOpen) {
       return
     }
+    
+    // Reset or Initialize state when opened
+    setSourceName(initialName)
+    setSourceUrl(initialUrl)
+    setSourceType('blog')
+    setSubmitError(null)
+    
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     nameInputRef.current?.focus()
@@ -47,7 +56,7 @@ export function AddSourceSheet({ isOpen, onClose, onSubmit }: AddSourceSheetProp
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', handleKeydown)
     }
-  }, [isOpen, dismissSheet])
+  }, [isOpen, dismissSheet, initialName, initialUrl])
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
