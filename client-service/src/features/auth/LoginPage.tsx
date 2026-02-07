@@ -111,12 +111,12 @@ export function LoginPage() {
               />
               <span>로그인 유지</span>
             </label>
-            <button
-              type="button"
+            <Link
+              to="/password-reset"
               className="text-[#94A3B8] hover:text-white transition-colors"
             >
               비밀번호 찾기
-            </button>
+            </Link>
           </div>
 
           <button

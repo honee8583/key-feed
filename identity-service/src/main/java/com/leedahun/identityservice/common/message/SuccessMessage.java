@@ -21,7 +21,10 @@ public enum SuccessMessage {
 
     PASSWORD_CHANGE_SUCCESS("비밀번호가 성공적으로 변경되었습니다."),
 
-    WITHDRAW_SUCCESS("회원 탈퇴가 완료되었습니다.");
+    WITHDRAW_SUCCESS("회원 탈퇴가 완료되었습니다."),
+
+    PASSWORD_RESET_EMAIL_SENT("비밀번호 재설정을 위한 인증 이메일이 발송되었습니다."),
+    PASSWORD_RESET_SUCCESS("비밀번호가 성공적으로 재설정되었습니다.");
 
     private final String message;
 }

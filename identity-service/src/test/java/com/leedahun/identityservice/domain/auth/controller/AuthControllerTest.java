@@ -30,6 +30,7 @@ import com.leedahun.identityservice.domain.auth.entity.Role;
 import com.leedahun.identityservice.domain.auth.exception.RefreshTokenNotExistsException;
 import com.leedahun.identityservice.domain.auth.service.JoinService;
 import com.leedahun.identityservice.domain.auth.service.LoginService;
+import com.leedahun.identityservice.domain.auth.service.PasswordResetService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,9 @@ class AuthControllerTest {
 
     @MockitoBean
     JoinService joinService;
+
+    @MockitoBean
+    PasswordResetService passwordResetService;
 
     @MockitoBean
     JwtProperties jwtProperties;

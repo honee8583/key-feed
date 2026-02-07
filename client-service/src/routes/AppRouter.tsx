@@ -1,7 +1,7 @@
 import { Suspense, useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { LoginPage, SignupPage, useAuth } from '../features/auth'
+import { LoginPage, PasswordResetPage, SignupPage, useAuth } from '../features/auth'
 import { MainPage } from '../features/home'
 import { ExplorePage } from '../features/explore'
 import { BookmarksPage } from '../features/bookmarks'
@@ -118,6 +118,7 @@ export function AppRouter() {
           />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/password-reset" element={<PasswordResetPage />} />
           <Route
             path="*"
             element={
