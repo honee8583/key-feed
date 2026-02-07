@@ -50,7 +50,10 @@ public enum ErrorMessage {
 
     // 비밀번호 변경 관련 에러 메시지
     PASSWORD_MISMATCH("새 비밀번호가 일치하지 않습니다."),
-    SAME_PASSWORD("현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.");
+    SAME_PASSWORD("현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다."),
+
+    // 비밀번호 재설정 관련 에러 메시지
+    EMAIL_VERIFICATION_REQUIRED("이메일 인증이 완료되지 않았습니다.");
 
     private final String message;
 }
