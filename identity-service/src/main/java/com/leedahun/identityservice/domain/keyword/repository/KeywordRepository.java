@@ -5,6 +5,7 @@ import com.leedahun.identityservice.domain.keyword.entity.Keyword;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -30,5 +31,13 @@ public interface KeywordRepository extends JpaRepository<Keyword, Long> {
     @Modifying
     @Query("DELETE FROM Keyword k WHERE k.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
+
+    @Query("""
+            SELECT k.name AS name, COUNT(DISTINCT k.user.id) AS userCount
+            FROM Keyword k
+            GROUP BY k.name
+            ORDER BY userCount DESC
+            """)
+    List<TrendingKeywordProjection> findTrendingKeywords(Pageable pageable);
 
 }
