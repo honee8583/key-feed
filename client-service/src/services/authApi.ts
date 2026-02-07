@@ -29,6 +29,21 @@ export type LoginResponse = {
   data: LoginResponseData
 }
 
+export type VerificationStatus = 'PENDING' | 'VERIFIED' | 'EXPIRED' | 'LOCKED'
+
+export type VerificationResponseData = {
+  status: VerificationStatus
+  attempts: number
+  retryAt: string | null
+  expiresAt: string
+}
+
+export type VerificationResponse = {
+  status: string
+  message: string
+  data: VerificationResponseData
+}
+
 export const authApi = {
   login(payload: LoginPayload) {
     return apiClient.request<LoginResponse>('/auth/login', {
@@ -42,19 +57,25 @@ export const authApi = {
     })
   },
   sendVerificationCode(email: string) {
-    return apiClient.request<{ success: boolean }>('/auth/email-verification/request', {
+    return apiClient.request<{ status: string; message: string; data: null }>('/auth/password-reset/request', {
       method: 'POST',
       body: { email },
     })
   },
   confirmVerificationCode(email: string, code: string) {
-    return apiClient.request<{ success: boolean }>('/auth/email-verification/confirm', {
+    return apiClient.request<VerificationResponse>('/auth/password-reset/verify', {
       method: 'POST',
       body: { email, code },
     })
   },
   signup(payload: SignupPayload) {
     return apiClient.request<{ token: string }>('/auth/join', {
+      method: 'POST',
+      body: payload,
+    })
+  },
+  resetPassword(payload: { email: string; newPassword: string; confirmPassword: string }) {
+    return apiClient.request<{ status: string; message: string; data: null }>('/auth/password-reset/confirm', {
       method: 'POST',
       body: payload,
     })

@@ -10,11 +10,15 @@ import com.leedahun.identityservice.domain.auth.dto.EmailVerificationSendRequest
 import com.leedahun.identityservice.domain.auth.dto.JoinRequestDto;
 import com.leedahun.identityservice.domain.auth.dto.LoginRequestDto;
 import com.leedahun.identityservice.domain.auth.dto.LoginResult;
+import com.leedahun.identityservice.domain.auth.dto.PasswordResetConfirmRequestDto;
+import com.leedahun.identityservice.domain.auth.dto.PasswordResetRequestDto;
+import com.leedahun.identityservice.domain.auth.dto.PasswordResetVerifyRequestDto;
 import com.leedahun.identityservice.domain.auth.dto.TokenResult;
 import com.leedahun.identityservice.domain.auth.entity.EmailVerifyStatus;
 import com.leedahun.identityservice.domain.auth.exception.RefreshTokenNotExistsException;
 import com.leedahun.identityservice.domain.auth.service.JoinService;
 import com.leedahun.identityservice.domain.auth.service.LoginService;
+import com.leedahun.identityservice.domain.auth.service.PasswordResetService;
 import com.leedahun.identityservice.domain.auth.util.CookieUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +39,7 @@ public class AuthController {
 
     private final LoginService loginService;
     private final JoinService joinService;
+    private final PasswordResetService passwordResetService;
     private final JwtProperties jwtProperties;
 
     @PostMapping("/join")
@@ -88,6 +93,37 @@ public class AuthController {
         return ResponseEntity
                 .ok()
                 .body(new HttpResponse(HttpStatus.OK, message, emailVerificationResult));
+    }
+
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<?> requestPasswordReset(@RequestBody PasswordResetRequestDto requestDto) {
+        passwordResetService.requestPasswordReset(requestDto);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new HttpResponse(HttpStatus.CREATED, SuccessMessage.PASSWORD_RESET_EMAIL_SENT.getMessage(), null));
+    }
+
+    @PostMapping("/password-reset/verify")
+    public ResponseEntity<?> verifyPasswordResetCode(@RequestBody PasswordResetVerifyRequestDto requestDto) {
+        EmailVerificationConfirmResponseDto result = passwordResetService.verifyCode(requestDto);
+
+        String message;
+        if (result.getStatus() == EmailVerifyStatus.VERIFIED) {
+            message = SuccessMessage.EMAIL_VERIFIED.getMessage();
+        } else {
+            message = ErrorMessage.EMAIL_VERIFICATION_FAILED.getMessage();
+        }
+        return ResponseEntity
+                .ok()
+                .body(new HttpResponse(HttpStatus.OK, message, result));
+    }
+
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<?> confirmPasswordReset(@RequestBody PasswordResetConfirmRequestDto requestDto) {
+        passwordResetService.resetPassword(requestDto);
+        return ResponseEntity
+                .ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.PASSWORD_RESET_SUCCESS.getMessage(), null));
     }
 
 }
