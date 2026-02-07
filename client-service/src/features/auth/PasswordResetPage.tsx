@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { ArrowLeftIcon, MailIcon } from './components/AuthIcons'
 import { LoginInput } from './components/LoginInput'
 import { VerificationInput } from './components/VerificationInput'
-// import { authApi } from '../../services/authApi'
+import { authApi } from '../../services/authApi'
 
 export function PasswordResetPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1)
@@ -53,10 +53,12 @@ export function PasswordResetPage() {
     setMessage('')
 
     try {
-      // MOCK: API call bypassed for UI testing
-      // await authApi.sendVerificationCode(email)
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await authApi.sendVerificationCode(email)
       
+      if (step === 2) {
+        toast.success('인증번호가 재발송되었습니다.')
+      }
+
       setStep(2)
       setTimeLeft(180)
       setIsTimerActive(true)
@@ -65,7 +67,7 @@ export function PasswordResetPage() {
     } catch (error) {
       console.error(error)
       setFeedback('error')
-      setMessage('인증번호 전송에 실패했습니다. 다시 시도해주세요.')
+      setMessage(error instanceof Error ? error.message : '인증번호 전송에 실패했습니다. 다시 시도해주세요.')
     } finally {
       setIsLoading(false)
     }
@@ -80,18 +82,21 @@ export function PasswordResetPage() {
     setMessage('')
 
     try {
-      // MOCK: API call bypassed for UI testing
-      // await authApi.confirmVerificationCode(email, verificationCode)
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      setStep(3)
-      setFeedback('idle')
-      setMessage('')
-      setIsTimerActive(false)
+      const response = await authApi.confirmVerificationCode(email, verificationCode)
+      
+      if (response.data.status === 'VERIFIED') {
+        setStep(3)
+        setFeedback('idle')
+        setMessage('')
+        setIsTimerActive(false)
+      } else {
+        setFeedback('error')
+        setMessage(response.message || '인증번호가 일치하지 않습니다.')
+      }
     } catch (error) {
       console.error(error)
       setFeedback('error')
-      setMessage('인증번호가 올바르지 않거나 만료되었습니다.')
+      setMessage(error instanceof Error ? error.message : '인증번호 확인에 실패했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -106,16 +111,35 @@ export function PasswordResetPage() {
     setMessage('')
 
     try {
-      // MOCK: API call bypassed for UI testing
-      // await authApi.resetPassword({ email, code: verificationCode, password })
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await authApi.resetPassword({ 
+        email, 
+        newPassword: password, 
+        confirmPassword 
+      })
 
       toast.success('비밀번호가 성공적으로 변경되었습니다.')
       navigate('/login')
     } catch (error) {
       console.error(error)
       setFeedback('error')
-      setMessage('비밀번호 변경에 실패했습니다. 다시 시도해주세요.')
+      
+      let errorMsg = '비밀번호 변경에 실패했습니다. 다시 시도해주세요.'
+      const err = error as { response?: { status: number; data?: { message?: string } } }
+
+      if (err?.response?.status === 400) {
+        const message = err.response.data?.message || ''
+        if (message.includes('동일한 비밀번호')) {
+          errorMsg = '현재 비밀번호와 다른 새 비밀번호를 입력해주세요.'
+        } else if (message.includes('일치하지 않습니다')) {
+          errorMsg = '비밀번호가 일치하지 않습니다.'
+        } else if (message) {
+          errorMsg = message
+        }
+      } else if (error instanceof Error) {
+        errorMsg = error.message
+      }
+
+      setMessage(errorMsg)
     } finally {
       setIsLoading(false)
     }
