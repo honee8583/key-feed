@@ -36,7 +36,7 @@ public interface KeywordRepository extends JpaRepository<Keyword, Long> {
             SELECT k.name AS name, COUNT(DISTINCT k.user.id) AS userCount
             FROM Keyword k
             GROUP BY k.name
-            ORDER BY userCount DESC
+            ORDER BY userCount DESC, k.name ASC
             """)
     List<TrendingKeywordProjection> findTrendingKeywords(Pageable pageable);
 
