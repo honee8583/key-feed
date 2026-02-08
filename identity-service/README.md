@@ -411,9 +411,9 @@
 
 ### 3.5 트렌딩 키워드 조회
 
-**GET** `/api/keywords/trending?page={page}&size={size}`
+**GET** `/api/keywords/trending?size={size}`
 
-> 사용자 등록 수 기준으로 인기 키워드를 조회합니다. 기본 페이지 크기는 10입니다.
+> 사용자 등록 수 기준으로 인기 키워드를 조회합니다. 기본 size는 10이며, 최대 10까지 지정 가능합니다.
 
 ```json
 // Response (200 OK)

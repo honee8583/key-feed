@@ -13,7 +13,7 @@ import com.leedahun.identityservice.domain.keyword.service.KeywordService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,10 +89,13 @@ public class KeywordServiceImpl implements KeywordService {
         return keywordRepository.findUserIdsByNamesAndSourceId(keywords, sourceId);
     }
 
+    private static final int TRENDING_MAX_SIZE = 10;
+
     @Override
     @Transactional(readOnly = true)
-    public List<TrendingKeywordResponseDto> getTrendingKeywords(Pageable pageable) {
-        return keywordRepository.findTrendingKeywords(pageable)
+    public List<TrendingKeywordResponseDto> getTrendingKeywords(int size) {
+        int limitedSize = Math.min(Math.max(size, 1), TRENDING_MAX_SIZE);
+        return keywordRepository.findTrendingKeywords(PageRequest.of(0, limitedSize))
                 .stream()
                 .map(projection -> TrendingKeywordResponseDto.builder()
                         .name(projection.getName())

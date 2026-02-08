@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.anyInt;
 import static org.mockito.BDDMockito.doNothing;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -29,7 +30,6 @@ import com.leedahun.identityservice.domain.keyword.dto.TrendingKeywordResponseDt
 import com.leedahun.identityservice.domain.keyword.service.KeywordService;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
-import org.springframework.data.domain.Pageable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -181,7 +181,7 @@ class KeywordControllerTest {
                         .build()
         );
 
-        when(keywordService.getTrendingKeywords(any(Pageable.class))).thenReturn(trendingList);
+        when(keywordService.getTrendingKeywords(anyInt())).thenReturn(trendingList);
 
         // when & then
         mockMvc.perform(get("/api/keywords/trending"))
@@ -195,14 +195,14 @@ class KeywordControllerTest {
                 .andExpect(jsonPath("$.data[1].userCount").value(35));
 
         // verify
-        verify(keywordService, times(1)).getTrendingKeywords(any(Pageable.class));
+        verify(keywordService, times(1)).getTrendingKeywords(anyInt());
     }
 
     @Test
     @DisplayName("[GET /api/keywords/trending] 키워드가 없을 때 빈 배열을 반환한다")
     void getTrendingKeywords_empty() throws Exception {
         // given
-        when(keywordService.getTrendingKeywords(any(Pageable.class))).thenReturn(List.of());
+        when(keywordService.getTrendingKeywords(anyInt())).thenReturn(List.of());
 
         // when & then
         mockMvc.perform(get("/api/keywords/trending"))
@@ -212,14 +212,14 @@ class KeywordControllerTest {
                 .andExpect(jsonPath("$.data", hasSize(0)));
 
         // verify
-        verify(keywordService, times(1)).getTrendingKeywords(any(Pageable.class));
+        verify(keywordService, times(1)).getTrendingKeywords(anyInt());
     }
 
     @Test
     @DisplayName("[GET /api/keywords/trending] size 파라미터로 조회 개수를 지정할 수 있다")
     void getTrendingKeywords_withSizeParam() throws Exception {
         // given
-        when(keywordService.getTrendingKeywords(any(Pageable.class))).thenReturn(List.of());
+        when(keywordService.getTrendingKeywords(anyInt())).thenReturn(List.of());
 
         // when & then
         mockMvc.perform(get("/api/keywords/trending")
@@ -228,6 +228,6 @@ class KeywordControllerTest {
                 .andExpect(jsonPath("$.status").value(200));
 
         // verify
-        verify(keywordService, times(1)).getTrendingKeywords(any(Pageable.class));
+        verify(keywordService, times(1)).getTrendingKeywords(5);
     }
 }

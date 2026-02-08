@@ -380,8 +380,6 @@ class KeywordServiceTest {
         @DisplayName("성공: 트렌딩 키워드 목록을 조회한다")
         void getTrendingKeywords_success() {
             // given
-            Pageable pageable = PageRequest.of(0, 10);
-
             TrendingKeywordProjection projection1 = mock(TrendingKeywordProjection.class);
             when(projection1.getName()).thenReturn("AI");
             when(projection1.getUserCount()).thenReturn(42L);
@@ -390,11 +388,11 @@ class KeywordServiceTest {
             when(projection2.getName()).thenReturn("Spring");
             when(projection2.getUserCount()).thenReturn(35L);
 
-            when(keywordRepository.findTrendingKeywords(pageable))
+            when(keywordRepository.findTrendingKeywords(PageRequest.of(0, 10)))
                     .thenReturn(List.of(projection1, projection2));
 
             // when
-            List<TrendingKeywordResponseDto> result = keywordService.getTrendingKeywords(pageable);
+            List<TrendingKeywordResponseDto> result = keywordService.getTrendingKeywords(10);
 
             // then
             assertThat(result).hasSize(2);
@@ -403,45 +401,56 @@ class KeywordServiceTest {
             assertThat(result.get(1).getName()).isEqualTo("Spring");
             assertThat(result.get(1).getUserCount()).isEqualTo(35L);
 
-            verify(keywordRepository, times(1)).findTrendingKeywords(pageable);
+            verify(keywordRepository, times(1)).findTrendingKeywords(PageRequest.of(0, 10));
         }
 
         @Test
         @DisplayName("성공: 키워드가 없는 경우 빈 목록을 반환한다")
         void getTrendingKeywords_empty() {
             // given
-            Pageable pageable = PageRequest.of(0, 10);
-            when(keywordRepository.findTrendingKeywords(pageable))
+            when(keywordRepository.findTrendingKeywords(PageRequest.of(0, 10)))
                     .thenReturn(List.of());
 
             // when
-            List<TrendingKeywordResponseDto> result = keywordService.getTrendingKeywords(pageable);
+            List<TrendingKeywordResponseDto> result = keywordService.getTrendingKeywords(10);
 
             // then
             assertThat(result).isEmpty();
-            verify(keywordRepository, times(1)).findTrendingKeywords(pageable);
+            verify(keywordRepository, times(1)).findTrendingKeywords(PageRequest.of(0, 10));
         }
 
         @Test
-        @DisplayName("성공: Pageable로 상위 N개만 조회한다")
-        void getTrendingKeywords_withPagination() {
+        @DisplayName("성공: size로 상위 N개만 조회한다")
+        void getTrendingKeywords_withCustomSize() {
             // given
-            Pageable pageable = PageRequest.of(0, 2);
-
             TrendingKeywordProjection projection1 = mock(TrendingKeywordProjection.class);
             when(projection1.getName()).thenReturn("AI");
             when(projection1.getUserCount()).thenReturn(42L);
 
-            when(keywordRepository.findTrendingKeywords(pageable))
+            when(keywordRepository.findTrendingKeywords(PageRequest.of(0, 2)))
                     .thenReturn(List.of(projection1));
 
             // when
-            List<TrendingKeywordResponseDto> result = keywordService.getTrendingKeywords(pageable);
+            List<TrendingKeywordResponseDto> result = keywordService.getTrendingKeywords(2);
 
             // then
             assertThat(result).hasSize(1);
             assertThat(result.get(0).getName()).isEqualTo("AI");
-            verify(keywordRepository, times(1)).findTrendingKeywords(pageable);
+            verify(keywordRepository, times(1)).findTrendingKeywords(PageRequest.of(0, 2));
+        }
+
+        @Test
+        @DisplayName("성공: size가 10을 초과하면 10으로 제한한다")
+        void getTrendingKeywords_sizeCappedAt10() {
+            // given
+            when(keywordRepository.findTrendingKeywords(PageRequest.of(0, 10)))
+                    .thenReturn(List.of());
+
+            // when
+            keywordService.getTrendingKeywords(20);
+
+            // then
+            verify(keywordRepository, times(1)).findTrendingKeywords(PageRequest.of(0, 10));
         }
     }
 
