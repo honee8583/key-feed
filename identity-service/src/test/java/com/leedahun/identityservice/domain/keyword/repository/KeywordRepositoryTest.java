@@ -276,27 +276,23 @@ class KeywordRepositoryTest {
     }
 
     @Test
-    @DisplayName("findTrendingKeywords: 동일 사용자의 동일 키워드는 1명으로 카운트")
+    @DisplayName("findTrendingKeywords: 동일 사용자가 동일 키워드를 중복 등록해도 1명으로 카운트")
     void findTrendingKeywords_distinctUserCount() {
-        // Given - user1이 이미 "Java"를 가지고 있으므로, 또다시 "Java" 추가해도 DISTINCT로 1명만 카운트
-        // 기존: Java(user1), Spring(user1), Docker(user2) -> Java:1, Spring:1, Docker:1
-        // 실제로는 user.id가 이미 unique하므로 동일 유저가 같은 이름을 가질 수 없지만 (비즈니스 로직에서),
-        // DISTINCT 검증을 위해 user2에게 "Spring" 추가 -> Spring:2
-        User savedUser2 = entityManager.find(User.class, user2.getId());
-        entityManager.persist(Keyword.builder().name("Spring").user(savedUser2).build());
+        // Given - user1이 이미 "Java"를 가지고 있는 상태에서 "Java"를 한 번 더 등록
+        // 비즈니스 로직상 중복 등록은 막히지만, DISTINCT 쿼리 자체의 정확성을 검증
+        // 기존: Java(user1), Spring(user1), Docker(user2)
+        // 추가: Java(user1) -> DB에는 Java 2행이지만 DISTINCT user.id로 여전히 1명
+        User savedUser1 = entityManager.find(User.class, user1.getId());
+        entityManager.persist(Keyword.builder().name("Java").user(savedUser1).build());
         entityManager.flush();
         entityManager.clear();
 
         // When
         List<TrendingKeywordProjection> result = keywordRepository.findTrendingKeywords(PageRequest.of(0, 10));
 
-        // Then
+        // Then - Java는 user1이 2행 가지고 있지만 DISTINCT로 1명만 카운트
         assertThat(result).hasSize(3);
-        assertThat(result.get(0).getName()).isEqualTo("Spring");
-        assertThat(result.get(0).getUserCount()).isEqualTo(2L);
-        // Docker와 Java는 각각 1명
-        assertThat(result.get(1).getUserCount()).isEqualTo(1L);
-        assertThat(result.get(2).getUserCount()).isEqualTo(1L);
+        assertThat(result).allSatisfy(r -> assertThat(r.getUserCount()).isEqualTo(1L));
     }
 
     @Test
