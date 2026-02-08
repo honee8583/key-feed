@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.leedahun.identityservice.domain.source.entity.Source;
 import com.leedahun.identityservice.domain.source.entity.UserSource;
+import org.springframework.data.domain.PageRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -221,6 +222,96 @@ class KeywordRepositoryTest {
         // Then
         assertThat(resultUserIds).hasSize(1);
         assertThat(resultUserIds).containsExactly(user1.getId());
+    }
+
+    @Test
+    @DisplayName("findTrendingKeywords: 사용자 등록 수 기준으로 인기 키워드 조회")
+    void findTrendingKeywords_success() {
+        // Given - user2에게도 "Java" 키워드 추가 (Java: 2명, Spring: 1명, Docker: 1명)
+        User savedUser2 = entityManager.find(User.class, user2.getId());
+        entityManager.persist(Keyword.builder().name("Java").user(savedUser2).build());
+        entityManager.flush();
+        entityManager.clear();
+
+        // When
+        List<TrendingKeywordProjection> result = keywordRepository.findTrendingKeywords(PageRequest.of(0, 10));
+
+        // Then
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).getName()).isEqualTo("Java");
+        assertThat(result.get(0).getUserCount()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("findTrendingKeywords: Pageable로 상위 N개만 조회")
+    void findTrendingKeywords_withPageable() {
+        // Given - user2에게도 "Java" 키워드 추가
+        User savedUser2 = entityManager.find(User.class, user2.getId());
+        entityManager.persist(Keyword.builder().name("Java").user(savedUser2).build());
+        entityManager.flush();
+        entityManager.clear();
+
+        // When - 상위 2개만 조회
+        List<TrendingKeywordProjection> result = keywordRepository.findTrendingKeywords(PageRequest.of(0, 2));
+
+        // Then
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getName()).isEqualTo("Java");
+        assertThat(result.get(0).getUserCount()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("findTrendingKeywords: 키워드가 없는 경우 빈 목록 반환")
+    void findTrendingKeywords_empty() {
+        // Given - 모든 키워드 삭제
+        keywordRepository.deleteAll();
+        entityManager.flush();
+        entityManager.clear();
+
+        // When
+        List<TrendingKeywordProjection> result = keywordRepository.findTrendingKeywords(PageRequest.of(0, 10));
+
+        // Then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("findTrendingKeywords: 동일 사용자가 동일 키워드를 중복 등록해도 1명으로 카운트")
+    void findTrendingKeywords_distinctUserCount() {
+        // Given - user1이 이미 "Java"를 가지고 있는 상태에서 "Java"를 한 번 더 등록
+        // 비즈니스 로직상 중복 등록은 막히지만, DISTINCT 쿼리 자체의 정확성을 검증
+        // 기존: Java(user1), Spring(user1), Docker(user2)
+        // 추가: Java(user1) -> DB에는 Java 2행이지만 DISTINCT user.id로 여전히 1명
+        User savedUser1 = entityManager.find(User.class, user1.getId());
+        entityManager.persist(Keyword.builder().name("Java").user(savedUser1).build());
+        entityManager.flush();
+        entityManager.clear();
+
+        // When
+        List<TrendingKeywordProjection> result = keywordRepository.findTrendingKeywords(PageRequest.of(0, 10));
+
+        // Then - Java는 user1이 2행 가지고 있지만 DISTINCT로 1명만 카운트
+        assertThat(result).hasSize(3);
+        assertThat(result).allSatisfy(r -> assertThat(r.getUserCount()).isEqualTo(1L));
+    }
+
+    @Test
+    @DisplayName("findTrendingKeywords: 여러 사용자가 동일 키워드를 등록한 경우 정확한 카운트")
+    void findTrendingKeywords_multipleUsersWithSameKeyword() {
+        // Given - 3명의 사용자가 모두 "Java" 등록
+        User user3 = entityManager.persist(new User());
+        User savedUser2 = entityManager.find(User.class, user2.getId());
+        entityManager.persist(Keyword.builder().name("Java").user(savedUser2).build());
+        entityManager.persist(Keyword.builder().name("Java").user(user3).build());
+        entityManager.flush();
+        entityManager.clear();
+
+        // When
+        List<TrendingKeywordProjection> result = keywordRepository.findTrendingKeywords(PageRequest.of(0, 10));
+
+        // Then
+        assertThat(result.get(0).getName()).isEqualTo("Java");
+        assertThat(result.get(0).getUserCount()).isEqualTo(3L);
     }
 
 }
