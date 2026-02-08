@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.doNothing;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
+import static org.mockito.BDDMockito.verify;
 import static org.mockito.BDDMockito.when;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -24,9 +25,11 @@ import com.leedahun.identityservice.domain.auth.config.SecurityConfig;
 import com.leedahun.identityservice.domain.auth.util.test.WithAnonymousUser;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordCreateRequestDto;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
+import com.leedahun.identityservice.domain.keyword.dto.TrendingKeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.service.KeywordService;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
+import org.springframework.data.domain.Pageable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -161,5 +164,70 @@ class KeywordControllerTest {
 
         // Verify
         then(keywordService).should(times(1)).deleteKeyword(any(), any());
+    }
+
+    @Test
+    @DisplayName("[GET /api/keywords/trending] 트렌딩 키워드 조회 성공 시 200 OK와 키워드 목록을 반환한다")
+    void getTrendingKeywords_success() throws Exception {
+        // given
+        List<TrendingKeywordResponseDto> trendingList = List.of(
+                TrendingKeywordResponseDto.builder()
+                        .name("AI")
+                        .userCount(42L)
+                        .build(),
+                TrendingKeywordResponseDto.builder()
+                        .name("Spring")
+                        .userCount(35L)
+                        .build()
+        );
+
+        when(keywordService.getTrendingKeywords(any(Pageable.class))).thenReturn(trendingList);
+
+        // when & then
+        mockMvc.perform(get("/api/keywords/trending"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value(SuccessMessage.READ_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].name").value("AI"))
+                .andExpect(jsonPath("$.data[0].userCount").value(42))
+                .andExpect(jsonPath("$.data[1].name").value("Spring"))
+                .andExpect(jsonPath("$.data[1].userCount").value(35));
+
+        // verify
+        verify(keywordService, times(1)).getTrendingKeywords(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("[GET /api/keywords/trending] 키워드가 없을 때 빈 배열을 반환한다")
+    void getTrendingKeywords_empty() throws Exception {
+        // given
+        when(keywordService.getTrendingKeywords(any(Pageable.class))).thenReturn(List.of());
+
+        // when & then
+        mockMvc.perform(get("/api/keywords/trending"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value(SuccessMessage.READ_SUCCESS.getMessage()))
+                .andExpect(jsonPath("$.data", hasSize(0)));
+
+        // verify
+        verify(keywordService, times(1)).getTrendingKeywords(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("[GET /api/keywords/trending] size 파라미터로 조회 개수를 지정할 수 있다")
+    void getTrendingKeywords_withSizeParam() throws Exception {
+        // given
+        when(keywordService.getTrendingKeywords(any(Pageable.class))).thenReturn(List.of());
+
+        // when & then
+        mockMvc.perform(get("/api/keywords/trending")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+
+        // verify
+        verify(keywordService, times(1)).getTrendingKeywords(any(Pageable.class));
     }
 }

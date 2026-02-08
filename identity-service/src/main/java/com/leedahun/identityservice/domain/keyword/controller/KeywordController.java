@@ -4,9 +4,12 @@ import com.leedahun.identityservice.common.message.SuccessMessage;
 import com.leedahun.identityservice.common.response.HttpResponse;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordCreateRequestDto;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
+import com.leedahun.identityservice.domain.keyword.dto.TrendingKeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.service.KeywordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +29,13 @@ public class KeywordController {
         List<KeywordResponseDto> keywords = keywordService.getKeywords(userId);
         return ResponseEntity.ok()
                 .body(new HttpResponse(HttpStatus.OK, SuccessMessage.READ_SUCCESS.getMessage(), keywords));
+    }
+
+    @GetMapping("/trending")
+    public ResponseEntity<?> getTrendingKeywords(@PageableDefault(size = 10) Pageable pageable) {
+        List<TrendingKeywordResponseDto> trending = keywordService.getTrendingKeywords(pageable);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.READ_SUCCESS.getMessage(), trending));
     }
 
     @PostMapping

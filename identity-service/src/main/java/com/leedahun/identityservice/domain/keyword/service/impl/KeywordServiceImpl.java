@@ -5,6 +5,7 @@ import com.leedahun.identityservice.common.error.exception.EntityNotFoundExcepti
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
+import com.leedahun.identityservice.domain.keyword.dto.TrendingKeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.entity.Keyword;
 import com.leedahun.identityservice.domain.keyword.exception.KeywordLimitExceededException;
 import com.leedahun.identityservice.domain.keyword.repository.KeywordRepository;
@@ -12,6 +13,7 @@ import com.leedahun.identityservice.domain.keyword.service.KeywordService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,6 +87,18 @@ public class KeywordServiceImpl implements KeywordService {
         }
 
         return keywordRepository.findUserIdsByNamesAndSourceId(keywords, sourceId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TrendingKeywordResponseDto> getTrendingKeywords(Pageable pageable) {
+        return keywordRepository.findTrendingKeywords(pageable)
+                .stream()
+                .map(projection -> TrendingKeywordResponseDto.builder()
+                        .name(projection.getName())
+                        .userCount(projection.getUserCount())
+                        .build())
+                .toList();
     }
 
     private User findUserById(Long userId) {

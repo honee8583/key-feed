@@ -5,11 +5,15 @@ import com.leedahun.identityservice.common.error.exception.EntityNotFoundExcepti
 import com.leedahun.identityservice.domain.auth.entity.User;
 import com.leedahun.identityservice.domain.auth.repository.UserRepository;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
+import com.leedahun.identityservice.domain.keyword.dto.TrendingKeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.entity.Keyword;
 import com.leedahun.identityservice.domain.keyword.exception.KeywordLimitExceededException;
 import com.leedahun.identityservice.domain.keyword.repository.KeywordRepository;
+import com.leedahun.identityservice.domain.keyword.repository.TrendingKeywordProjection;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -365,6 +369,79 @@ class KeywordServiceTest {
             assertThat(result).isEmpty();
 
             verify(keywordRepository, never()).findUserIdsByNamesAndSourceId(any(), any());
+        }
+    }
+
+    @Nested
+    @DisplayName("getTrendingKeywords")
+    class GetTrendingKeywords {
+
+        @Test
+        @DisplayName("성공: 트렌딩 키워드 목록을 조회한다")
+        void getTrendingKeywords_success() {
+            // given
+            Pageable pageable = PageRequest.of(0, 10);
+
+            TrendingKeywordProjection projection1 = mock(TrendingKeywordProjection.class);
+            when(projection1.getName()).thenReturn("AI");
+            when(projection1.getUserCount()).thenReturn(42L);
+
+            TrendingKeywordProjection projection2 = mock(TrendingKeywordProjection.class);
+            when(projection2.getName()).thenReturn("Spring");
+            when(projection2.getUserCount()).thenReturn(35L);
+
+            when(keywordRepository.findTrendingKeywords(pageable))
+                    .thenReturn(List.of(projection1, projection2));
+
+            // when
+            List<TrendingKeywordResponseDto> result = keywordService.getTrendingKeywords(pageable);
+
+            // then
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).getName()).isEqualTo("AI");
+            assertThat(result.get(0).getUserCount()).isEqualTo(42L);
+            assertThat(result.get(1).getName()).isEqualTo("Spring");
+            assertThat(result.get(1).getUserCount()).isEqualTo(35L);
+
+            verify(keywordRepository, times(1)).findTrendingKeywords(pageable);
+        }
+
+        @Test
+        @DisplayName("성공: 키워드가 없는 경우 빈 목록을 반환한다")
+        void getTrendingKeywords_empty() {
+            // given
+            Pageable pageable = PageRequest.of(0, 10);
+            when(keywordRepository.findTrendingKeywords(pageable))
+                    .thenReturn(List.of());
+
+            // when
+            List<TrendingKeywordResponseDto> result = keywordService.getTrendingKeywords(pageable);
+
+            // then
+            assertThat(result).isEmpty();
+            verify(keywordRepository, times(1)).findTrendingKeywords(pageable);
+        }
+
+        @Test
+        @DisplayName("성공: Pageable로 상위 N개만 조회한다")
+        void getTrendingKeywords_withPagination() {
+            // given
+            Pageable pageable = PageRequest.of(0, 2);
+
+            TrendingKeywordProjection projection1 = mock(TrendingKeywordProjection.class);
+            when(projection1.getName()).thenReturn("AI");
+            when(projection1.getUserCount()).thenReturn(42L);
+
+            when(keywordRepository.findTrendingKeywords(pageable))
+                    .thenReturn(List.of(projection1));
+
+            // when
+            List<TrendingKeywordResponseDto> result = keywordService.getTrendingKeywords(pageable);
+
+            // then
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getName()).isEqualTo("AI");
+            verify(keywordRepository, times(1)).findTrendingKeywords(pageable);
         }
     }
 

@@ -1,8 +1,10 @@
 package com.leedahun.identityservice.domain.keyword.service;
 
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
+import com.leedahun.identityservice.domain.keyword.dto.TrendingKeywordResponseDto;
 import java.util.List;
 import java.util.Set;
+import org.springframework.data.domain.Pageable;
 
 public interface KeywordService {
 
@@ -15,5 +17,7 @@ public interface KeywordService {
     void deleteKeyword(Long userId, Long keywordId);
 
     List<Long> findUserIdsByKeywordsAndSource(Set<String> keywords, Long sourceId);
+
+    List<TrendingKeywordResponseDto> getTrendingKeywords(Pageable pageable);
 
 }
