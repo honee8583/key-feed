@@ -97,10 +97,7 @@ public class KeywordServiceImpl implements KeywordService {
         int limitedSize = Math.min(Math.max(size, 1), TRENDING_MAX_SIZE);
         return keywordRepository.findTrendingKeywords(PageRequest.of(0, limitedSize))
                 .stream()
-                .map(projection -> TrendingKeywordResponseDto.builder()
-                        .name(projection.getName())
-                        .userCount(projection.getUserCount())
-                        .build())
+                .map(projection -> new TrendingKeywordResponseDto(projection.getName(), projection.getUserCount()))
                 .toList();
     }
 
