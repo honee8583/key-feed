@@ -4,6 +4,7 @@ import com.leedahun.identityservice.common.message.SuccessMessage;
 import com.leedahun.identityservice.common.response.HttpResponse;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordCreateRequestDto;
 import com.leedahun.identityservice.domain.keyword.dto.KeywordResponseDto;
+import com.leedahun.identityservice.domain.keyword.dto.TrendingKeywordResponseDto;
 import com.leedahun.identityservice.domain.keyword.service.KeywordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,13 @@ public class KeywordController {
         List<KeywordResponseDto> keywords = keywordService.getKeywords(userId);
         return ResponseEntity.ok()
                 .body(new HttpResponse(HttpStatus.OK, SuccessMessage.READ_SUCCESS.getMessage(), keywords));
+    }
+
+    @GetMapping("/trending")
+    public ResponseEntity<?> getTrendingKeywords(@RequestParam(defaultValue = "10") int size) {
+        List<TrendingKeywordResponseDto> trending = keywordService.getTrendingKeywords(size);
+        return ResponseEntity.ok()
+                .body(new HttpResponse(HttpStatus.OK, SuccessMessage.READ_SUCCESS.getMessage(), trending));
     }
 
     @PostMapping
