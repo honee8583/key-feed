@@ -171,17 +171,11 @@ class KeywordControllerTest {
     void getTrendingKeywords_success() throws Exception {
         // given
         List<TrendingKeywordResponseDto> trendingList = List.of(
-                TrendingKeywordResponseDto.builder()
-                        .name("AI")
-                        .userCount(42L)
-                        .build(),
-                TrendingKeywordResponseDto.builder()
-                        .name("Spring")
-                        .userCount(35L)
-                        .build()
+                new TrendingKeywordResponseDto("AI", 42L),
+                new TrendingKeywordResponseDto("Spring", 35L)
         );
 
-        when(keywordService.getTrendingKeywords(anyInt())).thenReturn(trendingList);
+        given(keywordService.getTrendingKeywords(anyInt())).willReturn(trendingList);
 
         // when & then
         mockMvc.perform(get("/api/keywords/trending"))
@@ -195,14 +189,14 @@ class KeywordControllerTest {
                 .andExpect(jsonPath("$.data[1].userCount").value(35));
 
         // verify
-        verify(keywordService, times(1)).getTrendingKeywords(anyInt());
+        then(keywordService).should(times(1)).getTrendingKeywords(anyInt());
     }
 
     @Test
     @DisplayName("[GET /api/keywords/trending] 키워드가 없을 때 빈 배열을 반환한다")
     void getTrendingKeywords_empty() throws Exception {
         // given
-        when(keywordService.getTrendingKeywords(anyInt())).thenReturn(List.of());
+        given(keywordService.getTrendingKeywords(anyInt())).willReturn(List.of());
 
         // when & then
         mockMvc.perform(get("/api/keywords/trending"))
@@ -212,14 +206,14 @@ class KeywordControllerTest {
                 .andExpect(jsonPath("$.data", hasSize(0)));
 
         // verify
-        verify(keywordService, times(1)).getTrendingKeywords(anyInt());
+        then(keywordService).should(times(1)).getTrendingKeywords(anyInt());
     }
 
     @Test
     @DisplayName("[GET /api/keywords/trending] size 파라미터로 조회 개수를 지정할 수 있다")
     void getTrendingKeywords_withSizeParam() throws Exception {
         // given
-        when(keywordService.getTrendingKeywords(anyInt())).thenReturn(List.of());
+        given(keywordService.getTrendingKeywords(anyInt())).willReturn(List.of());
 
         // when & then
         mockMvc.perform(get("/api/keywords/trending")
@@ -228,6 +222,6 @@ class KeywordControllerTest {
                 .andExpect(jsonPath("$.status").value(200));
 
         // verify
-        verify(keywordService, times(1)).getTrendingKeywords(5);
+        then(keywordService).should(times(1)).getTrendingKeywords(5);
     }
 }
