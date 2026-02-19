@@ -4,6 +4,8 @@ Key-Feed는 사용자가 관심 있는 키워드와 소스(RSS, 웹사이트)를
 
 ## 🏗 System Architecture
 
+![System Architecture](images/system._architecture.png)
+
 서비스는 역할에 따라 분리되어 있으며 Kafka를 통한 비동기 이벤트 처리와 Feign을 통한 동기 통신을 혼합하여 유기적으로 동작합니다.
 
 ```mermaid
@@ -55,6 +57,8 @@ graph TD
 
 ## 🧩 Services & Workflow
 
+![User Flow](images/user_flow.png)
+
 각 마이크로서비스는 고유한 책임을 가지며 아래와 같은 흐름으로 데이터를 처리합니다.
 
 ### 1. 🕷️ Crawl Service
@@ -89,6 +93,29 @@ graph TD
 ### 5. 🆔 Identity Service
 *   **역할**: 사용자 인증(Auth), 프로필 관리, 관심사(키워드/소스) 설정을 담당합니다.
 *   **Data**: 유저 정보, 키워드, 구독 소스, 북마크 등을 관리합니다.
+
+<br/>
+
+## CI/CD Pipeline
+
+![CI/CD Pipeline](images/key_feed_cicd.png)
+
+GitHub Actions를 이용하여 변경된 서비스만 감지하고, 빌드 및 배포하는 효율적인 파이프라인을 구축했습니다.
+
+1.  **Change Detection (변경 감지)**:
+    -   `dorny/paths-filter`를 사용하여 Push된 커밋에서 변경사항이 발생한 서비스(Module)를 자동으로 감지합니다.
+    -   변경되지 않은 서비스는 빌드 과정을 건너뛰어 자원을 절약합니다.
+
+2.  **Build & Test (빌드 및 테스트)**:
+    -   Backend: JDK 17 환경에서 Gradle을 사용하여 빌드 및 테스트를 수행합니다.
+    -   Frontend: Node.js 환경에서 빌드합니다.
+
+3.  **Dockerize & Push (이미지 생성 및 푸시)**:
+    -   서비스별 Docker Image를 생성하고 Docker Hub에 `latest`와 `commit-sha` 태그로 푸시합니다.
+
+4.  **GitOps Deployment (배포)**:
+    -   K8s Manifest Repository(`k8s-repo`)를 Clone 하여 `deployment.yaml`의 이미지 태그를 최신 Commit SHA로 업데이트합니다.
+    -   변경 사항이 Push 되면 ArgoCD가 이를 감지하여 Kubernetes 클러스터에 자동으로 동기화(Sync)합니다.
 
 <br/>
 
