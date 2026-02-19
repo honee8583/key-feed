@@ -4,7 +4,9 @@ import com.leedahun.matchservice.domain.content.document.ContentDocument;
 import com.leedahun.matchservice.domain.content.repository.ContentDocumentRepository;
 import com.leedahun.matchservice.domain.content.service.ContentService;
 import com.leedahun.matchservice.infra.kafka.dto.CrawledContentDto;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +22,10 @@ public class ContentServiceImpl implements ContentService {
     @Transactional
     public void saveContent(CrawledContentDto dto) {
 
+        String id = UUID.nameUUIDFromBytes(dto.getOriginalUrl().getBytes(StandardCharsets.UTF_8)).toString();
+
         ContentDocument contentDocument = ContentDocument.builder()
+                .id(id)
                 .sourceId(dto.getSourceId())
                 .title(dto.getTitle())
                 .summary(dto.getSummary())
