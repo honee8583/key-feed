@@ -61,9 +61,6 @@ dependencies {
     // kafka
     implementation 'org.springframework.kafka:spring-kafka'
 
-    // elastic search
-    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-
     implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
 
     implementation 'cn.hutool:hutool-core:5.8.25'

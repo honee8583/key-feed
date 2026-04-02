@@ -5,9 +5,6 @@ spring:
     username: root
     password: 1111
 
-  elasticsearch:
-    uris: http://localhost:9200
-
   kafka:
     bootstrap-servers: localhost:9092
     # 알림 메시지 전송
