@@ -1,15 +1,19 @@
 package com.leedahun.matchservice.domain.content.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.leedahun.matchservice.domain.content.document.ContentDocument;
-import com.leedahun.matchservice.domain.content.repository.ContentDocumentRepository;
+import com.leedahun.matchservice.domain.content.entity.Content;
+import com.leedahun.matchservice.domain.content.repository.ContentRepository;
 import com.leedahun.matchservice.domain.content.service.impl.ContentServiceImpl;
 import com.leedahun.matchservice.infra.kafka.dto.CrawledContentDto;
 import java.time.LocalDateTime;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,11 +29,11 @@ class ContentServiceTest {
     private ContentServiceImpl contentService;
 
     @Mock
-    private ContentDocumentRepository contentDocumentRepository;
+    private ContentRepository contentRepository;
 
     @Test
-    @DisplayName("콘텐츠 저장 시 ES 문서에 null이 아닌 ID가 설정되어야 한다")
-    void saveContent_Success_NewContent() {
+    @DisplayName("존재하지 않는 콘텐츠는 MySQL에 저장된다")
+    void saveContent_NewContent_Saved() {
         // given
         CrawledContentDto dto = CrawledContentDto.builder()
                 .sourceId(1L)
@@ -40,73 +44,69 @@ class ContentServiceTest {
                 .publishedAt(LocalDateTime.now())
                 .build();
 
-        ArgumentCaptor<ContentDocument> captor = ArgumentCaptor.forClass(ContentDocument.class);
+        when(contentRepository.existsBySourceIdAndOriginalUrl(anyLong(), anyString()))
+                .thenReturn(false);
 
         // when
         contentService.saveContent(dto);
 
         // then
-        verify(contentDocumentRepository, times(1)).save(captor.capture());
-        ContentDocument saved = captor.getValue();
-        assertThat(saved.getId()).isNotNull();
+        verify(contentRepository, times(1)).save(any(Content.class));
     }
 
     @Test
-    @DisplayName("동일한 originalUrl로 두 번 저장해도 동일한 ID의 문서가 생성되어야 한다 (멱등성)")
-    void saveContent_Idempotent_SameUrlProducesSameId() {
+    @DisplayName("이미 존재하는 콘텐츠는 저장하지 않고 skip한다")
+    void saveContent_DuplicateContent_Skipped() {
         // given
         CrawledContentDto dto = CrawledContentDto.builder()
                 .sourceId(1L)
-                .title("Same Article")
+                .title("Duplicate Title")
                 .summary("Summary")
                 .originalUrl("https://blog.com/post/1")
                 .thumbnailUrl("https://img.com/1.jpg")
                 .publishedAt(LocalDateTime.now())
                 .build();
 
-        ArgumentCaptor<ContentDocument> captor = ArgumentCaptor.forClass(ContentDocument.class);
+        when(contentRepository.existsBySourceIdAndOriginalUrl(anyLong(), anyString()))
+                .thenReturn(true);
 
         // when
         contentService.saveContent(dto);
-        contentService.saveContent(dto);
 
         // then
-        verify(contentDocumentRepository, times(2)).save(captor.capture());
-        List<ContentDocument> savedDocs = captor.getAllValues();
-        assertThat(savedDocs.get(0).getId()).isEqualTo(savedDocs.get(1).getId());
+        verify(contentRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("서로 다른 originalUrl은 서로 다른 ID를 생성해야 한다")
-    void saveContent_DifferentUrls_ProduceDifferentIds() {
+    @DisplayName("저장 시 Content 엔티티에 올바른 필드가 매핑된다")
+    void saveContent_ContentFields_MappedCorrectly() {
         // given
-        CrawledContentDto dto1 = CrawledContentDto.builder()
+        LocalDateTime publishedAt = LocalDateTime.of(2024, 1, 1, 0, 0);
+        CrawledContentDto dto = CrawledContentDto.builder()
                 .sourceId(1L)
-                .title("Article 1")
-                .summary("Summary 1")
+                .title("Test Title")
+                .summary("Test Summary")
                 .originalUrl("https://blog.com/post/1")
                 .thumbnailUrl("https://img.com/1.jpg")
-                .publishedAt(LocalDateTime.now())
+                .publishedAt(publishedAt)
                 .build();
 
-        CrawledContentDto dto2 = CrawledContentDto.builder()
-                .sourceId(1L)
-                .title("Article 2")
-                .summary("Summary 2")
-                .originalUrl("https://blog.com/post/2")
-                .thumbnailUrl("https://img.com/2.jpg")
-                .publishedAt(LocalDateTime.now())
-                .build();
+        when(contentRepository.existsBySourceIdAndOriginalUrl(anyLong(), anyString()))
+                .thenReturn(false);
 
-        ArgumentCaptor<ContentDocument> captor = ArgumentCaptor.forClass(ContentDocument.class);
+        ArgumentCaptor<Content> captor = ArgumentCaptor.forClass(Content.class);
 
         // when
-        contentService.saveContent(dto1);
-        contentService.saveContent(dto2);
+        contentService.saveContent(dto);
 
         // then
-        verify(contentDocumentRepository, times(2)).save(captor.capture());
-        List<ContentDocument> savedDocs = captor.getAllValues();
-        assertThat(savedDocs.get(0).getId()).isNotEqualTo(savedDocs.get(1).getId());
+        verify(contentRepository).save(captor.capture());
+        Content saved = captor.getValue();
+        assertThat(saved.getSourceId()).isEqualTo(1L);
+        assertThat(saved.getTitle()).isEqualTo("Test Title");
+        assertThat(saved.getSummary()).isEqualTo("Test Summary");
+        assertThat(saved.getOriginalUrl()).isEqualTo("https://blog.com/post/1");
+        assertThat(saved.getThumbnailUrl()).isEqualTo("https://img.com/1.jpg");
+        assertThat(saved.getPublishedAt()).isEqualTo(publishedAt);
     }
 }
