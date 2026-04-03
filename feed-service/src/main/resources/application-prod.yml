@@ -5,9 +5,6 @@ spring:
     username: root
     password: 1111
 
-  elasticsearch:
-    uris: http://localhost:9200
-
 eureka:
   client:
     enabled: false
@@ -20,7 +17,7 @@ decorator:
 logging:
   level:
     root: INFO
-    com.leedahun.identityservice: INFO
+    com.leedahun.feedservice: INFO
     org.springframework.web: WARN
     org.hibernate.SQL: WARN
     org.hibernate.orm.jdbc.bind: OFF

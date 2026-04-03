@@ -1,5 +1,6 @@
 package com.leedahun.feedservice.common.response;
 
+import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,4 +17,12 @@ public class CommonPageResponse<T> {
     private List<T> content;
     private Long nextCursorId;
     private boolean hasNext;
+
+    public static <T> CommonPageResponse<T> empty() {
+        return CommonPageResponse.<T>builder()
+                .content(Collections.emptyList())
+                .hasNext(false)
+                .nextCursorId(null)
+                .build();
+    }
 }

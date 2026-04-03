@@ -5,9 +5,9 @@ import com.leedahun.feedservice.common.error.exception.InternalServerProcessingE
 import com.leedahun.feedservice.common.response.CommonPageResponse;
 import com.leedahun.feedservice.infra.client.UserInternalApiClient;
 import com.leedahun.feedservice.infra.client.dto.SourceResponseDto;
-import com.leedahun.feedservice.domain.feed.document.ContentDocument;
 import com.leedahun.feedservice.domain.feed.dto.ContentFeedResponseDto;
-import com.leedahun.feedservice.domain.feed.repository.ContentDocumentRepository;
+import com.leedahun.feedservice.domain.feed.entity.Content;
+import com.leedahun.feedservice.domain.feed.repository.ContentRepository;
 import com.leedahun.feedservice.domain.feed.service.FeedService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,11 +31,7 @@ import static com.leedahun.feedservice.common.message.ErrorMessage.USER_SOURCE_R
 public class FeedServiceImpl implements FeedService {
 
     private final UserInternalApiClient userInternalApiClient;
-    private final ContentDocumentRepository contentDocumentRepository;
-
-    private static final DateTimeFormatter ES_DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
-                    .withZone(ZoneOffset.UTC);
+    private final ContentRepository contentRepository;
 
     @Override
     public Map<Long, String> fetchUserSourceMapping(Long userId) {
@@ -64,104 +57,113 @@ public class FeedServiceImpl implements FeedService {
         }
     }
 
+    // TODO user_source 엔티티 추가
     @Override
-    public CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeeds(Long userId, Map<Long, String> sourceMapping, Long lastPublishedAt, int size) {
-        if (sourceMapping == null || sourceMapping.isEmpty()) {
-            return CommonPageResponse.<ContentFeedResponseDto>builder()
-                    .content(Collections.emptyList())
-                    .hasNext(false)
-                    .nextCursorId(null)
-                    .build();
+    public CommonPageResponse<ContentFeedResponseDto> getPersonalizedFeeds(Long userId,
+                                                                           Map<Long, String> sourceMapping,
+                                                                           Long lastId,
+                                                                           int size) {
+
+        if (isEmptySourceMapping(sourceMapping)) {
+            return CommonPageResponse.empty();
         }
 
-        List<Long> sourceIds = new ArrayList<>(sourceMapping.keySet());
+        List<Content> contents = fetchContents(sourceMapping.keySet(), lastId, size);
 
-        Pageable pageable = buildPageable(size);
-        List<ContentDocument> documents = searchDocuments(sourceIds, lastPublishedAt, pageable);
+        boolean hasNext = contents.size() > size;
+        List<Content> pagedContents = hasNext ? contents.subList(0, size) : contents;
 
-        boolean hasNext = documents.size() > size;
-        List<ContentDocument> resultList = trimResultList(documents, hasNext, size);
+        List<ContentFeedResponseDto> feeds = toFeedDtos(pagedContents, sourceMapping);
+        enrichWithBookmarks(feeds, userId);
 
-        List<ContentFeedResponseDto> feeds = resultList.stream()
-                .map(content -> ContentFeedResponseDto.from(content, sourceMapping))
-                .collect(Collectors.toList());
-
-        if (userId != null && !feeds.isEmpty()) {
-            try {
-                List<String> contentIds = feeds.stream()
-                        .map(ContentFeedResponseDto::getContentId)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList());
-
-                // contentIds가 비어있으면 API 호출 스킵
-                if (!contentIds.isEmpty()) {
-                    Map<String, Long> bookmarkMap = userInternalApiClient.getBookmarkedContentIds(userId, contentIds);
-
-                    // bookmarkMap이 null일 경우 대비 및 feed.getContentId()가 null인 경우 방어
-                    if (bookmarkMap != null) {
-                        feeds.forEach(feed -> {
-                            if (feed.getContentId() != null) {
-                                feed.setBookmarkId(bookmarkMap.get(feed.getContentId()));
-                            }
-                        });
-                    }
-                }
-
-            } catch (Exception e) {
-                log.error("북마크 정보 조회 실패. userId: {}", userId, e);
-            }
-        }
-
-        Long nextCursorId = getNextPublishedAt(hasNext, resultList);
         return CommonPageResponse.<ContentFeedResponseDto>builder()
                 .content(feeds)
                 .hasNext(hasNext)
-                .nextCursorId(nextCursorId)
+                .nextCursorId(getNextCursorId(hasNext, pagedContents))
                 .build();
     }
 
     @Override
     public List<ContentFeedResponseDto> getContentsByIds(List<String> contentIds) {
-        Iterable<ContentDocument> contentDocuments = contentDocumentRepository.findAllById(contentIds);
+        List<Long> longIds = contentIds.stream()
+                .map(this::parseContentId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
-        List<ContentFeedResponseDto> contents = new ArrayList<>();
-        for (ContentDocument contentDocument : contentDocuments) {
-            contents.add(ContentFeedResponseDto.from(contentDocument));
+        return contentRepository.findAllById(longIds).stream()
+                .map(ContentFeedResponseDto::from)
+                .collect(Collectors.toList());
+    }
+
+    private boolean isEmptySourceMapping(Map<Long, String> sourceMapping) {
+        return sourceMapping == null || sourceMapping.isEmpty();
+    }
+
+    private List<Content> fetchContents(Set<Long> sourceIds, Long lastId, int size) {
+        Pageable pageable = buildPageable(size);
+        return searchContents(new ArrayList<>(sourceIds), lastId, pageable);
+    }
+
+    private List<ContentFeedResponseDto> toFeedDtos(List<Content> contents, Map<Long, String> sourceMapping) {
+        return contents.stream()
+                .map(content -> ContentFeedResponseDto.from(content, sourceMapping))
+                .collect(Collectors.toList());
+    }
+
+    private void enrichWithBookmarks(List<ContentFeedResponseDto> feeds, Long userId) {
+        if (userId == null || feeds.isEmpty()) {
+            return;
         }
 
-        return contents;
+        List<String> contentIds = extractContentIds(feeds);
+        if (contentIds.isEmpty()) return;
+
+        try {
+            Map<String, Long> bookmarkMap = userInternalApiClient.getBookmarkedContentIds(userId, contentIds);
+            if (bookmarkMap == null) {
+                return;
+            }
+
+            feeds.forEach(feed -> {
+                if (feed.getContentId() != null) {
+                    feed.setBookmarkId(bookmarkMap.get(feed.getContentId()));
+                }
+            });
+        } catch (Exception e) {
+            log.error("북마크 정보 조회 실패. userId: {}", userId, e);
+        }
+    }
+
+    private List<String> extractContentIds(List<ContentFeedResponseDto> feeds) {
+        return feeds.stream()
+                .map(ContentFeedResponseDto::getContentId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private Long parseContentId(String id) {
+        try {
+            return Long.parseLong(id);
+        } catch (NumberFormatException e) {
+            log.warn("잘못된 contentId 형식. id: {}", id);
+            return null;
+        }
     }
 
     private Pageable buildPageable(int size) {
-        return PageRequest.of(0, size + 1, Sort.by(Sort.Direction.DESC, "publishedAt"));
+        return PageRequest.of(0, size + 1, Sort.by(Sort.Direction.DESC, "id"));
     }
 
-    private List<ContentDocument> searchDocuments(List<Long> sourceIds, Long lastId, Pageable pageable) {
+    private List<Content> searchContents(List<Long> sourceIds, Long lastId, Pageable pageable) {
         if (lastId == null) {
-            return contentDocumentRepository.searchBySourceIdsFirstPage(sourceIds, pageable);
+            return contentRepository.findBySourceIdIn(sourceIds, pageable);
         }
-
-        String lastPublishedAt = convertCursorMillisToEsDate(lastId);
-        return contentDocumentRepository.searchBySourceIdsAndCursor(sourceIds, lastPublishedAt, pageable);
+        return contentRepository.findBySourceIdInAndIdBefore(sourceIds, lastId, pageable);
     }
 
-    private String convertCursorMillisToEsDate(Long cursorMillis) {
-        return ES_DATE_FORMATTER.format(Instant.ofEpochMilli(cursorMillis));
-    }
-
-    private List<ContentDocument> trimResultList(List<ContentDocument> contents, boolean hasNext, int size) {
-        if (hasNext) {
-            return contents.subList(0, size);
-        }
-        return contents;
-    }
-
-    private Long getNextPublishedAt(boolean hasNext, List<ContentDocument> contents) {
+    private Long getNextCursorId(boolean hasNext, List<Content> contents) {
         if (hasNext && !contents.isEmpty()) {
-            return contents.get(contents.size() - 1).getPublishedAt()
-                    .atZone(ZoneOffset.UTC)
-                    .toInstant()
-                    .toEpochMilli();
+            return contents.get(contents.size() - 1).getId();
         }
         return null;
     }

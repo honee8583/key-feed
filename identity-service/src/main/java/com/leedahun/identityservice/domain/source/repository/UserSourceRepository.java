@@ -12,7 +12,8 @@ public interface UserSourceRepository extends JpaRepository<UserSource, Long> {
 
     List<UserSource> findByUserId(Long userId);
 
-    List<UserSource> findByUserIdAndReceiveFeedTrue(Long userId);
+    @Query("SELECT us FROM UserSource us JOIN FETCH us.source WHERE us.user.id = :userId AND us.receiveFeed = true")
+    List<UserSource> findByUserIdAndReceiveFeedTrue(@Param("userId") Long userId);
 
     Optional<UserSource> findByIdAndUserId(Long userSourceId, Long userId);
 
