@@ -2,6 +2,7 @@ package com.leedahun.feedservice.domain.feed.repository;
 
 import com.leedahun.feedservice.domain.feed.entity.Content;
 import java.util.List;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,5 +22,9 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
             @Param("cursorId") Long cursorId,
             @Param("limit") int limit
     );
+
+    List<Content> findBySourceIdIn(List<Long> sourceIds, Pageable pageable);
+
+    List<Content> findBySourceIdInAndIdBefore(List<Long> sourceIds, Long lastId, Pageable pageable);
 
 }

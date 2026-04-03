@@ -1,6 +1,6 @@
 package com.leedahun.feedservice.domain.feed.dto;
 
-import com.leedahun.feedservice.domain.feed.document.ContentDocument;
+import com.leedahun.feedservice.domain.feed.entity.Content;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
@@ -23,14 +23,14 @@ public class ContentFeedResponseDto {
 
     private Long bookmarkId;
 
-    public static ContentFeedResponseDto from(ContentDocument content) {
+    public static ContentFeedResponseDto from(Content content) {
         return from(content, Collections.emptyMap());
     }
 
-    public static ContentFeedResponseDto from(ContentDocument content, Map<Long, String> sourceMapping) {
+    public static ContentFeedResponseDto from(Content content, Map<Long, String> sourceMapping) {
         String sourceName = sourceMapping.getOrDefault(content.getSourceId(), content.getSourceName());
         return ContentFeedResponseDto.builder()
-                .contentId(content.getId())
+                .contentId(String.valueOf(content.getId()))
                 .title(content.getTitle())
                 .summary(content.getSummary())
                 .sourceName(sourceName)
